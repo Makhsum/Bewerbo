@@ -1,0 +1,34 @@
+# ---- .NET (backend) ----
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+appsettings.Local.json
+*.db
+*.db-shm
+*.db-wal
+
+# ---- Android (Kotlin client) ----
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+captures/
+.cxx/
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+secrets.json
