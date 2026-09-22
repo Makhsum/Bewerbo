@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="overview_application_count">
+        <item quantity="one">%1$d заявка</item>
+        <item quantity="few">%1$d заявки</item>
+        <item quantity="many">%1$d заявок</item>
+        <item quantity="other">%1$d заявки</item>
+    </plurals>
+    <plurals name="profile_gap_count">
+        <item quantity="one">%1$d прогалина</item>
+        <item quantity="few">%1$d прогалини</item>
+        <item quantity="many">%1$d прогалин</item>
+        <item quantity="other">%1$d прогалини</item>
+    </plurals>
+</resources>

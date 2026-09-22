@@ -1,0 +1,50 @@
+{
+  "name": "Bewerbo",
+  "kind": "android",
+  "sourceRoot": ".",
+  "description": "An Android app that turns a profile entered in the user's own language into a German Bewerbungsmappe — Lebenslauf and Anschreiben, DIN 5008, exported as one PDF. Kotlin/Compose client, C# .NET 10 Minimal API backend.",
+
+  "backend": {
+    "sourceRoot": "backend",
+    "buildCommand": "dotnet build backend/src/Bewerbo.Api/Bewerbo.Api.csproj",
+    "testCommand": "dotnet test backend/tests/Bewerbo.Api.Tests/Bewerbo.Api.Tests.csproj",
+    "runCommand": "dotnet run --project backend/src/Bewerbo.Api --urls http://0.0.0.0:5099",
+    "notes": [
+      "PostgreSQL is the product database, but with no ConnectionStrings:Bewerbo configured the same DbContext falls back to a SQLite file next to the binary. Nothing needs installing to run it.",
+      "Set ANTHROPIC_API_KEY (or Anthropic:ApiKey) to use claude-opus-5 for the German. Without it a complete rule-based writer runs instead and GET /api/health reports writer=regeln."
+    ]
+  },
+
+  "android": {
+    "sourceRoot": "android",
+    "applicationId": "de.bewerbo.app",
+    "mainActivity": "de.bewerbo.app/.MainActivity",
+    "buildCommand": "gradle :app:assembleDebug",
+    "testCommand": "gradle :app:testDebugUnitTest",
+    "installCommand": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "apiBaseUrl": "http://10.0.2.2:5099"
+  },
+
+  "conventions": {
+    "commitPrefix": "feat(bewerbo)",
+    "notes": [
+      "The one architectural rule: the model does not lay out the document. Llm/OutputSchemas.cs contains NO layout field and AssertNoLayoutFields() enforces that at startup and in a unit test. Layout lives only in Rendering/.",
+      "No emoji in any user-facing string. EmojiFreeStringsTest scans every values*/strings.xml and fails the build. Those files are declared as inputs of the test task in app/build.gradle.kts — without that declaration Gradle reports the test UP-TO-DATE and skips exactly the commit that adds one.",
+      "testTagsAsResourceId is set ONCE at the Compose root in MainActivity. Dialogs and dropdown menus render in their own windows and inherit nothing, so each carries Modifier.exposeTestTags() of its own.",
+      "Compose testTags surface to a driver as BARE resource-ids ('overview_readiness_ring'), not as 'de.bewerbo.app:id/...'. Matching on the package-prefixed form finds nothing.",
+      "The German terms of art — Lebenslauf, Anschreiben, Anforderungsabgleich, DIN 5008, Anlagen, Mappe, anabin — stay German in every locale. Only the surrounding UI chrome is translated.",
+      "The Floskel and 'wirkt maschinell' checks must stay rule-based. A model grading its own letter always passes itself.",
+      "An anabin/ZAB equivalence is never written into a document unless the user confirmed it.",
+      "local.properties is not committed. On Windows write it as 'sdk.dir=C\\:/Android/Sdk' — a Java properties file eats the backslashes in 'C:\\Android\\Sdk'."
+    ]
+  },
+
+  "verify": {
+    "driver": "aria-android",
+    "notes": [
+      "Start order: emulator, poll 'adb shell getprop sys.boot_completed' until 1, then 'appium --port 4723', then start the app with 'adb shell monkey -p de.bewerbo.app -c android.intent.category.LAUNCHER 1'.",
+      "Never run 'adb shell pm clear de.bewerbo.app' with an ARIA session open: it kills the uiautomator2 instrumentation and ARIA then holds a dead session id that no retry recovers.",
+      "android/drive.sh is a fallback driver over adb (resolve by resource-id, tap the centre of its bounds) for when the ARIA session is unavailable."
+    ]
+  }
+}

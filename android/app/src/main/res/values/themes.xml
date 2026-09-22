@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The Activity theme only has to hand over to Compose without a flash of the wrong colour.
+      Everything the user sees afterwards comes from ui/theme/Theme.kt.
+    -->
+    <style name="Theme.Bewerbo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/canvas</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowBackground">@color/canvas</item>
+    </style>
+</resources>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The UI ships in the user's own language. The German is the OUTPUT, not the interface.
+
+  The product's German terms of art — Lebenslauf, Anschreiben, Anforderungsabgleich, DIN 5008,
+  Anlagen, anabin, Mappe — stay German in every locale on purpose. They are the words the user
+  will meet on the other side of the application, and swapping them for a translation would rob
+  them of the vocabulary they actually need.
+
+  HARD RULE: no emoji in any string here. EmojiFreeStringsTest fails the build if one appears.
+-->
+<resources>
+    <string name="app_name">Bewerbo</string>
+
+    <string name="nav_overview">Overview</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_posting">Posting</string>
+    <string name="nav_application">Application</string>
+    <string name="nav_locker">Mappe</string>
+
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_correct">Correct</string>
+
+    <!-- Overview -->
+    <string name="overview_mappe">Bewerbungsmappe</string>
+    <string name="overview_of_hundred">of 100</string>
+    <string name="overview_profile_complete">Profile complete</string>
+    <string name="overview_gaps_explained">Gaps explained</string>
+    <string name="overview_evidence">Evidence on file</string>
+    <string name="overview_next_steps">Next steps</string>
+    <string name="overview_active">Active applications</string>
+    <string name="overview_your_locker">Your Mappe</string>
+    <string name="overview_eu_title">Your data stays in the EU</string>
+    <string name="overview_eu_body">Profile data is held encrypted on EU servers and deleted after export whenever you ask for it.</string>
+
+    <string name="translation_pending_title">Translation is pending</string>
+    <string name="translation_pending_body">%1$d entries are still in your own language. Bewerbo writes the German once a language model is configured for this installation; until then the Lebenslauf keeps your wording for those entries.</string>
+
+    <!-- Profile -->
+    <string name="profile_subtitle">Enter everything in your own language. Bewerbo writes the German.</string>
+    <string name="profile_input_language">Input language: %1$s</string>
+    <string name="profile_complete">%1$d %% complete</string>
+    <string name="profile_section_person">Person</string>
+    <string name="profile_section_experience">Berufserfahrung</string>
+    <string name="profile_section_education">Ausbildung</string>
+    <string name="profile_section_languages">Sprachen</string>
+    <string name="profile_section_attachments">Anlagen</string>
+    <string name="profile_timeline">Zeitstrahl %1$d – %2$d</string>
+    <string name="profile_gap_headline">Gap %1$s – %2$s (%3$d months)</string>
+    <string name="profile_gap_explainer">Name it — Umzug, Sprachkurs or Anerkennungsverfahren — and it stops being a warning sign.</string>
+    <string name="profile_gap_reason_label">Reason for the gap</string>
+    <string name="profile_gap_save">Save reason</string>
+    <string name="profile_gap_in_cv">In the Lebenslauf: »%1$s«</string>
+    <string name="profile_reference_on_file">Zeugnis on file</string>
+    <string name="profile_reference_missing">Zeugnis missing</string>
+    <string name="profile_certificate_on_file">Certificate is in the Mappe</string>
+    <string name="profile_certificate_missing">No certificate on file yet</string>
+    <string name="profile_rephrase_duties">Rewrite duties as results</string>
+    <string name="profile_anabin_rating">anabin %1$s</string>
+    <string name="profile_anabin_open">Anerkennung open</string>
+    <string name="profile_anabin_lookup">Look up in anabin</string>
+    <string name="profile_equivalent_to">Equivalent in Germany to: %1$s</string>
+    <string name="profile_generate_cv">Lebenslauf erzeugen</string>
+    <string name="profile_template">Vorlage</string>
+    <string name="profile_add_experience">Add a position</string>
+
+    <string name="person_first_name">First name</string>
+    <string name="person_last_name">Last name</string>
+    <string name="person_street">Street and number</string>
+    <string name="person_postal_code">Postcode</string>
+    <string name="person_city">Town</string>
+    <string name="person_email">E-mail</string>
+    <string name="person_phone">Phone</string>
+
+    <string name="experience_position">Position</string>
+    <string name="experience_employer">Employer</string>
+    <string name="experience_location">Place</string>
+    <string name="experience_from">From (MM/YYYY)</string>
+    <string name="experience_to">To (blank = today)</string>
+    <string name="experience_workload">Pensum</string>
+    <string name="experience_duties">Duties, one per line</string>
+    <string name="experience_missing">Still needed: %1$s</string>
+
+    <!-- Posting -->
+    <string name="posting_subtitle">Paste the posting — every field below links back to the words it came from.</string>
+    <string name="posting_paste_label">Paste the posting</string>
+    <string name="posting_paste_field">Text of the posting</string>
+    <string name="posting_parse">Read the posting</string>
+    <string name="posting_new">Paste a different posting</string>
+    <string name="posting_source">Source text · %1$d characters</string>
+    <string name="posting_read_from">Read from the posting</string>
+    <string name="posting_field_contact">Kontakt</string>
+    <string name="posting_field_company">Unternehmen</string>
+    <string name="posting_field_reference">Referenz</string>
+    <string name="posting_field_title">Stelle</string>
+    <string name="posting_field_start">Eintritt</string>
+    <string name="posting_field_missing">Not found — add it yourself</string>
+    <string name="posting_confidence_sure">Sure</string>
+    <string name="posting_confidence_check">Check</string>
+    <string name="posting_confidence_missing">Missing</string>
+    <string name="posting_no_span">Shown without a highlight: the quoted words were not found in the text as they stand.</string>
+    <string name="posting_reference_note">Goes into the Betreffzeile</string>
+    <string name="posting_employer_type">Arbeitgebertyp</string>
+    <string name="posting_employer_type_note">drives photo and register</string>
+    <string name="posting_photo_expected">A photo is usual here, and personal data is expected. Neither is legally required — the AGG means no employer may demand them.</string>
+    <string name="posting_photo_public">In the public service the form matters more than the photo. Include personal data, leave the photo out.</string>
+    <string name="posting_photo_unusual">A photo would look out of place here. Leave it out and keep the register plain.</string>
+    <string name="posting_match">Anforderungen abgleichen</string>
+
+    <!-- Match -->
+    <string name="match_title">Abgleich</string>
+    <string name="match_none_title">No posting read yet</string>
+    <string name="match_none_body">Paste a posting on the Posting screen first. The Abgleich compares its requirements against your profile.</string>
+    <string name="match_covered">%1$d of %2$d requirements proven</string>
+    <string name="match_proven">Proven by your profile · %1$d</string>
+    <string name="match_open">Still open · %1$d</string>
+    <string name="match_not_proven">Not proven · %1$d</string>
+    <string name="match_guard_title">Anschreiben, not Motivationsschreiben</string>
+    <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to Studium and Stipendium — sent here, it marks you out as foreign. Nothing listed as not proven is claimed in the letter.</string>
+    <string name="match_tone">Ton des Anschreibens</string>
+    <string name="match_generate_letter">Anschreiben erzeugen</string>
+
+    <!-- Application -->
+    <string name="application_subtitle">What a German reader and an applicant tracking system see.</string>
+    <string name="application_none_title">No letter yet</string>
+    <string name="application_none_body">Run the Abgleich first. The letter is written against the requirements it finds.</string>
+    <string name="application_page_one">Page 1 · Anschreiben · DIN 5008</string>
+    <string name="application_attachments">Anlagen: %1$s</string>
+    <string name="application_din_show">Show the DIN grid</string>
+    <string name="application_din_hide">Hide the DIN grid</string>
+    <string name="application_regenerate">Write it again</string>
+    <string name="application_review">Textprüfung</string>
+    <string name="application_review_clean">No hints</string>
+    <string name="application_review_hints">%1$d hints</string>
+    <string name="application_ats">Maschinenlesbarkeit</string>
+    <string name="application_ats_passed">Passed</string>
+    <string name="application_ats_failed">Failed</string>
+    <string name="application_export">Export</string>
+    <string name="application_file_detail">%1$d pages · %2$d KB</string>
+    <string name="application_save_pdf">Save as one PDF</string>
+    <string name="application_why_german_title">Why it reads as German</string>
+    <string name="application_why_german_body">A named salutation, the Referenznummer in the Betreffzeile, no »Hiermit bewerbe ich mich« and no »Teamplayer« — and the letter answers the words of the posting instead of listing virtues.</string>
+    <string name="application_source_model">This letter was written by the language model and checked against the same rules.</string>
+    <string name="application_source_rules">This letter was written by the rule-based writer — no language model is configured for this installation.</string>
+
+    <string name="part_anschreiben">Anschreiben</string>
+    <string name="part_lebenslauf">Lebenslauf</string>
+    <string name="part_anlagen">Anlagenverzeichnis</string>
+
+    <!-- Locker -->
+    <string name="locker_subtitle">Zeugnisse, Zertifikate and the anabin extract the Anlagenverzeichnis refers to.</string>
+    <string name="locker_pages">%1$d pages</string>
+    <string name="locker_empty_title">The Mappe is empty</string>
+    <string name="locker_empty_body">Add the documents your application refers to. Bewerbo keeps the record here; the scan itself stays on your device.</string>
+    <string name="locker_add">Add a document</string>
+    <string name="locker_field_title">Title</string>
+    <string name="locker_field_note">Note</string>
+    <string name="locker_field_pages">Pages</string>
+    <string name="locker_storage_title">What is stored here</string>
+    <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The file itself is not uploaded.</string>
+</resources>

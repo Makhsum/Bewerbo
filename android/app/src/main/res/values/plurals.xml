@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Counts that appear next to a number need a plural rule, not a format string. "1 GAPS" is the kind
+  of detail that makes an interface read as machine-made, which is the one thing this product
+  cannot afford.
+-->
+<resources>
+    <plurals name="overview_application_count">
+        <item quantity="one">%1$d application</item>
+        <item quantity="other">%1$d applications</item>
+    </plurals>
+    <plurals name="profile_gap_count">
+        <item quantity="one">%1$d gap</item>
+        <item quantity="other">%1$d gaps</item>
+    </plurals>
+</resources>

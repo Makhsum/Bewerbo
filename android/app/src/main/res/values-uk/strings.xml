@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ukrainian UI. The German terms of art stay German: Lebenslauf, Anschreiben, Anforderungsabgleich,
+  DIN 5008, Anlagen, Mappe, anabin. Those are the words the user will meet on the German side, and
+  translating them away would take the vocabulary with them.
+-->
+<resources>
+    <string name="nav_overview">Огляд</string>
+    <string name="nav_profile">Профіль</string>
+    <string name="nav_posting">Вакансія</string>
+    <string name="nav_application">Заявка</string>
+    <string name="nav_locker">Mappe</string>
+
+    <string name="action_save">Зберегти</string>
+    <string name="action_cancel">Скасувати</string>
+    <string name="action_delete">Видалити</string>
+    <string name="action_correct">Виправити</string>
+
+    <string name="overview_of_hundred">зі 100</string>
+    <string name="overview_profile_complete">Профіль заповнено</string>
+    <string name="overview_gaps_explained">Прогалини пояснено</string>
+    <string name="overview_evidence">Підтверджень додано</string>
+    <string name="overview_next_steps">Наступні кроки</string>
+    <string name="overview_active">Активні заявки</string>
+    <string name="overview_your_locker">Ваша Mappe</string>
+    <string name="overview_eu_title">Ваші дані залишаються в ЄС</string>
+    <string name="overview_eu_body">Дані профілю зберігаються зашифровано на серверах у ЄС і видаляються після експорту, щойно ви цього попросите.</string>
+
+    <string name="translation_pending_title">Переклад ще не виконано</string>
+    <string name="translation_pending_body">%1$d записів досі вашою мовою. Bewerbo напише німецькою, коли для цієї інсталяції буде налаштовано мовну модель; доти Lebenslauf збереже ваше формулювання для цих записів.</string>
+
+    <string name="profile_subtitle">Вводьте все своєю мовою. Bewerbo напише німецькою.</string>
+    <string name="profile_input_language">Мова введення: %1$s</string>
+    <string name="profile_complete">Заповнено на %1$d %%</string>
+    <string name="profile_gap_headline">Прогалина %1$s – %2$s (%3$d міс.)</string>
+    <string name="profile_gap_explainer">Назвіть причину — Umzug, Sprachkurs або Anerkennungsverfahren — і вона перестане бути тривожним сигналом.</string>
+    <string name="profile_gap_reason_label">Причина прогалини</string>
+    <string name="profile_gap_save">Зберегти причину</string>
+    <string name="profile_gap_in_cv">У Lebenslauf: »%1$s«</string>
+    <string name="profile_reference_on_file">Zeugnis додано</string>
+    <string name="profile_reference_missing">Zeugnis відсутній</string>
+    <string name="profile_certificate_on_file">Сертифікат у Mappe</string>
+    <string name="profile_certificate_missing">Сертифікат ще не додано</string>
+    <string name="profile_rephrase_duties">Переписати обов\'язки як результати</string>
+    <string name="profile_anabin_open">Anerkennung не підтверджено</string>
+    <string name="profile_anabin_lookup">Знайти в anabin</string>
+    <string name="profile_equivalent_to">Еквівалент у Німеччині: %1$s</string>
+    <string name="profile_add_experience">Додати посаду</string>
+
+    <string name="person_first_name">Ім\'я</string>
+    <string name="person_last_name">Прізвище</string>
+    <string name="person_street">Вулиця та номер</string>
+    <string name="person_postal_code">Індекс</string>
+    <string name="person_city">Місто</string>
+    <string name="person_email">Електронна пошта</string>
+    <string name="person_phone">Телефон</string>
+
+    <string name="experience_position">Посада</string>
+    <string name="experience_employer">Роботодавець</string>
+    <string name="experience_location">Місто</string>
+    <string name="experience_from">З (ММ/РРРР)</string>
+    <string name="experience_to">До (порожньо = дотепер)</string>
+    <string name="experience_workload">Pensum</string>
+    <string name="experience_duties">Обов\'язки, по одному в рядку</string>
+    <string name="experience_missing">Ще потрібно: %1$s</string>
+
+    <string name="posting_subtitle">Вставте текст вакансії — кожне поле нижче посилається на слова, з яких воно взяте.</string>
+    <string name="posting_paste_label">Вставте вакансію</string>
+    <string name="posting_paste_field">Текст вакансії</string>
+    <string name="posting_parse">Прочитати вакансію</string>
+    <string name="posting_new">Вставити іншу вакансію</string>
+    <string name="posting_source">Текст оригіналу · %1$d символів</string>
+    <string name="posting_read_from">Прочитано з вакансії</string>
+    <string name="posting_field_missing">Не знайдено — впишіть самі</string>
+    <string name="posting_confidence_sure">Точно</string>
+    <string name="posting_confidence_check">Перевірте</string>
+    <string name="posting_confidence_missing">Немає</string>
+    <string name="posting_no_span">Показано без підсвічування: процитованих слів у тексті в такому вигляді немає.</string>
+    <string name="posting_reference_note">Потрапляє в Betreffzeile</string>
+    <string name="posting_employer_type_note">визначає фото і тон</string>
+    <string name="posting_photo_expected">Тут фото звичне, і особисті дані очікують. Жодне з цього не є обов\'язковим за законом — AGG забороняє роботодавцю їх вимагати.</string>
+    <string name="posting_photo_public">На державній службі важливіша форма, ніж фото. Додайте особисті дані, фото залиште.</string>
+    <string name="posting_photo_unusual">Фото тут виглядало б недоречно. Не додавайте його і тримайте простий тон.</string>
+    <string name="posting_match">Порівняти вимоги</string>
+
+    <string name="match_none_title">Вакансію ще не прочитано</string>
+    <string name="match_none_body">Спочатку вставте вакансію на екрані «Вакансія». Abgleich порівняє її вимоги з вашим профілем.</string>
+    <string name="match_covered">Підтверджено %1$d з %2$d вимог</string>
+    <string name="match_proven">Підтверджено профілем · %1$d</string>
+    <string name="match_open">Ще відкрито · %1$d</string>
+    <string name="match_not_proven">Не підтверджено · %1$d</string>
+    <string name="match_guard_body">Ви вставили оголошення про вакансію, тож Bewerbo пише Anschreiben. Motivationsschreiben пишуть для навчання і стипендії — надісланий сюди, він одразу видає у вас іноземця. Нічого з позначеного «не підтверджено» в листі не стверджується.</string>
+    <string name="match_generate_letter">Створити Anschreiben</string>
+
+    <string name="application_subtitle">Те, що бачить німецький читач і система відбору кандидатів.</string>
+    <string name="application_none_title">Листа ще немає</string>
+    <string name="application_none_body">Спочатку виконайте Abgleich. Лист пишеться під знайдені вимоги.</string>
+    <string name="application_page_one">Сторінка 1 · Anschreiben · DIN 5008</string>
+    <string name="application_din_show">Показати сітку DIN</string>
+    <string name="application_din_hide">Сховати сітку DIN</string>
+    <string name="application_regenerate">Написати ще раз</string>
+    <string name="application_review_clean">Без зауважень</string>
+    <string name="application_review_hints">Зауважень: %1$d</string>
+    <string name="application_ats_passed">Пройдено</string>
+    <string name="application_ats_failed">Не пройдено</string>
+    <string name="application_export">Експорт</string>
+    <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
+    <string name="application_save_pdf">Зберегти одним PDF</string>
+    <string name="application_why_german_title">Чому це звучить по-німецьки</string>
+    <string name="application_why_german_body">Іменне звертання, Referenznummer у Betreffzeile, жодного »Hiermit bewerbe ich mich« і жодного »Teamplayer« — і лист відповідає на слова вакансії, а не перелічує чесноти.</string>
+    <string name="application_source_model">Цей лист написала мовна модель і перевірено тими самими правилами.</string>
+    <string name="application_source_rules">Цей лист написано за правилами — мовну модель для цієї інсталяції не налаштовано.</string>
+
+    <string name="locker_subtitle">Zeugnisse, Zertifikate та витяг з anabin, на які посилається Anlagenverzeichnis.</string>
+    <string name="locker_pages">Сторінок: %1$d</string>
+    <string name="locker_empty_title">Mappe порожня</string>
+    <string name="locker_empty_body">Додайте документи, на які посилається ваша заявка. Bewerbo зберігає тут лише запис; сам скан залишається на вашому пристрої.</string>
+    <string name="locker_add">Додати документ</string>
+    <string name="locker_field_title">Назва</string>
+    <string name="locker_field_note">Примітка</string>
+    <string name="locker_field_pages">Сторінок</string>
+    <string name="locker_storage_title">Що тут зберігається</string>
+    <string name="locker_storage_body">Bewerbo зберігає запис про документ — назву, вид і кількість сторінок — щоб Anlagenverzeichnis міг його назвати. Сам файл не завантажується.</string>
+</resources>

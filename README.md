@@ -61,3 +61,45 @@ branch, from the first screen — retrofitting it later means re-tagging the who
 
 QuestPDF is free under its Community licence below roughly $1M annual revenue; above that it needs
 a paid one.
+
+## Layout of the repository
+
+```
+backend/src/Bewerbo.Api      .NET 10 Minimal API — the whole server
+  Domain/                    the entities
+  Data/                      EF Core DbContext
+  Llm/                       OutputSchemas.cs (no layout fields), LlmClient.cs, ApplicationWriter.cs
+  Rendering/                 DIN 5008 letter, Lebenslauf, Anlagenverzeichnis, merge, ATS re-read
+  Services/                  timeline and gaps, posting parser, evidence locator, requirement matcher
+  Text/                      FloskelRules.cs, TextReview.cs, ScriptCheck.cs
+backend/tests                one test per rule this README states
+android/app                  Kotlin + Compose client, five destinations
+  ui/theme/                  the colour, type and spacing tokens
+  ui/icons/                  24 drawn vectors — no emoji anywhere
+  ui/components/             Timeline, EvidenceText, RequirementRow, DinOverlay, ReadinessRing
+  ui/screens/                Overview, Profile, Posting, Match, Application, Locker
+```
+
+## Running it
+
+```bash
+# backend — no database needed; with no connection string it uses a SQLite file
+dotnet run --project backend/src/Bewerbo.Api --urls http://0.0.0.0:5099
+
+# client — 10.0.2.2 is the host as the emulator sees it
+gradle -p android :app:assembleDebug
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+`backend/smoke.sh` walks the whole card end to end against a running API.
+
+### The language model is optional, and the app says which one wrote the letter
+
+Set `ANTHROPIC_API_KEY` to have `claude-opus-5` write the German. Without it a **complete
+rule-based writer** runs instead: it produces a correct German letter and Lebenslauf structure, but
+it cannot translate the user's free text, so entries stay in the language they were typed in and the
+app says so rather than shipping a half-German CV. `GET /api/health` reports which is in use, and
+the Bewerbung screen states it under the letter.
+
+Either way the model never lays out the document, and either way the letter has to clear the same
+rule-based Floskel check before it is accepted.

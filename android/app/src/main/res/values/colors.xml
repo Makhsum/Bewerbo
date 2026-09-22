@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the tokens in ui/theme/Theme.kt for the few places XML needs them. -->
+    <color name="primary">#0E3A53</color>
+    <color name="canvas">#E8EBF0</color>
+    <color name="surface">#FFFFFF</color>
+</resources>
