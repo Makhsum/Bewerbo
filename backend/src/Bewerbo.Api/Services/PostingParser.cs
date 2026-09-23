@@ -322,7 +322,12 @@ public static partial class PostingParser
     [GeneratedRegex(@"^[\t ]*[-*•·–]\s*(?<item>.+)$", RegexOptions.Multiline)]
     private static partial Regex BulletRx();
 
-    [GeneratedRegex(@"(?:Wir erwarten|Sie bringen mit|Ihr Profil|Das bringen Sie mit|Wir setzen voraus)\s*:?\s*(?<list>[^.!?]+)",
+    // The list ends with its own LINE. Running to the next ".!?" instead let a heading like
+    // "Ihr Profil:" swallow the bullet list under it and the sentence after that, so the Abgleich
+    // listed the whole block as one "requirement" — dashes and all — plus a second one cut
+    // mid-abbreviation out of "Ihre Bewerbung richten Sie bitte an Frau Dr. <name>". The bullets
+    // are BulletRx's job; this pattern is only for the prose form that states them in a sentence.
+    [GeneratedRegex(@"(?:Wir erwarten|Sie bringen mit|Ihr Profil|Das bringen Sie mit|Wir setzen voraus)\s*:?[ \t]*(?<list>[^.!?\r\n]+)",
         RegexOptions.IgnoreCase)]
     private static partial Regex ExpectationRx();
 

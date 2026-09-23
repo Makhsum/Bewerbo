@@ -172,6 +172,40 @@ public class DomainRuleTests
     }
 
     [Fact]
+    public void A_requirements_heading_does_not_swallow_the_list_under_it_or_the_sentence_after_it()
+    {
+        // "Ihr Profil:" followed by bullets used to be read as prose running to the next full
+        // stop — which was the one in "Frau Dr.". The Abgleich then listed the whole bullet block
+        // as one requirement, dashes included, and a second one cut off mid-abbreviation.
+        var extract = PostingParser.Parse("""
+            Fachkraft für Lagerlogistik (m/w/d)
+
+            Ihr Profil:
+            - Abgeschlossene Berufsausbildung im Lager
+            - Sehr gute Deutschkenntnisse (mindestens B2) und gute Englischkenntnisse
+
+            Ihre Bewerbung richten Sie bitte an Frau Dr. Annette Kleinschmidt.
+            """);
+
+        Assert.Equal(
+        [
+            "Abgeschlossene Berufsausbildung im Lager",
+            "Sehr gute Deutschkenntnisse (mindestens B2) und gute Englischkenntnisse",
+        ], extract.Requirements.Select(r => r.Text));
+    }
+
+    [Fact]
+    public void A_requirements_sentence_without_bullets_is_still_split_into_its_parts()
+    {
+        // The prose form is why ExpectationRx exists at all; narrowing it to its own line must not
+        // cost the posting that states the same expectations in one sentence.
+        var extract = PostingParser.Parse(Posting);
+
+        Assert.Contains("sichere DATEV-Kenntnisse", extract.Requirements.Select(r => r.Text));
+        Assert.Contains("Deutsch mindestens B2", extract.Requirements.Select(r => r.Text));
+    }
+
+    [Fact]
     public void The_company_does_not_swallow_the_article_or_the_line_above_it()
     {
         var extract = PostingParser.Parse(Posting);
