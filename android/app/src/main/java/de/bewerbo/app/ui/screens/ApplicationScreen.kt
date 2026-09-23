@@ -61,6 +61,7 @@ import de.bewerbo.app.ui.components.atsFindingDetail
 import de.bewerbo.app.ui.components.atsFindingLabel
 import de.bewerbo.app.ui.components.reviewCheckDetail
 import de.bewerbo.app.ui.components.reviewCheckTitle
+import de.bewerbo.app.ui.components.reviewFailedLabels
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -609,19 +610,27 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
             }
         }
 
-        // A failed Maschinenlesbarkeit is a fault of the file that is about to leave the phone: the
-        // application is filtered out before a human opens it and nobody is told. So the export
-        // waits, and says which checks are failing rather than only greying out — "ungeprueft" is
-        // not a failure and does not stop anything, for the reason the section above states.
-        val failed = state.ats?.findings.orEmpty().filter { it.verdict == "fehler" }
-        if (failed.isNotEmpty()) {
+        // A failed check is a fault of the file that is about to leave the phone, and BOTH blocks
+        // above produce them: a letter that reads as a Motivationsschreiben is as unsendable as one
+        // an employer's system cannot index. So the export waits on either, and says which check is
+        // failing rather than only greying out.
+        //
+        // Only "fehler" stops it. A "hinweis" of the Textprüfung is a suggestion about wording, and
+        // "ungeprueft" says a check could not be run at all — neither is a fault of the document,
+        // for the reason the two sections above state.
+        val failedChecks = state.review?.checks.orEmpty().filter { it.verdict == "fehler" }
+        val failedFindings = state.ats?.findings.orEmpty().filter { it.verdict == "fehler" }
+        val failed = failedChecks.isNotEmpty() || failedFindings.isNotEmpty()
+        if (failed) {
             item {
+                // Both halves are already in the user's language here, so THIS join is a plain one.
+                val named = listOf(reviewFailedLabels(failedChecks), atsFailedLabels(failedFindings))
+                    .filter { it.isNotBlank() }
+                    .joinToString("  ·  ")
                 Callout(
                     icon = BewerboIcons.NotClaimed,
                     title = stringResource(R.string.application_export_blocked_title),
-                    body = stringResource(
-                        R.string.application_export_blocked_body, atsFailedLabels(failed),
-                    ),
+                    body = stringResource(R.string.application_export_blocked_body, named),
                     tone = PillTone.Danger,
                     modifier = Modifier.testTag("application_export_blocked"),
                 )
@@ -633,7 +642,7 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                 // Nothing selected is not an export; the server would silently fall back to all
                 // three, which is the opposite of what the user just asked for.
                 onClick = { viewModel.savePdf(selectedParts.joinToString(",")) },
-                enabled = state.busy == null && selectedParts.isNotEmpty() && failed.isEmpty(),
+                enabled = state.busy == null && selectedParts.isNotEmpty() && !failed,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("application_btn_save_pdf"),
@@ -652,7 +661,7 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         item {
             OutlinedButton(
                 onClick = { viewModel.sendPdfByEmail(selectedParts.joinToString(",")) },
-                enabled = state.busy == null && selectedParts.isNotEmpty() && failed.isEmpty(),
+                enabled = state.busy == null && selectedParts.isNotEmpty() && !failed,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("application_btn_send_email"),

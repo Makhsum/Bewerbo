@@ -277,8 +277,8 @@
     <string name="application_export">Експорт</string>
     <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Зберегти одним PDF</string>
-    <string name="application_export_blocked_title">Файл не читається назад</string>
-    <string name="application_export_blocked_body">У файлі не знайдено як текст: %1$s. Саме за цим індексує система роботодавця, тому експорт чекає.</string>
+    <string name="application_export_blocked_title">Перевірку не пройдено</string>
+    <string name="application_export_blocked_body">Не пройдено: %1$s. Це той документ, який прочитає роботодавець, тому експорт чекає, доки це не виправлено.</string>
     <string name="application_preview_page">Сторінка %1$d із %2$d</string>
     <string name="application_preview_pending">Сторінки формуються.</string>
     <string name="application_preview_failed_title">Не вдалося завантажити сторінки</string>

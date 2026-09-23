@@ -275,8 +275,8 @@
     <string name="application_export">Экспорт</string>
     <string name="application_file_detail">Страниц: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Сохранить одним PDF</string>
-    <string name="application_export_blocked_title">Файл не читается обратно</string>
-    <string name="application_export_blocked_body">В файле не найдено как текст: %1$s. Именно по этому индексирует система работодателя, поэтому экспорт ждёт.</string>
+    <string name="application_export_blocked_title">Проверка не пройдена</string>
+    <string name="application_export_blocked_body">Не пройдено: %1$s. Это тот документ, который прочитает работодатель, поэтому экспорт ждёт, пока это не исправлено.</string>
     <string name="application_preview_page">Страница %1$d из %2$d</string>
     <string name="application_preview_pending">Страницы формируются.</string>
     <string name="application_preview_failed_title">Не удалось загрузить страницы</string>

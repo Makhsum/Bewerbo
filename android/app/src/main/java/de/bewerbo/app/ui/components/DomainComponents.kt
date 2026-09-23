@@ -599,6 +599,15 @@ fun atsFailedLabels(findings: List<AtsFinding>): String {
     return named.joinToString("  ·  ")
 }
 
+/// The same for the Textprüfung — the checks of the letter itself that came back "fehler". Written
+/// beside [atsFailedLabels] and in the same shape, because the export names both in one sentence.
+@Composable
+fun reviewFailedLabels(checks: List<ReviewCheck>): String {
+    val named = mutableListOf<String>()
+    checks.forEach { named += reviewCheckTitle(it) }
+    return named.joinToString("  ·  ")
+}
+
 @Composable
 fun atsFindingDetail(finding: AtsFinding): String = when (finding.detailKind) {
     // What WAS found is the user's own data: the name, the employers, the dates. It reads the

@@ -278,8 +278,8 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d Seiten · %2$d KB</string>
     <string name="application_save_pdf">Als ein PDF speichern</string>
-    <string name="application_export_blocked_title">Die Datei liest sich nicht zurück</string>
-    <string name="application_export_blocked_body">Nicht als Text in der Datei gefunden: %1$s. Genau darauf indexiert das System des Arbeitgebers, deshalb wartet der Export.</string>
+    <string name="application_export_blocked_title">Eine Prüfung ist nicht bestanden</string>
+    <string name="application_export_blocked_body">Nicht bestanden: %1$s. Das ist das Dokument, das der Arbeitgeber liest — bis das behoben ist, wartet der Export.</string>
     <string name="application_preview_page">Seite %1$d von %2$d</string>
     <string name="application_preview_pending">Die Seiten werden erzeugt.</string>
     <string name="application_preview_failed_title">Die Seiten konnten nicht geladen werden</string>

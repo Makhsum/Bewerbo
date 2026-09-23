@@ -302,8 +302,8 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d pages · %2$d KB</string>
     <string name="application_save_pdf">Save as one PDF</string>
-    <string name="application_export_blocked_title">The file does not read back</string>
-    <string name="application_export_blocked_body">Not found as text in the file: %1$s. An employer\'s system indexes on exactly these, so the export waits until they are there.</string>
+    <string name="application_export_blocked_title">A check has failed</string>
+    <string name="application_export_blocked_body">Not passed: %1$s. This is the document the employer reads, so the export waits until that is put right.</string>
     <string name="application_preview_page">Page %1$d of %2$d</string>
     <string name="application_preview_pending">The pages are being rendered.</string>
     <string name="application_preview_failed_title">The pages could not be fetched</string>
