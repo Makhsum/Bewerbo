@@ -341,12 +341,18 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
             // the backend leaves it out rather than reporting noise. "No hints" over a check that
             // never ran would claim it passed, which is why the pill has a third state — the same
             // one the Maschinenlesbarkeit summary below uses for a check it could not carry out.
+            //
+            // A FAILED check is the fourth, and it outranks the other three: over a red
+            // "Anschreiben, nicht Motivationsschreiben" the pill read "1 hint", which is the
+            // summary contradicting the row underneath it. Same order and same tones as the
+            // Maschinenlesbarkeit summary below — failure first, then what could not be judged.
             val notChecked = review.notChecked.isNotEmpty()
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     SectionLabel(stringResource(R.string.application_review))
                     StatusPill(
                         when {
+                            !review.passed -> stringResource(R.string.application_review_failed)
                             // A count next to a number needs a plural rule. This one read
                             // "1 HINTS", which is the sort of detail plurals.xml was written to
                             // prevent and then did not cover.
@@ -357,7 +363,11 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                             notChecked -> stringResource(R.string.application_review_unchecked)
                             else -> stringResource(R.string.application_review_clean)
                         },
-                        if (review.hintCount == 0 && !notChecked) PillTone.Success else PillTone.Attention,
+                        when {
+                            !review.passed -> PillTone.Danger
+                            review.hintCount > 0 || notChecked -> PillTone.Attention
+                            else -> PillTone.Success
+                        },
                         Modifier.testTag("application_review_summary"),
                     )
                 }

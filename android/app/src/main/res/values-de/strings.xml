@@ -269,6 +269,7 @@
     <string name="application_regenerate">Neu schreiben</string>
     <string name="application_review">Textprüfung</string>
     <string name="application_review_clean">Keine Hinweise</string>
+    <string name="application_review_failed">Nicht bestanden</string>
     <string name="application_review_unchecked">Nicht vollständig geprüft</string>
     <string name="application_ats">Maschinenlesbarkeit</string>
     <string name="application_ats_passed">Bestanden</string>
