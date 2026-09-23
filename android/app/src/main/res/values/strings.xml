@@ -29,7 +29,6 @@
 
     <!-- Overview -->
     <string name="overview_mappe">Bewerbungsmappe</string>
-    <string name="overview_of_hundred">of 100</string>
     <string name="overview_profile_complete">Profile complete</string>
     <string name="overview_gaps_explained">Gaps explained</string>
     <string name="overview_evidence">Evidence on file</string>
@@ -37,6 +36,11 @@
     <string name="overview_active">Active applications</string>
     <string name="overview_flow_start">Start an application</string>
     <string name="overview_flow_continue">Continue the application</string>
+    <string name="overview_first_profile">Start with your profile</string>
+    <string name="overview_next_steps_empty_title">Nothing outstanding</string>
+    <string name="overview_next_steps_empty_body">The profile carries everything a Lebenslauf needs. What a single application still needs is written below in its own row.</string>
+    <string name="overview_loading_title">One moment</string>
+    <string name="overview_loading_body">Bewerbo is reading what your Bewerbungsmappe still needs.</string>
     <string name="overview_applications_empty_title">No application started yet</string>
     <string name="overview_applications_empty_body">Start one above and paste a posting. Every application you start is listed here with its employer, its Referenznummer and where it stands, and you get back into an unfinished one from here.</string>
     <string name="overview_your_locker">Your Mappe</string>

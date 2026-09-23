@@ -5,11 +5,14 @@ using Bewerbo.Api.Endpoints;
 namespace Bewerbo.Api.Services;
 
 /// <summary>
-/// The Bewerbungsmappe readiness score and the "Nächste Schritte" it breaks out into.
+/// What the Bewerbungsmappe still needs — the "Nächste Schritte" — and the three counted things
+/// they break out of: profile completeness, gaps explained, evidence on file.
 ///
-/// The score is only worth having if every point of it names the thing that would raise it. So it
-/// is computed from three counted things — profile completeness, gaps explained, evidence on file —
-/// and each shortfall produces the step that closes it, pointing at the screen that does the work.
+/// There used to be a weighted score out of 100 over the top of these. It was an invented measure:
+/// on an empty profile it said "0 of 100" and named nothing a user could do about it, and the three
+/// counts it was averaged from are the only part of it that was ever attributable. So the score is
+/// gone and what is outstanding is the whole of the answer — each shortfall produces the step that
+/// closes it, pointing at the screen that does the work.
 /// </summary>
 public static class ReadinessService
 {
@@ -21,19 +24,6 @@ public static class ReadinessService
         var gapsExplained = timeline.Gaps.Count(g => g.Explained);
 
         var (evidenceOnFile, evidenceExpected) = Evidence(profile);
-
-        // Weighted: an incomplete profile is the thing that blocks everything else, an unexplained
-        // gap is what a recruiter reacts to, missing evidence only bites at the Abgleich.
-        var gapScore = gapsTotal == 0 ? 100 : 100 * gapsExplained / gapsTotal;
-        var evidenceScore = evidenceExpected == 0 ? 100 : 100 * evidenceOnFile / evidenceExpected;
-
-        // An empty profile has no gaps and needs no evidence, so both of those score 100 — which
-        // would hand a user who has entered nothing a readiness of 54. Until there is a career to
-        // measure, the only honest number is how much of the profile is filled in.
-        var hasCareer = profile.Experience.Count > 0 || profile.Education.Count > 0;
-        var readiness = hasCareer
-            ? (int)Math.Round(completeness * 0.5 + gapScore * 0.3 + evidenceScore * 0.2)
-            : completeness;
 
         var steps = NextSteps(profile, timeline);
 
@@ -57,7 +47,10 @@ public static class ReadinessService
             $"{profile.FirstName} {profile.LastName}".Trim(),
             profile.City,
             applications.Count,
-            readiness,
+            // Which of the two the Übersicht offers as the first step. Without one Berufserfahrung
+            // there is no Lebenslauf to produce, so beginning an application there leads to a path
+            // that cannot finish — the same thing the "beruf" step below says in words.
+            profile.Experience.Count > 0,
             completeness,
             gapsExplained, gapsTotal,
             evidenceOnFile, evidenceExpected,
@@ -131,6 +124,29 @@ public static class ReadinessService
     private static List<NextStepDto> NextSteps(Profile profile, TimelineView timeline)
     {
         var steps = new List<NextStepDto>();
+
+        // The person's own details went uncounted here while they were half of Completeness, so the
+        // Übersicht could say nothing was outstanding over a profile with no name and no Anschrift —
+        // and the Briefkopf of every Anschreiben is made of exactly these.
+        var personMissing = new[]
+        {
+            (Missing: string.IsNullOrWhiteSpace(profile.FirstName)
+                      || string.IsNullOrWhiteSpace(profile.LastName), Label: "Name"),
+            (Missing: string.IsNullOrWhiteSpace(profile.Street)
+                      || string.IsNullOrWhiteSpace(profile.City), Label: "Anschrift"),
+            (Missing: string.IsNullOrWhiteSpace(profile.Phone)
+                      && string.IsNullOrWhiteSpace(profile.Email), Label: "Kontakt"),
+        }.Where(p => p.Missing).Select(p => p.Label).ToList();
+
+        if (personMissing.Count > 0)
+        {
+            steps.Add(new NextStepDto(
+                "person",
+                "Angaben zur Person vervollständigen",
+                $"Der Briefkopf nach DIN 5008 braucht noch: {string.Join(", ", personMissing)}",
+                "attention",
+                "profil"));
+        }
 
         foreach (var gap in timeline.Gaps.Where(g => !g.Explained))
         {

@@ -264,7 +264,9 @@ data class Overview(
     val displayName: String = "",
     val city: String = "",
     val applicationCount: Int = 0,
-    val readiness: Int = 0,
+    /// Whether the profile carries enough for an application to be worth beginning. False is what
+    /// makes the Übersicht offer the profile as the first step instead of the flow.
+    val canStartApplication: Boolean = false,
     val profileCompleteness: Int = 0,
     val gapsExplained: Int = 0,
     val gapsTotal: Int = 0,

@@ -21,7 +21,6 @@
     <string name="action_delete">Löschen</string>
     <string name="action_correct">Korrigieren</string>
 
-    <string name="overview_of_hundred">von 100</string>
     <string name="overview_profile_complete">Profil vollständig</string>
     <string name="overview_gaps_explained">Lücken erklärt</string>
     <string name="overview_evidence">Nachweise abgelegt</string>
@@ -29,6 +28,11 @@
     <string name="overview_active">Laufende Bewerbungen</string>
     <string name="overview_flow_start">Bewerbung beginnen</string>
     <string name="overview_flow_continue">Bewerbung fortsetzen</string>
+    <string name="overview_first_profile">Mit dem Profil beginnen</string>
+    <string name="overview_next_steps_empty_title">Nichts offen</string>
+    <string name="overview_next_steps_empty_body">Das Profil trägt alles, was ein Lebenslauf braucht. Was an einer einzelnen Bewerbung noch offen ist, steht unten in ihrer Zeile.</string>
+    <string name="overview_loading_title">Einen Moment</string>
+    <string name="overview_loading_body">Bewerbo liest gerade, was Ihrer Bewerbungsmappe noch fehlt.</string>
     <string name="overview_applications_empty_title">Noch keine Bewerbung begonnen</string>
     <string name="overview_applications_empty_body">Beginnen Sie oben eine und fügen Sie eine Anzeige ein. Jede begonnene Bewerbung steht hier mit Arbeitgeber, Referenznummer und Stand, und von hier kommen Sie in eine unfertige zurück.</string>
     <string name="overview_your_locker">Ihre Mappe</string>

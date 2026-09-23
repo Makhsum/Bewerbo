@@ -18,7 +18,9 @@ data class AppState(
     val writer: String = "regeln",
     val profile: ProfileView? = null,
     val timeline: Timeline = Timeline(),
-    val overview: Overview = Overview(),
+    /// Null until it has been fetched. An empty default would have the Übersicht answer "nothing
+    /// outstanding" over a profile it has not read yet, and offer a first step it then changes.
+    val overview: Overview? = null,
     val posting: PostingView? = null,
     val match: MatchView? = null,
     val application: ApplicationView? = null,

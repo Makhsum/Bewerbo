@@ -3,6 +3,7 @@ package de.bewerbo.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import de.bewerbo.app.Destination
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
@@ -28,7 +31,6 @@ import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.IconRow
 import de.bewerbo.app.ui.components.Meter
 import de.bewerbo.app.ui.components.PillTone
-import de.bewerbo.app.ui.components.ReadinessRing
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.icons.BewerboIcons
@@ -36,13 +38,19 @@ import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
 /**
- * Übersicht — how ready the Bewerbungsmappe is, what would make it readier, and every application
- * the user has started with what each of them still needs.
+ * Übersicht — what the Bewerbungsmappe still needs, what it is made of, and every application the
+ * user has started with what each of them still needs.
  *
- * The score is only useful because every point of it is attributable: the three meters below it
- * are what it is made of, and each "Nächster Schritt" deep-links to the screen that closes it.
- * An application's own steps work the same way, and so does the application itself — this is the
- * one screen from which a user with several employers gets back into an unfinished one.
+ * It opens with ONE first step, because the screen a user sees before they have entered anything is
+ * the screen that has to say where to begin. Which step that is depends on the profile: without a
+ * Berufserfahrung there is no Lebenslauf to produce, so the first step is the profile and the flow
+ * is offered beside it rather than as the thing to do — see `canStartApplication`.
+ *
+ * Under it stands what is outstanding. That used to be a readiness score out of 100 over three
+ * meters, and a score says nothing a user can act on: each "Nächster Schritt" deep-links to the
+ * screen that closes it, and the meters stay as the counted things they are. An application's own
+ * steps work the same way, and so does the application itself — this is the one screen from which a
+ * user with several employers gets back into an unfinished one.
  *
  * It is also the ONE way into the flow that produces an application, now that its steps are no
  * longer on the bottom bar: [flowLabel] says whether the path is being begun or picked up, and
@@ -77,93 +85,97 @@ fun OverviewScreen(
         item {
             Column {
                 Text(stringResource(R.string.nav_overview), style = MaterialTheme.typography.headlineLarge)
-                Text(
-                    listOfNotNull(
-                        overview.displayName.ifBlank { null },
-                        overview.city.ifBlank { null },
-                        pluralStringResource(
-                            R.plurals.overview_application_count,
-                            overview.applicationCount, overview.applicationCount,
-                        ),
-                    ).joinToString("  ·  "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.muted,
-                )
-            }
-        }
-
-        item {
-            BewerboCard(Modifier.testTag("overview_readiness_card")) {
-                SectionLabel(stringResource(R.string.overview_mappe))
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(top = Space.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ReadinessRing(
-                        overview.readiness,
-                        stringResource(R.string.overview_of_hundred),
-                        Modifier.testTag("overview_readiness_ring"),
+                if (overview != null) {
+                    Text(
+                        listOfNotNull(
+                            overview.displayName.ifBlank { null },
+                            overview.city.ifBlank { null },
+                            pluralStringResource(
+                                R.plurals.overview_application_count,
+                                overview.applicationCount, overview.applicationCount,
+                            ),
+                        ).joinToString("  ·  "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
                     )
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .padding(start = Space.m),
-                        verticalArrangement = Arrangement.spacedBy(Space.s),
-                    ) {
-                        Meter(
-                            stringResource(R.string.overview_profile_complete),
-                            "${overview.profileCompleteness} %",
-                            overview.profileCompleteness / 100f,
-                            if (overview.profileCompleteness >= 80) PillTone.Success else PillTone.Attention,
-                            Modifier.testTag("overview_meter_profile"),
-                        )
-                        Meter(
-                            stringResource(R.string.overview_gaps_explained),
-                            "${overview.gapsExplained} / ${overview.gapsTotal}",
-                            if (overview.gapsTotal == 0) 1f else {
-                                overview.gapsExplained.toFloat() / overview.gapsTotal
-                            },
-                            if (overview.gapsExplained == overview.gapsTotal) {
-                                PillTone.Success
-                            } else PillTone.Attention,
-                            Modifier.testTag("overview_meter_gaps"),
-                            empty = overview.gapsTotal == 0,
-                        )
-                        Meter(
-                            stringResource(R.string.overview_evidence),
-                            "${overview.evidenceOnFile} / ${overview.evidenceExpected}",
-                            if (overview.evidenceExpected == 0) 1f else {
-                                overview.evidenceOnFile.toFloat() / overview.evidenceExpected
-                            },
-                            if (overview.evidenceOnFile == overview.evidenceExpected) {
-                                PillTone.Success
-                            } else PillTone.Attention,
-                            Modifier.testTag("overview_meter_evidence"),
-                            empty = overview.evidenceExpected == 0,
-                        )
-                    }
                 }
             }
         }
 
-        // The way onto the path, above the fold and before anything the user could read first. The
-        // steps used to be tabs, so "where do I start" was answered by knowing the order of them;
-        // this is the answer on screen.
+        // Everything below says what is outstanding and what to do first, and neither is known until
+        // the Übersicht has been fetched. Drawn from an empty default they read as answers — "nothing
+        // outstanding" over a profile with nothing in it, and a first step that then changes under
+        // the user's finger. So until it arrives the screen says that it is fetching, which is the
+        // one thing that is true: a blank first screen tells a new user no more than a wrong one.
+        if (overview == null) {
+            item {
+                Callout(
+                    icon = BewerboIcons.Refresh,
+                    title = stringResource(R.string.overview_loading_title),
+                    body = stringResource(R.string.overview_loading_body),
+                    modifier = Modifier.testTag("overview_loading"),
+                )
+            }
+            return@LazyColumn
+        }
+
+        // The one first step, above everything the user could read first. The steps used to be tabs,
+        // so "where do I start" was answered by knowing the order of them; this is the answer on
+        // screen. A profile with no Berufserfahrung in it cannot produce a Lebenslauf, so beginning
+        // an application there leads to a path that cannot finish — the profile is the first step
+        // then, and the flow stands beside it for the user who wants to read a posting first.
         item {
-            Button(
-                onClick = onOpenFlow,
-                modifier = Modifier
+            val profileFirst = !overview.canStartApplication
+
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                if (profileFirst) {
+                    Button(
+                        onClick = { navigate(Destination.Profile.route) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("overview_btn_profile"),
+                    ) {
+                        Icon(BewerboIcons.Person, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.overview_first_profile),
+                            modifier = Modifier.padding(start = Space.s),
+                        )
+                    }
+                }
+
+                // The flow keeps its place and its tag either way — it is the only way in, and a
+                // user who wants to read a posting before filling anything in must still get there.
+                // What changes is whether it is the step being offered or the one standing beside it.
+                val flowContent: @Composable RowScope.() -> Unit = {
+                    Icon(BewerboIcons.Posting, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(stringResource(flowLabel), modifier = Modifier.padding(start = Space.s))
+                }
+                val flowModifier = Modifier
                     .fillMaxWidth()
-                    .testTag("overview_btn_flow"),
-            ) {
-                Icon(BewerboIcons.Posting, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(flowLabel), modifier = Modifier.padding(start = Space.s))
+                    .testTag("overview_btn_flow")
+
+                if (profileFirst) {
+                    OutlinedButton(onClick = onOpenFlow, modifier = flowModifier, content = flowContent)
+                } else {
+                    Button(onClick = onOpenFlow, modifier = flowModifier, content = flowContent)
+                }
             }
         }
 
-        if (overview.nextSteps.isNotEmpty()) {
+        // What is outstanding, said before what it is measured out of. The card is announced even at
+        // none, for the reason the application list is: a user has to be able to see that this is
+        // where it would stand.
+        if (overview.nextSteps.isEmpty()) {
+            item {
+                Callout(
+                    icon = BewerboIcons.Anabin,
+                    title = stringResource(R.string.overview_next_steps_empty_title),
+                    body = stringResource(R.string.overview_next_steps_empty_body),
+                    tone = PillTone.Success,
+                    modifier = Modifier.testTag("overview_next_steps_empty"),
+                )
+            }
+        } else {
             item {
                 BewerboCard {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -188,6 +200,50 @@ fun OverviewScreen(
                             onClick = { navigate(step.target) },
                         )
                     }
+                }
+            }
+        }
+
+        item {
+            BewerboCard(Modifier.testTag("overview_readiness_card")) {
+                SectionLabel(stringResource(R.string.overview_mappe))
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    Meter(
+                        stringResource(R.string.overview_profile_complete),
+                        "${overview.profileCompleteness} %",
+                        overview.profileCompleteness / 100f,
+                        if (overview.profileCompleteness >= 80) PillTone.Success else PillTone.Attention,
+                        Modifier.testTag("overview_meter_profile"),
+                    )
+                    Meter(
+                        stringResource(R.string.overview_gaps_explained),
+                        "${overview.gapsExplained} / ${overview.gapsTotal}",
+                        if (overview.gapsTotal == 0) 1f else {
+                            overview.gapsExplained.toFloat() / overview.gapsTotal
+                        },
+                        if (overview.gapsExplained == overview.gapsTotal) {
+                            PillTone.Success
+                        } else PillTone.Attention,
+                        Modifier.testTag("overview_meter_gaps"),
+                        empty = overview.gapsTotal == 0,
+                    )
+                    Meter(
+                        stringResource(R.string.overview_evidence),
+                        "${overview.evidenceOnFile} / ${overview.evidenceExpected}",
+                        if (overview.evidenceExpected == 0) 1f else {
+                            overview.evidenceOnFile.toFloat() / overview.evidenceExpected
+                        },
+                        if (overview.evidenceOnFile == overview.evidenceExpected) {
+                            PillTone.Success
+                        } else PillTone.Attention,
+                        Modifier.testTag("overview_meter_evidence"),
+                        empty = overview.evidenceExpected == 0,
+                    )
                 }
             }
         }

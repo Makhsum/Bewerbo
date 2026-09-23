@@ -16,7 +16,6 @@
     <string name="action_delete">Удалить</string>
     <string name="action_correct">Исправить</string>
 
-    <string name="overview_of_hundred">из 100</string>
     <string name="overview_profile_complete">Профиль заполнен</string>
     <string name="overview_gaps_explained">Пробелы объяснены</string>
     <string name="overview_evidence">Подтверждений приложено</string>
@@ -24,6 +23,11 @@
     <string name="overview_active">Активные заявки</string>
     <string name="overview_flow_start">Начать заявку</string>
     <string name="overview_flow_continue">Продолжить заявку</string>
+    <string name="overview_first_profile">Начните с профиля</string>
+    <string name="overview_next_steps_empty_title">Ничего не осталось</string>
+    <string name="overview_next_steps_empty_body">В профиле есть всё, что нужно для Lebenslauf. Что осталось по отдельной заявке, написано ниже в её строке.</string>
+    <string name="overview_loading_title">Одну минуту</string>
+    <string name="overview_loading_body">Bewerbo читает, чего ещё не хватает вашей Bewerbungsmappe.</string>
     <string name="overview_applications_empty_title">Ни одной заявки не начато</string>
     <string name="overview_applications_empty_body">Начните её выше и вставьте вакансию. Каждая начатая заявка появится здесь с работодателем, Referenznummer и текущим состоянием, и отсюда же вы вернётесь к незавершённой.</string>
     <string name="overview_your_locker">Ваша Mappe</string>

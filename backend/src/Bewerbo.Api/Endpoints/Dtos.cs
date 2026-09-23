@@ -96,9 +96,13 @@ public record ActiveApplicationDto(
     Guid Id, string JobTitle, string Company, string Reference, string Status, string? SentAt,
     IReadOnlyList<NextStepDto> OpenSteps);
 
+/// <summary>
+/// The Übersicht. <paramref name="CanStartApplication"/> is whether the profile carries enough for
+/// an application to be worth beginning, which is what decides the one first step the screen offers.
+/// </summary>
 public record OverviewDto(
     string DisplayName, string City, int ApplicationCount,
-    int Readiness, int ProfileCompleteness,
+    bool CanStartApplication, int ProfileCompleteness,
     int GapsExplained, int GapsTotal,
     int EvidenceOnFile, int EvidenceExpected,
     IReadOnlyList<NextStepDto> NextSteps,

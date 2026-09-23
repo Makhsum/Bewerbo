@@ -573,6 +573,51 @@ public class DomainRuleTests
         Assert.Equal(0, ReadinessService.Completeness(new Domain.Profile()));
     }
 
+    [Fact]
+    public void An_empty_profile_is_told_what_is_outstanding_and_is_not_sent_to_start_an_application()
+    {
+        // The first screen a new user sees used to offer a score of 0 out of 100 and, as its one
+        // action, an application the empty profile cannot produce a Lebenslauf for.
+        var profile = new Domain.Profile();
+        var overview = ReadinessService.Build(
+            profile, TimelineService.Build(profile, new DateOnly(2026, 9, 23)), []);
+
+        Assert.False(overview.CanStartApplication);
+        Assert.All(overview.NextSteps, s => Assert.Equal("profil", s.Target));
+        Assert.Equal(["person", "beruf"], overview.NextSteps.Select(s => s.Key));
+    }
+
+    [Fact]
+    public void A_profile_with_no_name_and_no_Anschrift_has_the_Briefkopf_outstanding()
+    {
+        // Half of Completeness is the person's own details, and none of it produced a step — so the
+        // Übersicht read "nothing outstanding" over a profile that cannot address a letter.
+        var profile = SampleProfile();
+        profile.FirstName = "";
+        profile.Street = "";
+        profile.Email = "olena.kovalchuk@example.de";
+
+        var steps = ReadinessService.Build(
+            profile, TimelineService.Build(profile, new DateOnly(2026, 9, 23)), []).NextSteps;
+
+        var step = Assert.Single(steps, s => s.Key == "person");
+        Assert.Contains("Name", step.Detail);
+        Assert.Contains("Anschrift", step.Detail);
+        // An Email is enough to be reachable, so the Kontakt is not outstanding.
+        Assert.DoesNotContain("Kontakt", step.Detail);
+    }
+
+    [Fact]
+    public void One_Berufserfahrung_is_what_makes_an_application_worth_beginning()
+    {
+        var profile = SampleProfile();
+        var overview = ReadinessService.Build(
+            profile, TimelineService.Build(profile, new DateOnly(2026, 9, 23)), []);
+
+        Assert.True(overview.CanStartApplication);
+        Assert.DoesNotContain(overview.NextSteps, s => s.Key == "beruf");
+    }
+
     // -- gaps ------------------------------------------------------------------------------------------
 
     [Fact]

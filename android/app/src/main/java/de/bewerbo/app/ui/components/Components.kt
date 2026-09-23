@@ -1,7 +1,6 @@
 package de.bewerbo.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,15 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import de.bewerbo.app.ui.LocalUiLanguage
@@ -215,42 +209,6 @@ fun Meter(
                     .clip(RoundedCornerShape(3.dp))
                     .background(bar),
             )
-        }
-    }
-}
-
-/// The readiness ring: one number, and the arc that says how far along it is.
-@Composable
-fun ReadinessRing(value: Int, caption: String, modifier: Modifier = Modifier) {
-    val colors = LocalSemanticColors.current
-    val ring = MaterialTheme.colorScheme.primary
-    val track = MaterialTheme.colorScheme.surfaceVariant
-
-    Box(
-        modifier
-            .size(96.dp)
-            .semantics { contentDescription = "$value / 100" },
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(96.dp)) {
-            val stroke = 8.dp.toPx()
-            val inset = stroke / 2
-            val arcSize = Size(size.width - stroke, size.height - stroke)
-            drawArc(
-                color = track, startAngle = -90f, sweepAngle = 360f, useCenter = false,
-                topLeft = Offset(inset, inset), size = arcSize,
-                style = Stroke(width = stroke, cap = StrokeCap.Round),
-            )
-            drawArc(
-                color = ring, startAngle = -90f, sweepAngle = 360f * (value / 100f),
-                useCenter = false,
-                topLeft = Offset(inset, inset), size = arcSize,
-                style = Stroke(width = stroke, cap = StrokeCap.Round),
-            )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$value", style = MaterialTheme.typography.headlineLarge, color = ring)
-            Text(caption, style = MaterialTheme.typography.labelSmall, color = colors.muted)
         }
     }
 }
