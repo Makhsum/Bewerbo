@@ -207,6 +207,8 @@
     <string name="posting_confidence_check">Prüfen</string>
     <string name="posting_correct_fields">Felder korrigieren</string>
     <string name="posting_no_span">Ohne Hervorhebung gezeigt: die zitierten Worte stehen so nicht im Text.</string>
+    <string name="posting_evidence_hint">Tippen Sie auf eine hervorgehobene Stelle oder auf ein Feld darunter, um das jeweils andere zu sehen.</string>
+    <string name="posting_field_no_passage">–</string>
     <string name="posting_reference_note">Das ist die Referenznummer, sie kommt in die Betreffzeile des Briefes</string>
     <string name="posting_employer_type">Arbeitgebertyp</string>
     <string name="posting_employer_type_note">bestimmt Foto und Register</string>

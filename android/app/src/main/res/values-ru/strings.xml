@@ -204,6 +204,8 @@
     <string name="posting_confidence_check">Проверьте</string>
     <string name="posting_correct_fields">Исправить поля</string>
     <string name="posting_no_span">Показано без подсветки: процитированных слов в тексте в таком виде нет.</string>
+    <string name="posting_evidence_hint">Нажмите на выделенный фрагмент или на поле ниже, чтобы увидеть второе.</string>
+    <string name="posting_field_no_passage">–</string>
     <string name="posting_reference_note">Это и есть Referenznummer — она попадёт в строку темы письма</string>
     <string name="posting_employer_type">Тип работодателя</string>
     <string name="posting_employer_type_note">определяет фото и тон</string>

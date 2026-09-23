@@ -227,6 +227,8 @@
     <string name="posting_confidence_check">Check</string>
     <string name="posting_correct_fields">Correct the fields</string>
     <string name="posting_no_span">Shown without a highlight: the quoted words were not found in the text as they stand.</string>
+    <string name="posting_evidence_hint">Tap a highlighted passage, or a field below, to see the other.</string>
+    <string name="posting_field_no_passage">–</string>
     <string name="posting_reference_note">This is the Referenznummer, and it goes into the subject line of the letter</string>
     <string name="posting_employer_type">Type of employer</string>
     <string name="posting_employer_type_note">drives photo and register</string>

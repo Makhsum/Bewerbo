@@ -3,6 +3,7 @@ package de.bewerbo.app.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,13 +27,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.AtsFinding
@@ -161,41 +170,130 @@ private fun LegendDot(color: Color, label: String) {
     }
 }
 
+/// One passage of the posting and the number that ties it to the field it produced. The number is
+/// handed out by the screen, not by the server: it is a reading aid for this one list of fields.
+data class EvidenceMark(val start: Int, val length: Int, val number: Int)
+
 /**
- * The posting's text with the spans the parser read underlined, each carrying its marker number.
+ * The posting's text with the passages the parser read underlined, each carrying its marker number.
  *
- * A span is only drawn where the server found the quote verbatim. Where it did not, the field is
+ * The number is the whole point: a highlight on its own says "something was read here", and the
+ * user still cannot tell which of the six fields below came out of it. Tapping a passage names its
+ * field; the field, selected, is what makes the other passages step back.
+ *
+ * A passage is only drawn where the server found the quote verbatim. Where it did not, the field is
  * simply shown without a highlight — a wrong highlight would tell the user the value came from
  * words it did not come from, which is worse than telling them nothing.
  */
 @Composable
 fun EvidenceText(
     source: String,
-    spans: List<Triple<Int, Int, Int>>,
+    spans: List<EvidenceMark>,
+    selected: Int?,
+    onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val accent = LocalSemanticColors.current.accent
-    val highlight = LocalSemanticColors.current.accentTint
+    val colors = LocalSemanticColors.current
+    val accent = colors.accent
+    val highlight = colors.accentTint
+    val muted = colors.muted
+
+    val marked = remember(source, spans) { markUp(source, spans) }
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
     val text = buildAnnotatedString {
-        append(source)
-        spans.forEach { (start, length, _) ->
-            if (start >= 0 && start + length <= source.length) {
-                addStyle(
-                    SpanStyle(
-                        background = highlight,
-                        color = accent,
-                        fontWeight = FontWeight.Bold,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                    start, start + length,
-                )
-            }
+        append(marked.text)
+        marked.passages.forEach { passage ->
+            // With one passage selected the rest step back rather than vanish: the user is checking
+            // one field, not losing sight of what else was read.
+            val faded = selected != null && passage.number != selected
+            addStyle(
+                SpanStyle(
+                    background = if (faded) highlight.copy(alpha = 0.4f) else highlight,
+                    color = if (faded) muted else accent,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = if (faded) TextDecoration.None else TextDecoration.Underline,
+                ),
+                passage.words.first, passage.words.last + 1,
+            )
+            addStyle(
+                SpanStyle(
+                    background = Color.Transparent,
+                    color = if (faded) muted else accent,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = MarkerSize,
+                    baselineShift = BaselineShift.Superscript,
+                    textDecoration = TextDecoration.None,
+                ),
+                passage.marker.first, passage.marker.last + 1,
+            )
         }
     }
 
-    Text(text, style = MaterialTheme.typography.bodySmall, modifier = modifier)
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        onTextLayout = { layout = it },
+        // Keyed on the marked-up text rather than on the selection: the tappable ranges move only
+        // when the posting or its passages change, and restarting the gesture detector on every
+        // selection would drop the tap that caused it.
+        modifier = modifier.pointerInput(marked) {
+            detectTapGestures { position ->
+                val offset = layout?.getOffsetForPosition(position) ?: return@detectTapGestures
+                marked.passages
+                    .firstOrNull { offset >= it.words.first && offset <= it.marker.last }
+                    ?.let { onSelect(it.number) }
+            }
+        },
+    )
 }
+
+/// Where a passage sits in the marked-up text: the words themselves, and the number spliced in
+/// behind them.
+private data class MarkedPassage(val number: Int, val words: IntRange, val marker: IntRange)
+
+private data class MarkedSource(val text: String, val passages: List<MarkedPassage>)
+
+/**
+ * Splices the marker numbers into the source text.
+ *
+ * It happens in one pass, before any styling, because every digit inserted moves everything after
+ * it along: keeping the offsets in a single place is what stops a number being drawn over the
+ * wrong words.
+ */
+private fun markUp(source: String, spans: List<EvidenceMark>): MarkedSource {
+    val out = StringBuilder(source.length + spans.size * 2)
+    val passages = mutableListOf<MarkedPassage>()
+    var cursor = 0
+
+    spans
+        .filter { it.start >= 0 && it.length > 0 && it.start + it.length <= source.length }
+        .sortedBy { it.start }
+        .forEach { mark ->
+            // Two fields read out of the same words would stack their numbers on one another. The
+            // earlier passage keeps them; the other field simply shows no number.
+            if (mark.start < cursor) return@forEach
+
+            out.append(source, cursor, mark.start)
+            val wordsFrom = out.length
+            out.append(source, mark.start, mark.start + mark.length)
+            val markerFrom = out.length
+            out.append(mark.number)
+
+            passages += MarkedPassage(
+                mark.number,
+                wordsFrom until markerFrom,
+                markerFrom until out.length,
+            )
+            cursor = mark.start + mark.length
+        }
+
+    out.append(source, cursor, source.length)
+    return MarkedSource(out.toString(), passages)
+}
+
+/// The marker rides above the line, so it has to be small enough not to open the line spacing.
+private val MarkerSize = 9.sp
 
 /**
  * One requirement of the Anforderungsabgleich, in one of exactly three states.
