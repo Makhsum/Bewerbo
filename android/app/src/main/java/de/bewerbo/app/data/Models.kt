@@ -152,6 +152,8 @@ data class Requirement(
     val state: String,
     val evidence: String = "",
     val action: String = "",
+    /// For offen: the language entry whose Nachweis closes this requirement.
+    val language: String = "",
 )
 
 @Serializable

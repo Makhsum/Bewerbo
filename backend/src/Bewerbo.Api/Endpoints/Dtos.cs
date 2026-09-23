@@ -55,7 +55,7 @@ public record PostingDto(
 
 public record CorrectFieldRequest(string Key, string Value);
 
-public record RequirementDto(string Text, string State, string Evidence, string Action);
+public record RequirementDto(string Text, string State, string Evidence, string Action, string Language = "");
 
 public record MatchDto(
     Guid PostingId, string Company, string Reference,

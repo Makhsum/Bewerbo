@@ -197,6 +197,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(match = api.match(posting.id)) }
     }
 
+    /**
+     * Files the Nachweis an open requirement is waiting for, from the Abgleich itself.
+     *
+     * Two records, one action: the document goes into the Mappe so the Anlagenverzeichnis can name
+     * it, AND the language's `certificateOnFile` is set — because that flag, not the presence of a
+     * document, is what the Abgleich, the Übersicht and the Anschreiben read. Writing only one of
+     * them is what the old "Nachweis hochladen" chip did by sending the user to the Mappe: the
+     * document was filed, the flag stayed false, and the requirement stayed open for ever.
+     *
+     * The Abgleich is re-run at the end, so the count on screen is the one the profile now holds.
+     */
+    fun fileCertificate(language: String, document: StoredDocument) = launch("document") {
+        val id = profileId() ?: return@launch
+        val languages = _state.value.profile?.languages.orEmpty()
+
+        api.addDocument(id, document)
+        val profile = api.saveLanguages(
+            id,
+            languages.map { if (it.language == language) it.copy(certificateOnFile = true) else it },
+        )
+        _state.update { it.copy(profile = profile) }
+
+        _state.value.posting?.let { posting ->
+            _state.update { it.copy(match = api.match(posting.id)) }
+        }
+        refreshDerived()
+    }
+
     // -- application -----------------------------------------------------------------------
 
     fun generateLetter(tone: String) = launch("letter") {

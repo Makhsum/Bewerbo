@@ -97,7 +97,7 @@ public static class PostingEndpoints
                 posting.Id, posting.Company, posting.Reference,
                 match.Covered, match.Total, match.Percent,
                 match.Requirements.Select(r => new RequirementDto(
-                    r.Text, StateName(r.State), r.Evidence, r.Action)).ToList()));
+                    r.Text, StateName(r.State), r.Evidence, r.Action, r.Language)).ToList()));
         });
     }
 

@@ -92,6 +92,8 @@
     <string name="match_open">Ещё открыто · %1$d</string>
     <string name="match_not_proven">Не подтверждено · %1$d</string>
     <string name="match_not_proven_note">Ничего из этого в Anschreiben не утверждается.</string>
+    <string name="match_file_title">Добавить Nachweis</string>
+    <string name="match_file_body">Документ попадёт в вашу Mappe, и это требование будет засчитано как подтверждённое.</string>
     <string name="match_guard_body">Вы вставили объявление о вакансии, поэтому Bewerbo пишет Anschreiben. Motivationsschreiben пишут для учёбы и стипендии — присланный сюда, он сразу выдаёт в вас иностранца.</string>
     <string name="match_generate_letter">Создать Anschreiben</string>
 

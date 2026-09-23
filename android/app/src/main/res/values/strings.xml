@@ -121,6 +121,8 @@
     <string name="match_open">Still open · %1$d</string>
     <string name="match_not_proven">Not proven · %1$d</string>
     <string name="match_not_proven_note">None of these is claimed in the Anschreiben.</string>
+    <string name="match_file_title">File the Nachweis</string>
+    <string name="match_file_body">The document goes into your Mappe and this requirement counts as proven.</string>
     <string name="match_guard_title">Anschreiben, not Motivationsschreiben</string>
     <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to Studium and Stipendium — sent here, it marks you out as foreign.</string>
     <string name="match_tone">Ton des Anschreibens</string>

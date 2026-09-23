@@ -17,7 +17,13 @@ public record MatchedRequirement(
     /// its own to say — what holds for every nicht_belegt requirement alike ("wird im Anschreiben
     /// nicht behauptet") is said once by the screen that groups them, not repeated on every row.
     /// </summary>
-    string Action);
+    string Action,
+    /// <summary>
+    /// For offen: the language entry whose Nachweis closes this requirement, so the Abgleich can
+    /// file that document instead of sending the user off to look for the right one. Empty
+    /// everywhere else — a requirement with no action has nothing for the action to act on.
+    /// </summary>
+    string Language = "");
 
 public record MatchResult(
     IReadOnlyList<MatchedRequirement> Requirements,
@@ -124,9 +130,12 @@ public static class RequirementMatcher
         return skill.CertificateOnFile
             ? new MatchedRequirement(requirement, RequirementState.Belegt,
                 $"{skill.Language} {skill.Level} · Nachweis in der Mappe", "")
-            // Stated but not evidenced: the app can close this, so it asks rather than dropping it.
+            // Stated but not evidenced: the app can close this, so it asks rather than dropping it
+            // — and names the language, because the asking is only worth anything if the Abgleich
+            // can then file the right Nachweis without the user hunting for it.
             : new MatchedRequirement(requirement, RequirementState.Offen,
-                "Im Profil angegeben, Zertifikat fehlt in den Anlagen", "Nachweis hochladen");
+                "Im Profil angegeben, Zertifikat fehlt in den Anlagen", "Nachweis hochladen",
+                skill.Language);
     }
 
     private static readonly string[] Levels = ["A1", "A2", "B1", "B2", "C1", "C2"];

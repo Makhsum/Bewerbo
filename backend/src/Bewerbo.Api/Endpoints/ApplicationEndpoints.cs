@@ -34,7 +34,7 @@ public static class ApplicationEndpoints
                 Tone = tone,
                 LetterJson = JsonSerializer.Serialize(letter),
                 MatchJson = JsonSerializer.Serialize(match.Requirements.Select(r =>
-                    new RequirementDto(r.Text, PostingEndpoints.StateName(r.State), r.Evidence, r.Action))),
+                    new RequirementDto(r.Text, PostingEndpoints.StateName(r.State), r.Evidence, r.Action, r.Language))),
             };
             db.Applications.Add(application);
             await db.SaveChangesAsync();

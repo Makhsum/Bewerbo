@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -25,13 +28,17 @@ import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.Requirement
+import de.bewerbo.app.data.StoredDocument
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
+import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.Meter
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.RequirementRow
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
+import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -49,12 +56,12 @@ private val TONES = listOf("Klassisch", "Sachlich", "Modern")
 fun MatchScreen(
     state: AppState,
     viewModel: AppViewModel,
-    navigate: (String) -> Unit,
     onGenerated: () -> Unit,
 ) {
     val colors = LocalSemanticColors.current
     val match = state.match
     var tone by remember { mutableIntStateOf(1) }
+    var filing by remember { mutableStateOf<Requirement?>(null) }
 
     LazyColumn(
         Modifier
@@ -120,14 +127,14 @@ fun MatchScreen(
             item {
                 BewerboCard(Modifier.testTag("match_group_offen")) {
                     offen.forEach { requirement ->
-                        // "Nachweis hochladen" leads to the Mappe, which is where a Nachweis is
-                        // recorded — the same place the Übersicht's own next step for a missing
-                        // Sprachzertifikat points at. It used to be a tappable chip with an empty
-                        // lambda, so the one row on this screen offering a way forward was inert.
+                        // "Nachweis hochladen" files the document HERE. It used to navigate to the
+                        // Mappe, which left the user to work out which document had been meant —
+                        // and filing it there closed nothing, because the Abgleich reads the
+                        // language's own certificateOnFile flag and the Mappe never set it.
                         RequirementRow(
                             requirement,
                             match.requirements.indexOf(requirement),
-                            onAction = { navigate("mappe") },
+                            onAction = { filing = requirement },
                         )
                     }
                 }
@@ -206,4 +213,99 @@ fun MatchScreen(
             }
         }
     }
+
+    filing?.let { requirement ->
+        FileCertificateDialog(
+            language = requirement.language,
+            level = state.profile?.languages
+                .orEmpty()
+                .firstOrNull { it.language == requirement.language }
+                ?.level
+                .orEmpty(),
+            onDismiss = { filing = null },
+            onSave = { document ->
+                viewModel.fileCertificate(requirement.language, document)
+                filing = null
+            },
+        )
+    }
+}
+
+/**
+ * Files the Nachweis an open requirement is waiting for, without leaving the Abgleich.
+ *
+ * The kind is not offered: a row asking for a Sprachnachweis is asking for a Sprachnachweis, and a
+ * selector whose answer is already known is one more thing to read. The title is prefilled with the
+ * language and the level the profile states, so the document the Anlagenverzeichnis will name says
+ * which certificate it is — and it stays German in every locale, like the kinds in the Mappe,
+ * because it is a line the recruiter reads.
+ */
+@Composable
+private fun FileCertificateDialog(
+    language: String,
+    level: String,
+    onDismiss: () -> Unit,
+    onSave: (StoredDocument) -> Unit,
+) {
+    var title by remember(language) {
+        mutableStateOf(
+            listOfNotNull("Sprachnachweis", language.ifBlank { null }, level.ifBlank { null })
+                .joinToString(" "),
+        )
+    }
+    var note by remember(language) { mutableStateOf("") }
+    var pages by remember(language) { mutableStateOf("1") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        // A dialog is its own window: without its own flag nothing inside it has a resource-id.
+        modifier = Modifier.exposeTestTags().testTag("match_file_dialog"),
+        title = { Text(stringResource(R.string.match_file_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                Text(
+                    stringResource(R.string.match_file_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalSemanticColors.current.muted,
+                )
+                LabelledField(
+                    label = stringResource(R.string.locker_field_title),
+                    value = title,
+                    onValueChange = { title = it },
+                    testTag = "match_file_input_title",
+                )
+                LabelledField(
+                    label = stringResource(R.string.locker_field_note),
+                    value = note,
+                    onValueChange = { note = it },
+                    testTag = "match_file_input_note",
+                )
+                LabelledField(
+                    label = stringResource(R.string.locker_field_pages),
+                    value = pages,
+                    onValueChange = { pages = it },
+                    testTag = "match_file_input_pages",
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSave(
+                        StoredDocument(
+                            title = title, kind = "Sprachnachweis", note = note,
+                            pageCount = pages.toIntOrNull() ?: 1,
+                        ),
+                    )
+                },
+                modifier = Modifier.testTag("match_file_confirm"),
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("match_file_cancel"),
+            ) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }
