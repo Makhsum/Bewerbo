@@ -124,7 +124,7 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                     .imePadding(),
             ) {
                 composable(Destination.Overview.route) {
-                    OverviewScreen(state, viewModel) { route -> navController.navigate(route) }
+                    OverviewScreen(state, viewModel) { route -> navController.openFromOverview(route) }
                 }
                 composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
                 composable(Destination.Posting.route) {
@@ -141,6 +141,22 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                 composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
             }
         }
+    }
+}
+
+/**
+ * Follows a link out of the Übersicht — a next step, an application, the Mappe card.
+ *
+ * Every one of them leads to another TAB, so it has to change tab the way the bar does. A plain
+ * navigate() pushed the destination on top of the Übersicht's own entry instead, and the bar then
+ * had nothing to go back to: tapping "Übersicht" returned the user to the screen they had just
+ * come from, and the list they came from could not be reached again at all.
+ */
+private fun NavHostController.openFromOverview(route: String) {
+    navigate(route) {
+        popUpTo(graph.startDestinationId) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
