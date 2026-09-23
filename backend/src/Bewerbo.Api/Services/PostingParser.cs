@@ -243,8 +243,13 @@ public static partial class PostingParser
         return noun.Length == 0 ? rest : $"{noun} {rest}".Trim();
     }
 
+    /// <summary>
+    /// The semicolon is what a posting reaches for when the items themselves contain commas, so a
+    /// list that used it came back as ONE requirement four items long. It separates here like the
+    /// comma does.
+    /// </summary>
     private static IEnumerable<string> SplitList(string clause) =>
-        Regex.Split(clause, @",\s*|\s+und\s+|\s+sowie\s+")
+        Regex.Split(clause, @"[,;]\s*|\s+und\s+|\s+sowie\s+")
              .Where(p => !string.IsNullOrWhiteSpace(p));
 
     // -- employer type --------------------------------------------------------------------------
@@ -330,7 +335,12 @@ public static partial class PostingParser
     // listed the whole block as one "requirement" — dashes and all — plus a second one cut
     // mid-abbreviation out of "Ihre Bewerbung richten Sie bitte an Frau Dr. <name>". The bullets
     // are BulletRx's job; this pattern is only for the prose form that states them in a sentence.
-    [GeneratedRegex(@"(?:Wir erwarten|Sie bringen mit|Ihr Profil|Das bringen Sie mit|Wir setzen voraus)\s*:?[ \t]*(?<list>[^.!?\r\n]+)",
+    // "Anforderungen" and "Voraussetzungen" are the two words a German posting most often puts over
+    // this list — the first is the word the Anforderungsabgleich is named after — and neither was
+    // here, so a one-paragraph advert naming four Anforderungen produced NO requirements at all and
+    // the Abgleich showed "0 von 0". The verb forms ("Wir setzen voraus") were already covered; it
+    // is the headings that were missing.
+    [GeneratedRegex(@"(?:Wir erwarten|Sie bringen mit|Ihr Profil|Das bringen Sie mit|Wir setzen voraus|Anforderungen|Voraussetzungen)\s*:?[ \t]*(?<list>[^.!?\r\n]+)",
         RegexOptions.IgnoreCase)]
     private static partial Regex ExpectationRx();
 

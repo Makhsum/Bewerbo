@@ -206,6 +206,50 @@ public class DomainRuleTests
     }
 
     [Fact]
+    public void A_one_paragraph_posting_that_names_its_Anforderungen_still_yields_them()
+    {
+        // The whole advert on one line, the list introduced by the word the Abgleich is named
+        // after and separated by semicolons. Neither the heading nor the semicolon was known, so
+        // this posting produced NO requirements and the Abgleich showed "0 von 0" — which reads
+        // to the applicant like "nothing you have counts".
+        var extract = PostingParser.Parse(
+            "Stellenausschreibung: Fachkraft Lagerlogistik (m/w/d), Referenz LOG-2026-11. " +
+            "Die Muster Logistik GmbH, Hauptstrasse 12, 70173 Stuttgart, sucht zum " +
+            "naechstmoeglichen Zeitpunkt eine Fachkraft fuer Lagerlogistik. Anforderungen: " +
+            "abgeschlossene Ausbildung im Bereich Lagerlogistik; Erfahrung mit Gabelstaplern; " +
+            "Deutschkenntnisse ab Niveau B2; Bereitschaft zur Schichtarbeit. " +
+            "Wir bieten eine unbefristete Anstellung.");
+
+        Assert.Equal(
+        [
+            "abgeschlossene Ausbildung im Bereich Lagerlogistik",
+            "Erfahrung mit Gabelstaplern",
+            "Deutschkenntnisse ab Niveau B2",
+            "Bereitschaft zur Schichtarbeit",
+        ], extract.Requirements.Select(r => r.Text));
+    }
+
+    [Fact]
+    public void A_Voraussetzungen_heading_over_bullets_still_leaves_the_bullets_to_their_own_rule()
+    {
+        // The heading forms were added for the prose case only. A heading on its own line must
+        // still not swallow the list under it — the same guarantee the Ihr-Profil case already has.
+        var extract = PostingParser.Parse("""
+            Fachkraft für Lagerlogistik (m/w/d)
+
+            Voraussetzungen:
+            - Abgeschlossene Berufsausbildung im Lager
+            - Bereitschaft zur Schichtarbeit
+            """);
+
+        Assert.Equal(
+        [
+            "Abgeschlossene Berufsausbildung im Lager",
+            "Bereitschaft zur Schichtarbeit",
+        ], extract.Requirements.Select(r => r.Text));
+    }
+
+    [Fact]
     public void The_company_does_not_swallow_the_article_or_the_line_above_it()
     {
         var extract = PostingParser.Parse(Posting);
