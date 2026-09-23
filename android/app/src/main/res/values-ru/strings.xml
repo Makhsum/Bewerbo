@@ -129,6 +129,9 @@
     <string name="application_save_pdf">Сохранить одним PDF</string>
     <string name="application_preview_page">Страница %1$d из %2$d</string>
     <string name="application_preview_pending">Страницы формируются.</string>
+    <string name="application_preview_failed_title">Не удалось загрузить страницы</string>
+    <string name="application_preview_failed_body">Mappe собирается на сервере. Пока он не отвечает, предпросмотр не может показать, что даст этот выбор. Сама заявка при этом не теряется.</string>
+    <string name="application_preview_retry">Загрузить страницы снова</string>
     <string name="application_send_email">Отправить по электронной почте</string>
     <string name="application_why_german_title">Почему это звучит по-немецки</string>
     <string name="application_why_german_body">Именное обращение, Referenznummer в Betreffzeile, никакого »Hiermit bewerbe ich mich« и никакого »Teamplayer« — и письмо отвечает на слова вакансии, а не перечисляет добродетели.</string>

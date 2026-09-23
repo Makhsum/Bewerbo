@@ -31,6 +31,9 @@ data class AppState(
     /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
     /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
     val previewPages: List<android.graphics.Bitmap> = emptyList(),
+    /// The pages could not be fetched. Kept as state rather than left to the error snackbar: that
+    /// one is gone in seconds and the preview would go on standing there empty with no way back.
+    val previewFailed: Boolean = false,
     /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
     val pendingEmail: EmailDraft? = null,
     /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
@@ -359,9 +362,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun refreshPreview(parts: String) = launch("preview") {
         val application = _state.value.application ?: return@launch
-        val file = api.applicationPdf(
-            application.id, parts, getApplication<Application>().previewFile(),
-        )
+
+        // Cleared BEFORE the call, not replaced after it. Pages left over from the previous
+        // selection are a picture of a file the chips no longer describe, and if this call fails
+        // they stay there: the screen then shows a three-page Mappe under a Lebenslauf the user
+        // has just taken out, and the export button sends the other one.
+        _state.update { it.copy(previewPages = emptyList(), previewFailed = false) }
+
+        val file = runCatching {
+            api.applicationPdf(application.id, parts, getApplication<Application>().previewFile())
+        }.onFailure {
+            _state.update { state -> state.copy(previewFailed = true) }
+        }.getOrThrow()
+
         _state.update { it.copy(previewPages = renderPdfPages(file)) }
     }
 

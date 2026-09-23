@@ -144,7 +144,37 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
         // These are the real exported file rasterised, so the page shown is A4-proportioned with
         // the Anschriftenfeld and the date exactly where the renderer put them — which is what lets
         // the inspector overlay, drawn at fractions of the sheet, mean anything.
-        item {
+        //
+        // When they could not be fetched, this place says SO and offers the way back rather than
+        // showing pages — the same shape the Übersicht uses when the start itself could not reach
+        // the server, and for the same reason: the snackbar that said so is long gone. Everything
+        // below stays reachable; it is the preview that failed, not the application.
+        if (state.previewFailed) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                    Callout(
+                        icon = BewerboIcons.Attention,
+                        title = stringResource(R.string.application_preview_failed_title),
+                        body = stringResource(R.string.application_preview_failed_body),
+                        tone = PillTone.Attention,
+                        modifier = Modifier.testTag("application_preview_failed"),
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.refreshPreview(selectedParts.joinToString(",")) },
+                        enabled = state.busy == null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("application_btn_preview_retry"),
+                    ) {
+                        Icon(BewerboIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.application_preview_retry),
+                            modifier = Modifier.padding(start = Space.s),
+                        )
+                    }
+                }
+            }
+        } else item {
             Box(Modifier.testTag("application_preview_pager")) {
                 BewerboCard {
                     if (previewPages.isEmpty()) {

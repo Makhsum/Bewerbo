@@ -135,6 +135,9 @@
     <string name="application_save_pdf">Als ein PDF speichern</string>
     <string name="application_preview_page">Seite %1$d von %2$d</string>
     <string name="application_preview_pending">Die Seiten werden erzeugt.</string>
+    <string name="application_preview_failed_title">Die Seiten konnten nicht geladen werden</string>
+    <string name="application_preview_failed_body">Die Mappe wird auf dem Server zusammengestellt. Solange er nicht antwortet, kann die Vorschau nicht zeigen, was diese Auswahl ergibt. An der Bewerbung selbst geht nichts verloren.</string>
+    <string name="application_preview_retry">Seiten erneut laden</string>
     <string name="application_send_email">Per E-Mail senden</string>
     <string name="application_why_german_title">Warum es deutsch klingt</string>
     <string name="application_why_german_body">Eine namentliche Anrede, die Referenznummer in der Betreffzeile, kein »Hiermit bewerbe ich mich« und kein »Teamplayer« — und das Anschreiben antwortet auf die Worte der Anzeige, statt Tugenden aufzuzählen.</string>
