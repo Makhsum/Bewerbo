@@ -62,6 +62,55 @@ public class DomainRuleTests
         Assert.False(result.Passed);
     }
 
+    // -- a proportion needs a text long enough to have one -----------------------------------------
+
+    [Fact]
+    public void The_Ich_proportion_is_not_reported_on_a_letter_of_three_sentences()
+    {
+        var letter = ShortLetter(
+            "Ich bewerbe mich bei Ihnen. Die Stelle passt zu meiner Arbeit. Ich rufe Sie gern an.");
+
+        var result = TextReview.Run(letter, "Frau Dr. Weber", null);
+
+        // Two of three sentences open with "Ich", so the old check would have raised a hint on a
+        // text that is far too short for the share to mean anything.
+        Assert.DoesNotContain(result.Checks, c => c.Key == "perspektive");
+        Assert.Contains("perspektive", result.NotChecked);
+    }
+
+    [Fact]
+    public void A_check_that_was_left_out_is_not_counted_as_a_hint_and_not_reported_as_passed()
+    {
+        var result = TextReview.Run(ShortLetter("Ich bewerbe mich. Ich kann anfangen."), null, null);
+
+        var perspektive = result.Checks.FirstOrDefault(c => c.Key == "perspektive");
+        Assert.Null(perspektive);
+        Assert.NotEmpty(result.NotChecked);
+    }
+
+    [Fact]
+    public void The_Ich_proportion_is_reported_once_the_letter_is_long_enough()
+    {
+        var letter = ShortLetter(
+            "Ich bewerbe mich bei Ihnen. Ich habe vier Jahre in der Finanzbuchhaltung gearbeitet. " +
+            "Ich habe dort Monatsabschlüsse erstellt. Ich kenne DATEV und SAP. " +
+            "Ich kann im Frühjahr anfangen. Über ein Gespräch freue ich mich.");
+
+        var result = TextReview.Run(letter, "Frau Dr. Weber", null);
+
+        var check = result.Checks.Single(c => c.Key == "perspektive");
+        Assert.Equal("hinweis", check.Verdict);
+        Assert.Equal(["5", "6"], check.DetailArgs);
+        Assert.Empty(result.NotChecked);
+    }
+
+    private static LetterContent ShortLetter(string body) => new()
+    {
+        Salutation = "Sehr geehrte Frau Weber",
+        Subject = "Bewerbung als Bilanzbuchhalterin",
+        Paragraphs = [body],
+    };
+
     // -- DIN 5008 Betreffzeile ---------------------------------------------------------------------
 
     [Fact]

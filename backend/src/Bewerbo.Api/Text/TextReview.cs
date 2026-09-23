@@ -17,7 +17,15 @@ public record ReviewCheck(
     string DetailKind = "",
     IReadOnlyList<string>? DetailArgs = null);
 
-public record ReviewResult(IReadOnlyList<ReviewCheck> Checks, int HintCount)
+/// <summary>
+/// The outcome of the Prüfung. <see cref="NotChecked"/> names the checks that were left out because
+/// the text is too short for them to mean anything — they are not in <see cref="Checks"/> and they
+/// did not pass; the screen says so beside the summary.
+/// </summary>
+public record ReviewResult(
+    IReadOnlyList<ReviewCheck> Checks,
+    int HintCount,
+    IReadOnlyList<string> NotChecked)
 {
     public bool Passed => Checks.All(c => c.Verdict != "fehler");
 }
@@ -28,6 +36,11 @@ public record ReviewResult(IReadOnlyList<ReviewCheck> Checks, int HintCount)
 /// </summary>
 public static class TextReview
 {
+    /// Below this many sentences the share of "Ich" openings is noise rather than a habit: one of
+    /// two is half the letter and says nothing about it. Five is the shortest text where the
+    /// proportion describes how the letter is written.
+    private const int PerspektiveMinSentences = 5;
+
     public static ReviewResult Run(LetterContent letter, string? expectedContact, string? expectedReference)
     {
         var body = string.Join("\n\n", letter.Paragraphs);
@@ -109,14 +122,26 @@ public static class TextReview
             formOk ? [expectedContact ?? letter.Salutation, $"{words}"] : formFaults));
 
         // 4. Ich-/Sie-Perspektive: a letter that opens every sentence with "Ich" reads as a list of
-        //    claims rather than an answer to the posting.
-        var ichOpens = sentences.Count(s => s.TrimStart().StartsWith("Ich", StringComparison.Ordinal));
-        var perspectiveOk = sentences.Count == 0 || ichOpens * 2 <= sentences.Count;
-        checks.Add(new ReviewCheck("perspektive", "Sie-Perspektive überwiegt nicht",
-            perspectiveOk ? "ok" : "hinweis",
-            $"{ichOpens} von {sentences.Count} Sätzen beginnen mit »Ich«",
-            [],
-            "perspektive", [$"{ichOpens}", $"{sentences.Count}"]));
+        //    claims rather than an answer to the posting. This one is a PROPORTION, and a
+        //    proportion needs a text long enough to have one: on three sentences it reports noise
+        //    and spends the reader's attention on it. Under the minimum the check is left out
+        //    instead of answered — and named in NotChecked, because a check that never ran must not
+        //    read as one that passed.
+        var notChecked = new List<string>();
+        if (sentences.Count >= PerspektiveMinSentences)
+        {
+            var ichOpens = sentences.Count(s => s.TrimStart().StartsWith("Ich", StringComparison.Ordinal));
+            var perspectiveOk = ichOpens * 2 <= sentences.Count;
+            checks.Add(new ReviewCheck("perspektive", "Sie-Perspektive überwiegt nicht",
+                perspectiveOk ? "ok" : "hinweis",
+                $"{ichOpens} von {sentences.Count} Sätzen beginnen mit »Ich«",
+                [],
+                "perspektive", [$"{ichOpens}", $"{sentences.Count}"]));
+        }
+        else
+        {
+            notChecked.Add("perspektive");
+        }
 
         // 5. Anschreiben, not Motivationsschreiben.
         var isMotivation = full.Contains("Motivationsschreiben", StringComparison.OrdinalIgnoreCase)
@@ -131,7 +156,7 @@ public static class TextReview
             isMotivation ? "anschreiben_fehler" : "anschreiben_ok"));
 
         var hints = checks.Count(c => c.Verdict == "hinweis");
-        return new ReviewResult(checks, hints);
+        return new ReviewResult(checks, hints, notChecked);
     }
 
     private static List<string> SplitSentences(string text) =>

@@ -289,6 +289,7 @@
     <string name="application_regenerate">Write it again</string>
     <string name="application_review">Text check</string>
     <string name="application_review_clean">No hints</string>
+    <string name="application_review_unchecked">Not fully checked</string>
     <string name="application_ats">Machine readability</string>
     <string name="application_ats_passed">Passed</string>
     <string name="application_ats_failed">Failed</string>

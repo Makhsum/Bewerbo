@@ -242,6 +242,9 @@ data class Review(
     val passed: Boolean = false,
     val hintCount: Int = 0,
     val checks: List<ReviewCheck> = emptyList(),
+    /// The keys of the checks the backend left out because the text is too short for them to say
+    /// anything. They are not in [checks], and the summary must not read as a clean pass over them.
+    val notChecked: List<String> = emptyList(),
 )
 
 /// One machine-readability check. [verdict] is "ok", "fehler" or "ungeprueft"; the third one says

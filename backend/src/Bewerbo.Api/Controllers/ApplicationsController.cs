@@ -87,7 +87,8 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var review = TextReview.Run(letter, posting.ContactName, posting.Reference);
         return Ok(new ReviewDto(review.Passed, review.HintCount,
             review.Checks.Select(c => new ReviewCheckDto(c.Key, c.Title, c.Verdict, c.Detail, c.Items,
-                c.DetailKind, c.DetailArgs)).ToList()));
+                c.DetailKind, c.DetailArgs)).ToList(),
+            review.NotChecked));
     }
 
     // Maschinenlesbarkeit: render the real file and read it back.

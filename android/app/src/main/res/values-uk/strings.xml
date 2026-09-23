@@ -264,6 +264,7 @@
     <string name="application_regenerate">Написати ще раз</string>
     <string name="application_review">Перевірка тексту</string>
     <string name="application_review_clean">Без зауважень</string>
+    <string name="application_review_unchecked">Перевірено не повністю</string>
     <string name="application_ats">Машиночитаність</string>
     <string name="application_ats_passed">Пройдено</string>
     <string name="application_ats_failed">Не пройдено</string>

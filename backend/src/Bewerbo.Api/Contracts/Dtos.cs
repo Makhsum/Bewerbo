@@ -113,7 +113,16 @@ public record ReviewCheckDto(
     string DetailKind = "",
     IReadOnlyList<string>? DetailArgs = null);
 
-public record ReviewDto(bool Passed, int HintCount, IReadOnlyList<ReviewCheckDto> Checks);
+/// <summary>
+/// The Prüfung. <paramref name="NotChecked"/> names the checks that were left out because the text
+/// is too short for them to say anything — they are not in <paramref name="Checks"/>, so the screen
+/// must not report the rest as a clean pass.
+/// </summary>
+public record ReviewDto(
+    bool Passed,
+    int HintCount,
+    IReadOnlyList<ReviewCheckDto> Checks,
+    IReadOnlyList<string> NotChecked);
 
 /// <summary>
 /// One machine-readability check. <paramref name="Verdict"/> is "ok", "fehler" or "ungeprueft" —
