@@ -227,7 +227,7 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             "ausbildung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_education)) }
                 profile?.education?.forEachIndexed { index, entry ->
-                    item { EducationCard(entry, index, state, viewModel) }
+                    item { EducationCard(entry, index, profile.education, state, viewModel) }
                 }
                 item { AddEducationButton(state, viewModel) }
             }
@@ -455,6 +455,7 @@ private fun ExperienceCard(
 private fun EducationCard(
     entry: de.bewerbo.app.data.Education,
     index: Int,
+    all: List<Education>,
     state: AppState,
     viewModel: AppViewModel,
 ) {
@@ -509,6 +510,28 @@ private fun EducationCard(
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = Space.s),
             )
+            // Confirmed is not permanent. An equivalence the user later doubts has to be
+            // retractable, or the only safe thing they could do with this feature is avoid it.
+            OutlinedButton(
+                onClick = {
+                    viewModel.saveEducation(
+                        all.mapIndexed { i, other ->
+                            if (i == index) {
+                                other.copy(
+                                    equivalenceConfirmed = false,
+                                    germanEquivalent = null,
+                                    anabinAssessment = null,
+                                )
+                            } else other
+                        },
+                    )
+                },
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("profile_recognition_withdraw_$index"),
+            ) {
+                Text(stringResource(R.string.profile_anabin_withdraw))
+            }
         }
 
         OutlinedButton(
@@ -524,19 +547,51 @@ private fun EducationCard(
             )
         }
 
+        // A lookup result is an OFFER, not a fact. The product rule is that no equivalence is
+        // written into a document until the user has confirmed it, and until now there was no
+        // control that could confirm one — the result was shown and could never be acted on, so
+        // equivalenceConfirmed stayed false for the lifetime of every profile.
+        if (state.degrees.isNotEmpty() && !entry.equivalenceConfirmed) {
+            Text(
+                stringResource(R.string.profile_anabin_confirm_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier.padding(top = Space.s),
+            )
+        }
         state.degrees.take(3).forEachIndexed { degreeIndex, degree ->
             Row(
                 Modifier
+                    .fillMaxWidth()
                     .padding(top = Space.s)
                     .testTag("profile_recognition_result_$degreeIndex"),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(degree.foreignDegree, style = MaterialTheme.typography.bodyMedium)
                     Text(
                         "${degree.germanEquivalent}  ·  anabin ${degree.anabinRating}",
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.muted,
                     )
+                }
+                Button(
+                    onClick = {
+                        viewModel.saveEducation(
+                            all.mapIndexed { i, other ->
+                                if (i == index) {
+                                    other.copy(
+                                        germanEquivalent = degree.germanEquivalent,
+                                        anabinAssessment = degree.anabinRating,
+                                        equivalenceConfirmed = true,
+                                    )
+                                } else other
+                            },
+                        )
+                    },
+                    modifier = Modifier.testTag("profile_recognition_confirm_$degreeIndex"),
+                ) {
+                    Text(stringResource(R.string.profile_anabin_confirm))
                 }
             }
         }
