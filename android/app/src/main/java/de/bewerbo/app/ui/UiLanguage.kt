@@ -56,14 +56,22 @@ fun UiLanguageProvider(tag: String, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
 
-    val localised = remember(tag, configuration) {
-        Configuration(configuration).apply { setLocale(Locale.forLanguageTag(tag)) }
+    // Remembered, and that matters: createConfigurationContext() allocates a Context, and
+    // LocalContext is a STATIC CompositionLocal — handing it an instance it has not seen before
+    // recomposes the WHOLE subtree under it, which here is every screen in the app. Built outside
+    // a remember it was a new instance on every recomposition, so each state update the view model
+    // emitted redrew the lot.
+    val localised = remember(tag, context, configuration) {
+        context.createConfigurationContext(
+            Configuration(configuration).apply { setLocale(Locale.forLanguageTag(tag)) },
+        )
     }
 
     CompositionLocalProvider(
         LocalUiLanguage provides tag,
-        LocalConfiguration provides localised,
-        LocalContext provides context.createConfigurationContext(localised),
+        // Taken off the context rather than kept beside it, so the two can never disagree.
+        LocalConfiguration provides localised.resources.configuration,
+        LocalContext provides localised,
         content = content,
     )
 }
