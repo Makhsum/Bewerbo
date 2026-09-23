@@ -84,6 +84,13 @@ public class LanguageSkill
     public Guid ProfileId { get; set; }
     public Profile? Profile { get; set; }
 
+    /// <summary>
+    /// Where the user put this language in their own list. A Lebenslauf names the Muttersprache
+    /// first and the weakest language last, and that is the user's statement to make — the rows
+    /// have no order of their own, so the position they were sent in is kept.
+    /// </summary>
+    public int Ordinal { get; set; }
+
     public string Language { get; set; } = "";
     /// <summary>CEFR level, or "Muttersprache".</summary>
     public string Level { get; set; } = "";

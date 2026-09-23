@@ -121,11 +121,14 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
         }
 
         db.Languages.RemoveRange(profile.Languages);
-        foreach (var l in entries)
+        // The position in the array is the user's order, and the only place it exists — the section
+        // is replaced whole on every save, so nothing else remembers that Muttersprache came first.
+        for (var i = 0; i < entries.Length; i++)
         {
+            var l = entries[i];
             db.Languages.Add(new LanguageSkill
             {
-                ProfileId = id, Language = l.Language, Level = l.Level ?? "",
+                ProfileId = id, Ordinal = i, Language = l.Language, Level = l.Level ?? "",
                 CertificateOnFile = l.CertificateOnFile,
             });
         }
