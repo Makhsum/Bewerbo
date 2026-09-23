@@ -274,6 +274,21 @@ public class DomainRuleTests
         Assert.DoesNotContain(extract.Fields, f => f.Key == "reference");
     }
 
+    [Theory]
+    [InlineData("Die Referenznummer bitte unbedingt angeben.")]
+    [InlineData("Bitte richten Sie Ihre Unterlagen an uns unter Angabe der Referenznummer dieser Anzeige.")]
+    [InlineData("Nennen Sie die Kennziffer dieser Stelle.")]
+    public void An_ordinary_word_after_the_label_is_not_a_Referenznummer(string line)
+    {
+        // The code is capitals and digits, and that is all that tells it apart from the next word of
+        // the sentence — RegexOptions.IgnoreCase over the pattern made [A-Z0-9] match any letter, so
+        // these three read the Referenz "bitte", "dieser" and "dieser". Same silent path as the ref
+        // inside a word above: reported "sicher", no pill, straight into the Betreffzeile.
+        var extract = PostingParser.Parse(line);
+
+        Assert.DoesNotContain(extract.Fields, f => f.Key == "reference");
+    }
+
     [Fact]
     public void The_Kennziffer_is_read_even_when_a_word_containing_ref_comes_first()
     {

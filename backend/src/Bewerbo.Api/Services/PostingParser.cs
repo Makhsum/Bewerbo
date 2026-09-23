@@ -387,8 +387,14 @@ public static partial class PostingParser
     // read off a label the posting wrote itself — so no pill ever fired and the invented code went
     // into the Betreffzeile unchallenged. The real "Kennziffer NWH-2026-07" later in the same advert
     // was never reached, because this match came first.
-    [GeneratedRegex(@"\b(?:Referenz(?:nummer)?|Kennziffer|Stellen-?ID|Ref)\b\.?\s*:?\s*(?<code>[A-Z0-9][A-Z0-9/-]{3,})",
-        RegexOptions.IgnoreCase)]
+    //
+    // The CODE is capitals and digits, and that is the only thing telling a code apart from the
+    // ordinary word a sentence puts after the label — but RegexOptions.IgnoreCase over the whole
+    // pattern made [A-Z0-9] match any letter, so "Die Referenznummer bitte unbedingt angeben" read
+    // the Referenz "bitte" and "unter Angabe der Referenznummer dieser Anzeige" read "dieser". Both
+    // land in the Betreffzeile the same silent way the run-129 bug above did. Only the LABEL varies
+    // in case, so only the label is wrapped in an inline (?i:…).
+    [GeneratedRegex(@"\b(?i:Referenz(?:nummer)?|Kennziffer|Stellen-?ID|Ref)\b\.?\s*:?\s*(?<code>[A-Z0-9][A-Z0-9/-]{3,})")]
     private static partial Regex ReferenceRx();
 
     // The Stellenbezeichnung is the capitalised noun phrase immediately before the (m/w/d) marker,
