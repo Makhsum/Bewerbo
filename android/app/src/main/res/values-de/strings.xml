@@ -39,6 +39,7 @@
     <!-- Warum ein Aufruf scheiterte. Der Server nennt die Art; das hier sagt die Meldung dazu. -->
     <string name="error_unreachable">Bewerbo war nicht erreichbar. Prüfen Sie die Verbindung und versuchen Sie es erneut.</string>
     <string name="error_profile_missing">Dieses Profil liegt nicht mehr auf dem Server.</string>
+    <string name="error_profile_incomplete">Für das Anschreiben fehlen noch die Angaben zur Person und eine Position.</string>
     <string name="error_posting_missing">Diese Stellenanzeige liegt nicht mehr auf dem Server.</string>
     <string name="error_application_missing">Diese Bewerbung liegt nicht mehr auf dem Server.</string>
     <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
@@ -252,6 +253,9 @@
     <string name="match_guard_body">Sie haben eine Stellenanzeige eingefügt, deshalb schreibt Bewerbo ein Anschreiben. Ein Motivationsschreiben gehört zu Studium und Stipendium — hier eingereicht, weist es Sie als auswärtig aus.</string>
     <string name="match_tone">Ton des Anschreibens</string>
     <string name="match_generate_letter">Anschreiben schreiben</string>
+    <string name="match_letter_blocked_title">Für ein Anschreiben reicht das noch nicht</string>
+    <string name="match_letter_blocked_body">Dem Anschreiben fehlt noch: %1$s. Ohne diese Angaben geht der Brief ohne Absenderadresse und ohne Namen unter dem Gruß hinaus und hat nichts über Sie zu sagen.</string>
+    <string name="letter_blocked_item_beruf">eine Position</string>
 
     <string name="tone_klassisch">Klassisch</string>
     <string name="tone_sachlich">Sachlich</string>
@@ -273,6 +277,8 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d Seiten · %2$d KB</string>
     <string name="application_save_pdf">Als ein PDF speichern</string>
+    <string name="application_export_blocked_title">Die Datei liest sich nicht zurück</string>
+    <string name="application_export_blocked_body">Nicht als Text in der Datei gefunden: %1$s. Genau darauf indexiert das System des Arbeitgebers, deshalb wartet der Export.</string>
     <string name="application_preview_page">Seite %1$d von %2$d</string>
     <string name="application_preview_pending">Die Seiten werden erzeugt.</string>
     <string name="application_preview_failed_title">Die Seiten konnten nicht geladen werden</string>

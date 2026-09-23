@@ -170,10 +170,15 @@ public record ActiveApplicationDto(
 /// <summary>
 /// The Übersicht. <paramref name="CanStartApplication"/> is whether the profile carries enough for
 /// an application to be worth beginning, which is what decides the one first step the screen offers.
+///
+/// <paramref name="LetterBlockers"/> is the stricter question the Anschreiben itself asks — the
+/// keys of what is still missing before it may be written, empty when it may. Keys, not words, for
+/// the reason <see cref="NextStepDto"/> carries a Kind: the server never learns the interface
+/// language. See <see cref="Services.ReadinessService.LetterBlockers"/>.
 /// </summary>
 public record OverviewDto(
     string DisplayName, string City, int ApplicationCount,
-    bool CanStartApplication, int ProfileCompleteness,
+    bool CanStartApplication, IReadOnlyList<string> LetterBlockers, int ProfileCompleteness,
     int GapsExplained, int GapsTotal,
     int EvidenceOnFile, int EvidenceExpected,
     IReadOnlyList<NextStepDto> NextSteps,

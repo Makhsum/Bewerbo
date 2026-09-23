@@ -56,6 +56,7 @@ import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.components.applicationStatusLabel
+import de.bewerbo.app.ui.components.atsFailedLabels
 import de.bewerbo.app.ui.components.atsFindingDetail
 import de.bewerbo.app.ui.components.atsFindingLabel
 import de.bewerbo.app.ui.components.reviewCheckDetail
@@ -598,12 +599,31 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
             }
         }
 
+        // A failed Maschinenlesbarkeit is a fault of the file that is about to leave the phone: the
+        // application is filtered out before a human opens it and nobody is told. So the export
+        // waits, and says which checks are failing rather than only greying out — "ungeprueft" is
+        // not a failure and does not stop anything, for the reason the section above states.
+        val failed = state.ats?.findings.orEmpty().filter { it.verdict == "fehler" }
+        if (failed.isNotEmpty()) {
+            item {
+                Callout(
+                    icon = BewerboIcons.NotClaimed,
+                    title = stringResource(R.string.application_export_blocked_title),
+                    body = stringResource(
+                        R.string.application_export_blocked_body, atsFailedLabels(failed),
+                    ),
+                    tone = PillTone.Danger,
+                    modifier = Modifier.testTag("application_export_blocked"),
+                )
+            }
+        }
+
         item {
             Button(
                 // Nothing selected is not an export; the server would silently fall back to all
                 // three, which is the opposite of what the user just asked for.
                 onClick = { viewModel.savePdf(selectedParts.joinToString(",")) },
-                enabled = state.busy == null && selectedParts.isNotEmpty(),
+                enabled = state.busy == null && selectedParts.isNotEmpty() && failed.isEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("application_btn_save_pdf"),
@@ -622,7 +642,7 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         item {
             OutlinedButton(
                 onClick = { viewModel.sendPdfByEmail(selectedParts.joinToString(",")) },
-                enabled = state.busy == null && selectedParts.isNotEmpty(),
+                enabled = state.busy == null && selectedParts.isNotEmpty() && failed.isEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("application_btn_send_email"),

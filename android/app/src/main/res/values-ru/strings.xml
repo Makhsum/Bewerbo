@@ -36,6 +36,7 @@
     <!-- Почему вызов не удался. Сервер называет вид, а здесь написано, что сказать об этом. -->
     <string name="error_unreachable">Bewerbo недоступен. Проверьте соединение и попробуйте снова.</string>
     <string name="error_profile_missing">Этого профиля больше нет на сервере.</string>
+    <string name="error_profile_incomplete">Для Anschreiben сначала нужны личные данные и хотя бы одна должность.</string>
     <string name="error_posting_missing">Этой вакансии больше нет на сервере.</string>
     <string name="error_application_missing">Этой заявки больше нет на сервере.</string>
     <string name="error_document_missing">Этого документа больше нет на сервере.</string>
@@ -249,6 +250,9 @@
     <string name="match_guard_body">Вы вставили объявление о вакансии, поэтому Bewerbo пишет Anschreiben. Motivationsschreiben пишут для учёбы и стипендии — присланный сюда, он сразу выдаёт в вас иностранца.</string>
     <string name="match_tone">Тон письма Anschreiben</string>
     <string name="match_generate_letter">Написать Anschreiben</string>
+    <string name="match_letter_blocked_title">Для письма данных пока мало</string>
+    <string name="match_letter_blocked_body">Для Anschreiben ещё не хватает: %1$s. Без этого письмо уйдёт без адреса отправителя и без имени под прощальной строкой, и ему нечего сказать о вас.</string>
+    <string name="letter_blocked_item_beruf">должности</string>
 
     <string name="tone_klassisch">Классический</string>
     <string name="tone_sachlich">Деловой</string>
@@ -270,6 +274,8 @@
     <string name="application_export">Экспорт</string>
     <string name="application_file_detail">Страниц: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Сохранить одним PDF</string>
+    <string name="application_export_blocked_title">Файл не читается обратно</string>
+    <string name="application_export_blocked_body">В файле не найдено как текст: %1$s. Именно по этому индексирует система работодателя, поэтому экспорт ждёт.</string>
     <string name="application_preview_page">Страница %1$d из %2$d</string>
     <string name="application_preview_pending">Страницы формируются.</string>
     <string name="application_preview_failed_title">Не удалось загрузить страницы</string>

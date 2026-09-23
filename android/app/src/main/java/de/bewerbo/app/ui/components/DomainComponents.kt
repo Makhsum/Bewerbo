@@ -496,6 +496,24 @@ private fun personItems(args: List<String>): String {
     return named.joinToString(", ")
 }
 
+/// What is still missing before the Anschreiben may be written, named in the user's language and
+/// joined as a list. The first three keys are the ones [personItems] names — the Briefkopf is the
+/// same set of fields — with the one position the letter needs something to say about added to
+/// them. A plain loop for the same reason [personItems] uses one.
+@Composable
+fun letterBlockerItems(keys: List<String>): String {
+    val named = mutableListOf<String>()
+    keys.forEach { key ->
+        named += when (key) {
+            "name" -> stringResource(R.string.step_person_item_name)
+            "anschrift" -> stringResource(R.string.step_person_item_anschrift)
+            "kontakt" -> stringResource(R.string.step_person_item_kontakt)
+            else -> stringResource(R.string.letter_blocked_item_beruf)
+        }
+    }
+    return named.joinToString(", ")
+}
+
 /// The argument at [index], or an empty string — a step from an older server carries none, and a
 /// missing one must not take the Übersicht down with it.
 private fun NextStep.arg(index: Int): String = args.getOrElse(index) { "" }
@@ -569,6 +587,16 @@ fun atsFindingLabel(finding: AtsFinding): String = when (finding.key) {
     "zeitraeume" -> stringResource(R.string.ats_zeitraeume)
     "text" -> stringResource(R.string.ats_text)
     else -> finding.label
+}
+
+/// The checks the produced file FAILED, named in the user's language and joined as one line. A
+/// plain loop rather than a joinToString for the same reason [personItems] uses one: the lambda it
+/// takes is not composable, so [atsFindingLabel] cannot be called inside it.
+@Composable
+fun atsFailedLabels(findings: List<AtsFinding>): String {
+    val named = mutableListOf<String>()
+    findings.forEach { named += atsFindingLabel(it) }
+    return named.joinToString("  ·  ")
 }
 
 @Composable
@@ -646,6 +674,9 @@ fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     "link_unreachable" -> stringResource(R.string.error_link_unreachable)
     "link_no_text" -> stringResource(R.string.error_link_no_text)
     "profile_missing" -> stringResource(R.string.error_profile_missing)
+    // The letter was asked for over a profile that cannot carry one. The Abgleich names the
+    // fields; this is what the snackbar says when the request went out regardless.
+    "profile_incomplete" -> stringResource(R.string.error_profile_incomplete)
     "posting_missing" -> stringResource(R.string.error_posting_missing)
     "application_missing" -> stringResource(R.string.error_application_missing)
     "document_missing" -> stringResource(R.string.error_document_missing)

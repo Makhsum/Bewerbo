@@ -1,8 +1,10 @@
+using System.Text.RegularExpressions;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Llm;
 using Bewerbo.Api.Rendering;
 using Bewerbo.Api.Services;
 using Bewerbo.Api.Text;
+using UglyToad.PdfPig;
 using Xunit;
 
 namespace Bewerbo.Api.Tests;
@@ -803,6 +805,44 @@ public class DomainRuleTests
         Assert.DoesNotContain(overview.NextSteps, s => s.Key == "beruf");
     }
 
+    // -- what has to be there before an Anschreiben may be written ---------------------------------
+
+    [Fact]
+    public void An_empty_profile_has_no_Anschreiben_written_for_it_at_all()
+    {
+        // It used to write one from whatever was there, which on an empty profile is the advert:
+        // no sender address, no name under the closing, and a Lebenslauf listed as an Anlage that
+        // the profile cannot produce. What is missing is named field by field, as keys.
+        Assert.Equal(["name", "anschrift", "kontakt", "beruf"],
+            ReadinessService.LetterBlockers(new Domain.Profile()).Select(b => b.Key));
+    }
+
+    [Fact]
+    public void A_profile_with_the_Briefkopf_and_one_position_blocks_nothing()
+    {
+        var profile = SampleProfile();
+        profile.Street = "Hauptstraße 12";
+        profile.PostalCode = "70173";
+        profile.Email = "olena.kovalchuk@example.de";
+
+        Assert.Empty(ReadinessService.LetterBlockers(profile));
+    }
+
+    [Fact]
+    public void A_Briefkopf_that_is_complete_does_not_make_up_for_a_missing_position()
+    {
+        // The two halves are asked for separately: the letter has an address to come from, and
+        // nothing to say about the applicant. The Übersicht may still offer the flow here — that
+        // is the looser CanStartApplication question — but the letter waits.
+        var profile = SampleProfile();
+        profile.Street = "Hauptstraße 12";
+        profile.PostalCode = "70173";
+        profile.Email = "olena.kovalchuk@example.de";
+        profile.Experience.Clear();
+
+        Assert.Equal(["beruf"], ReadinessService.LetterBlockers(profile).Select(b => b.Key));
+    }
+
     // -- gaps ------------------------------------------------------------------------------------------
 
     [Fact]
@@ -1188,6 +1228,44 @@ public class DomainRuleTests
             "The rendered PDF did not read back: " +
             string.Join("; ", result.Findings.Where(f => f.Verdict != "ok").Select(f => f.Detail)));
         Assert.All(result.Findings, f => Assert.Equal("ok", f.Verdict));
+    }
+
+    [Fact]
+    public void The_letter_carries_the_sender_address_and_the_name_under_the_closing()
+    {
+        // The two things a letter that is sent must have and that an empty profile cannot give it.
+        // Read back out of the rendered Anschreiben rather than asserted on the content handed to
+        // the renderer: it is the page that is posted, not the LetterContent.
+        var profile = SampleProfile();
+        profile.Street = "Hauptstraße 12";
+        profile.PostalCode = "70173";
+        profile.Email = "olena.kovalchuk@example.de";
+
+        var posting = new Posting
+        {
+            JobTitle = "Bilanzbuchhalter (m/w/d)", Company = "Schwarzwald Technik GmbH",
+            CompanyAddress = "Industriestraße 8, 70563 Stuttgart",
+        };
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+        var match = RequirementMatcher.Match(profile, []);
+        var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
+
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+            new DateOnly(2026, 9, 22), ApplicationParts.Anschreiben);
+
+        using var document = PdfDocument.Open(pdf);
+        // PdfPig hands back the glyph run without the spaces the eye supplies, the way
+        // AtsTextCheck reads it.
+        var compact = Regex.Replace(
+            string.Join("\n", document.GetPages().Select(p => p.Text)), @"\s+", "");
+
+        Assert.Contains("Hauptstraße12", compact);
+        Assert.Contains("70173Stuttgart", compact);
+        // Twice: once in the sender line over the Anschriftenfeld, once typed under the signature
+        // rule. One occurrence would be satisfied by the Briefkopf alone.
+        Assert.Equal(2, Regex.Matches(compact, "OlenaKovalchuk").Count);
     }
 
     [Fact]

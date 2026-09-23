@@ -22,6 +22,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var posting = await db.Postings.FindAsync(request.PostingId);
         if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
         if (posting is null) return NotFoundProblem(PostingsController.PostingMissing, PostingsController.PostingMissingKind);
+        if (Incomplete(profile) is { } refusal) return refusal;
 
         var match = MatchFor(profile, posting);
         var tone = ParseEnum(request.Tone, LetterTone.Sachlich);
@@ -63,6 +64,9 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var loaded = await LoadAsync(id);
         if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (application, profile, posting, _) = loaded.Value;
+        // The same guard as on the way in: a profile can be emptied again after the letter was
+        // written, and re-writing it then would produce exactly the document Create refuses.
+        if (Incomplete(profile) is { } refusal) return refusal;
 
         application.Tone = ParseEnum(tone, application.Tone);
         var match = MatchFor(profile, posting);
@@ -151,6 +155,26 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
 
     internal const string ApplicationMissing = "Es gibt keine Bewerbung mit dieser Id.";
     internal const string ApplicationMissingKind = "application_missing";
+    internal const string ProfileIncompleteKind = "profile_incomplete";
+
+    /// <summary>
+    /// The refusal to write an Anschreiben for a profile that cannot carry one, or null when it
+    /// can. The rule itself lives in <see cref="ReadinessService.LetterBlockers"/>, which is also
+    /// what the Übersicht sends the screen, so the disabled button and this answer are the same
+    /// judgement rather than two that can drift apart.
+    ///
+    /// A refusal, not a validation error: the request is well-formed and names records that exist.
+    /// The kind is what the client writes its own sentence from; the German detail is the fallback.
+    /// </summary>
+    private ObjectResult? Incomplete(Domain.Profile profile)
+    {
+        var blockers = ReadinessService.LetterBlockers(profile);
+        if (blockers.Count == 0) return null;
+
+        return RefusedProblem(
+            $"Für ein Anschreiben fehlt noch: {string.Join(", ", blockers.Select(b => b.Label))}",
+            ProfileIncompleteKind);
+    }
 
     private static ApplicationParts ParseParts(string? parts)
     {

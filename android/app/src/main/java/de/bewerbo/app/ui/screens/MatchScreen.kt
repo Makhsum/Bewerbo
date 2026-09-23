@@ -40,6 +40,7 @@ import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.RequirementRow
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
+import de.bewerbo.app.ui.components.letterBlockerItems
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -225,13 +226,33 @@ fun MatchScreen(
             }
         }
 
+        // What the letter is still waiting for. Written from the profile with nothing in it, the
+        // Anschreiben carries no sender address and no name under the closing, and its body only
+        // restates the advert — a document that costs the applicant the position. The server
+        // refuses to write one then; this is the same rule where the user can still act on it,
+        // and it names the fields rather than only saying no.
+        val blockers = state.overview?.letterBlockers.orEmpty()
+        if (blockers.isNotEmpty()) {
+            item {
+                Callout(
+                    icon = BewerboIcons.Attention,
+                    title = stringResource(R.string.match_letter_blocked_title),
+                    body = stringResource(
+                        R.string.match_letter_blocked_body, letterBlockerItems(blockers),
+                    ),
+                    tone = PillTone.Attention,
+                    modifier = Modifier.testTag("match_letter_blocked"),
+                )
+            }
+        }
+
         item {
             Button(
                 onClick = {
                     viewModel.generateLetter(TONES[tone])
                     onGenerated()
                 },
-                enabled = state.busy == null,
+                enabled = state.busy == null && blockers.isEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("match_btn_generate_letter"),

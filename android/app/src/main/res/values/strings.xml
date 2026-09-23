@@ -53,6 +53,7 @@
     <!-- Why a call failed. The server names the kind; this is what the snackbar says about it. -->
     <string name="error_unreachable">Bewerbo could not be reached. Check the connection and try again.</string>
     <string name="error_profile_missing">This profile is no longer on the server.</string>
+    <string name="error_profile_incomplete">The Anschreiben needs your personal details and one position first.</string>
     <string name="error_posting_missing">This posting is no longer on the server.</string>
     <string name="error_application_missing">This application is no longer on the server.</string>
     <string name="error_document_missing">This document is no longer on the server.</string>
@@ -274,6 +275,9 @@
     <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to a course of study or a scholarship — sent here, it marks you out as foreign.</string>
     <string name="match_tone">Tone of the Anschreiben</string>
     <string name="match_generate_letter">Write the Anschreiben</string>
+    <string name="match_letter_blocked_title">Not enough for a letter yet</string>
+    <string name="match_letter_blocked_body">The Anschreiben still needs: %1$s. Without them the letter goes out with no sender address and no name under the closing, and has nothing to say about you.</string>
+    <string name="letter_blocked_item_beruf">one position</string>
 
     <!-- The tone of the letter. The value keeps the backend's spelling. -->
     <string name="tone_klassisch">Classic</string>
@@ -297,6 +301,8 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d pages · %2$d KB</string>
     <string name="application_save_pdf">Save as one PDF</string>
+    <string name="application_export_blocked_title">The file does not read back</string>
+    <string name="application_export_blocked_body">Not found as text in the file: %1$s. An employer\'s system indexes on exactly these, so the export waits until they are there.</string>
     <string name="application_preview_page">Page %1$d of %2$d</string>
     <string name="application_preview_pending">The pages are being rendered.</string>
     <string name="application_preview_failed_title">The pages could not be fetched</string>

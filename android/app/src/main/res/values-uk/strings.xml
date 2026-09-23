@@ -38,6 +38,7 @@
     <!-- Чому виклик не вдався. Сервер називає вид, а тут написано, що про це сказати. -->
     <string name="error_unreachable">Bewerbo недоступний. Перевірте зʼєднання та спробуйте ще раз.</string>
     <string name="error_profile_missing">Цього профілю більше немає на сервері.</string>
+    <string name="error_profile_incomplete">Для Anschreiben спершу потрібні особисті дані та хоча б одна посада.</string>
     <string name="error_posting_missing">Цієї вакансії більше немає на сервері.</string>
     <string name="error_application_missing">Цієї заявки більше немає на сервері.</string>
     <string name="error_document_missing">Цього документа більше немає на сервері.</string>
@@ -251,6 +252,9 @@
     <string name="match_guard_body">Ви вставили оголошення про вакансію, тож Bewerbo пише Anschreiben. Motivationsschreiben пишуть для навчання і стипендії — надісланий сюди, він одразу видає у вас іноземця.</string>
     <string name="match_tone">Тон листа Anschreiben</string>
     <string name="match_generate_letter">Написати Anschreiben</string>
+    <string name="match_letter_blocked_title">Для листа даних поки замало</string>
+    <string name="match_letter_blocked_body">Для Anschreiben ще бракує: %1$s. Без цього лист піде без адреси відправника та без імені під прощальним рядком, і йому нічого сказати про вас.</string>
+    <string name="letter_blocked_item_beruf">посади</string>
 
     <string name="tone_klassisch">Класичний</string>
     <string name="tone_sachlich">Діловий</string>
@@ -272,6 +276,8 @@
     <string name="application_export">Експорт</string>
     <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Зберегти одним PDF</string>
+    <string name="application_export_blocked_title">Файл не читається назад</string>
+    <string name="application_export_blocked_body">У файлі не знайдено як текст: %1$s. Саме за цим індексує система роботодавця, тому експорт чекає.</string>
     <string name="application_preview_page">Сторінка %1$d із %2$d</string>
     <string name="application_preview_pending">Сторінки формуються.</string>
     <string name="application_preview_failed_title">Не вдалося завантажити сторінки</string>

@@ -307,6 +307,11 @@ data class Overview(
     /// Whether the profile carries enough for an application to be worth beginning. False is what
     /// makes the Übersicht offer the profile as the first step instead of the flow.
     val canStartApplication: Boolean = false,
+    /// What is still missing before the Anschreiben may be written, as keys — empty when it may.
+    /// A stricter question than [canStartApplication]: the flow can be worth beginning before the
+    /// letterhead is filled in, the letter cannot be written then. The Abgleich names these and
+    /// keeps its button disabled until the list is empty.
+    val letterBlockers: List<String> = emptyList(),
     val profileCompleteness: Int = 0,
     val gapsExplained: Int = 0,
     val gapsTotal: Int = 0,

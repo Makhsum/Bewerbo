@@ -51,6 +51,10 @@ public static class ReadinessService
             // there is no Lebenslauf to produce, so beginning an application there leads to a path
             // that cannot finish — the same thing the "beruf" step below says in words.
             profile.Experience.Count > 0,
+            // What the Anschreiben itself is still waiting for, as keys. A superset of the line
+            // above: the flow may be worth beginning before the Briefkopf is filled in, the letter
+            // may not be written then. See LetterBlockers.
+            LetterBlockers(profile).Select(b => b.Key).ToList(),
             completeness,
             gapsExplained, gapsTotal,
             evidenceOnFile, evidenceExpected,
@@ -121,25 +125,51 @@ public static class ReadinessService
         return (onFile, expected);
     }
 
+    /// <summary>
+    /// The person's own details that are still empty. They went uncounted while they were half of
+    /// <see cref="Completeness"/>, so the Übersicht could say nothing was outstanding over a profile
+    /// with no name and no Anschrift — and the Briefkopf of every Anschreiben is made of exactly
+    /// these.
+    ///
+    /// The item names go out as the KEYS the client looks up, not as the words: "Anschrift" read as
+    /// "Anschrift" on an English screen, which is the whole of what a DTO's Kind and Args exist to
+    /// stop. The German Label stays beside each key as the fallback sentence's wording.
+    /// </summary>
+    private static List<(string Key, string Label)> PersonMissing(Profile profile) => new[]
+    {
+        (Missing: string.IsNullOrWhiteSpace(profile.FirstName)
+                  || string.IsNullOrWhiteSpace(profile.LastName), Key: "name", Label: "Name"),
+        (Missing: string.IsNullOrWhiteSpace(profile.Street)
+                  || string.IsNullOrWhiteSpace(profile.City), Key: "anschrift", Label: "Anschrift"),
+        (Missing: string.IsNullOrWhiteSpace(profile.Phone)
+                  && string.IsNullOrWhiteSpace(profile.Email), Key: "kontakt", Label: "Kontakt"),
+    }.Where(p => p.Missing).Select(p => (p.Key, p.Label)).ToList();
+
+    /// <summary>
+    /// What stands between this profile and an Anschreiben: the Briefkopf's own fields and one
+    /// Berufserfahrung. Empty means the letter may be written.
+    ///
+    /// This is a stricter thing than <see cref="OverviewDto.CanStartApplication"/>, which asks only
+    /// whether beginning an application is worth it. A letter written before these are filled in
+    /// carries no sender address and no name under the closing, restates the advert for want of
+    /// anything to say about the applicant, and lists a Lebenslauf as an Anlage that the empty
+    /// profile cannot produce — a document that costs the applicant the position.
+    ///
+    /// It is the one rule for this, and both the screen that offers the letter and the route that
+    /// writes it read it here, so the button and the refusal can never mean different things.
+    /// </summary>
+    public static List<(string Key, string Label)> LetterBlockers(Profile profile)
+    {
+        var blockers = PersonMissing(profile);
+        if (profile.Experience.Count == 0) blockers.Add(("beruf", "Berufserfahrung"));
+        return blockers;
+    }
+
     private static List<NextStepDto> NextSteps(Profile profile, TimelineView timeline)
     {
         var steps = new List<NextStepDto>();
 
-        // The person's own details went uncounted here while they were half of Completeness, so the
-        // Übersicht could say nothing was outstanding over a profile with no name and no Anschrift —
-        // and the Briefkopf of every Anschreiben is made of exactly these.
-        // The item names go out as the keys the client looks up, not as the words: "Anschrift"
-        // read as "Anschrift" on an English screen, which is the whole of what this DTO's Kind
-        // and Args exist to stop.
-        var personMissing = new[]
-        {
-            (Missing: string.IsNullOrWhiteSpace(profile.FirstName)
-                      || string.IsNullOrWhiteSpace(profile.LastName), Key: "name", Label: "Name"),
-            (Missing: string.IsNullOrWhiteSpace(profile.Street)
-                      || string.IsNullOrWhiteSpace(profile.City), Key: "anschrift", Label: "Anschrift"),
-            (Missing: string.IsNullOrWhiteSpace(profile.Phone)
-                      && string.IsNullOrWhiteSpace(profile.Email), Key: "kontakt", Label: "Kontakt"),
-        }.Where(p => p.Missing).ToList();
+        var personMissing = PersonMissing(profile);
 
         if (personMissing.Count > 0)
         {
