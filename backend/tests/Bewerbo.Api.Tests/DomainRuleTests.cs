@@ -117,6 +117,24 @@ public class DomainRuleTests
     }
 
     [Theory]
+    [InlineData("Ihre Ansprechpartnerin: Frau Dr. Katrin Sommer", "Frau Dr. Katrin Sommer")]
+    [InlineData("Ansprechpartner: Herr Klaus Meier", "Herr Klaus Meier")]
+    [InlineData("Ihre Ansprechpartnerin ist Frau Dr. Katrin Sommer", "Frau Dr. Katrin Sommer")]
+    [InlineData("Bitte wenden Sie sich an Frau Dr. Katrin Sommer", "Frau Dr. Katrin Sommer")]
+    public void The_contact_is_read_whether_the_label_uses_a_colon_or_the_word_ist(
+        string line, string expected)
+    {
+        // The colon form is at least as common as "ist" in a German advert, and it read as nothing:
+        // the CONTACT row said the posting had named nobody and asked the user to add what was
+        // written in front of them. Kontakt was already allowed its colon, so only this label broke.
+        var extract = PostingParser.Parse(line);
+        var field = extract.Fields.SingleOrDefault(f => f.Key == "contact");
+
+        Assert.NotNull(field);
+        Assert.Equal(expected, field!.Value);
+    }
+
+    [Theory]
     [InlineData("Ihre Ansprechpartnerin ist Frau Lena Sommer, Personalreferentin.")]
     [InlineData("Wir suchen für unser Referat Finanzen eine Sachbearbeiterin.")]
     [InlineData("Eine Reform der Abläufe begleiten Sie mit.")]

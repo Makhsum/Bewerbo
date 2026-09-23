@@ -301,7 +301,12 @@ public static partial class PostingParser
 
     // -- the conventions, as patterns -----------------------------------------------------------
 
-    [GeneratedRegex(@"(?:an|Ansprechpartner(?:in)?\s+ist|wenden Sie sich an|Kontakt:?)\s+(?<name>(?:Frau|Herr)\s+(?:Dr\.\s+|Prof\.\s+)*[A-ZÄÖÜ][\wäöüß-]+(?:\s+[A-ZÄÖÜ][\wäöüß-]+){0,2})",
+    // Ansprechpartner(in) is written with a colon at least as often as with "ist" — "Ihre
+    // Ansprechpartnerin: Frau Dr. Katrin Sommer" is an ordinary line of a German advert, and it
+    // read as nothing at all. That failure is a quiet one: the CONTACT row says "im Inserat nicht
+    // genannt" and carries the ADD marker, which reads as the advert's fault rather than ours.
+    // Kontakt already had its colon, which is why only this label was affected.
+    [GeneratedRegex(@"(?:an|Ansprechpartner(?:in)?(?:\s+ist|\s*:)|wenden Sie sich an|Kontakt:?)\s+(?<name>(?:Frau|Herr)\s+(?:Dr\.\s+|Prof\.\s+)*[A-ZÄÖÜ][\wäöüß-]+(?:\s+[A-ZÄÖÜ][\wäöüß-]+){0,2})",
         RegexOptions.IgnoreCase)]
     private static partial Regex ContactRx();
 
