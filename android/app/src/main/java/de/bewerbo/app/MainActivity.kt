@@ -5,9 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,12 +69,16 @@ enum class Destination(val route: String, val tag: String, val label: Int, val i
     Locker("mappe", "nav_mappe", R.string.nav_locker, BewerboIcons.Anlagen),
 }
 
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+@OptIn(
+    androidx.compose.ui.ExperimentalComposeUiApi::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class,
+)
 @Composable
 fun BewerboApp(viewModel: AppViewModel = viewModel()) {
     val navController = rememberNavController()
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
+    val keyboardOpen = WindowInsets.isImeVisible
 
     LaunchedEffect(state.error) {
         state.error?.let {
@@ -89,19 +96,17 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
             // tags are invisible to Appium without it, and every screen below relies on that —
             // which is why it is at the root rather than sprinkled per screen.
             .semantics { testTagsAsResourceId = true }
-            // The manifest asks for adjustResize, but enableEdgeToEdge() lays the window out
-            // behind the system bars and nothing consumes the IME inset, so the viewport stayed
-            // full height with the keyboard over the bottom of it. Every list below then believed
-            // all of its content was visible and refused to scroll, which left the focused field
-            // hidden and the Save button unreachable. Consuming the inset here does it once, for
-            // every screen, rather than per form.
-            .imePadding()
             .fillMaxSize(),
     ) {
         Scaffold(
-            bottomBar = { BottomBar(navController) },
+            // The bar has nowhere to sit while the keyboard is up: the IME inset lifted it onto
+            // the keyboard, where it ate a row of the little viewport that was left. Nobody
+            // changes tab mid-word, so it stands down until the keyboard is gone.
+            bottomBar = { if (!keyboardOpen) BottomBar(navController) },
             snackbarHost = {
-                SnackbarHost(snackbar) { data ->
+                // The Scaffold places the host over the bottom of the window, which the keyboard
+                // covers. It keeps rising above the keyboard as it did before.
+                SnackbarHost(snackbar, modifier = Modifier.imePadding()) { data ->
                     Snackbar(snackbarData = data, modifier = Modifier.testTag("app_message"))
                 }
             },
@@ -109,7 +114,14 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
             NavHost(
                 navController = navController,
                 startDestination = Destination.Overview.route,
-                modifier = Modifier.padding(padding),
+                // The IME inset belongs to the content, not to the whole window: consumed above
+                // the Scaffold it lifted the bar along with everything else. The Scaffold's own
+                // padding goes on first and is then declared consumed, so imePadding() adds only
+                // what the keyboard needs beyond it instead of counting the system bar twice.
+                modifier = Modifier
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .imePadding(),
             ) {
                 composable(Destination.Overview.route) {
                     OverviewScreen(state, viewModel) { route -> navController.navigate(route) }
