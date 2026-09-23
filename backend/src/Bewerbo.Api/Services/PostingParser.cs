@@ -316,8 +316,15 @@ public static partial class PostingParser
     // pattern allows for a double surname reached into whatever the advert wrote next: a posting
     // whose contact line is followed by "Anforderungen:" produced the contact "Frau Dr. Katrin
     // Sommer Anforderungen", and that name is what the Anschreiben opens with.
-    [GeneratedRegex(@"(?:an|Ansprechpartner(?:in)?(?:\s+ist|\s*:)|wenden Sie sich an|Kontakt:?)\s+(?<name>(?:Frau|Herr)[ \t]+(?:Dr\.[ \t]+|Prof\.[ \t]+)*[A-ZÄÖÜ][\wäöüß-]+(?:[ \t]+[A-ZÄÖÜ][\wäöüß-]+){0,2})",
-        RegexOptions.IgnoreCase)]
+    //
+    // Those trailing words know where the name ENDS only by the capital letter they have to start
+    // with — and RegexOptions.IgnoreCase over the whole pattern voided exactly that. On the same
+    // line, "an Frau Dr. Annika Weber unter Angabe der Referenznummer" therefore read the contact
+    // as "Frau Dr. Annika Weber unter"; Salutation() takes the last word for the surname, so the
+    // Anschreiben opened "Sehr geehrte Frau Dr. unter" and the Anschriftenfeld carried the stray
+    // word too. Only the LABEL varies in case (an advert starts a sentence with "An Frau ..."), so
+    // only the label is wrapped in an inline (?i:…) — the division CompanyRx below already makes.
+    [GeneratedRegex(@"(?i:an|Ansprechpartner(?:in)?(?:\s+ist|\s*:)|wenden Sie sich an|Kontakt:?)\s+(?<name>(?i:Frau|Herr)[ \t]+(?:(?i:Dr|Prof)\.[ \t]+)*[A-ZÄÖÜ][\wäöüß-]+(?:[ \t]+[A-ZÄÖÜ][\wäöüß-]+){0,2})")]
     private static partial Regex ContactRx();
 
     [GeneratedRegex(@"(?<role>Leitung\s+[A-ZÄÖÜ][\wäöüß-]+|Personalleiter(?:in)?|Recruiter(?:in)?|Personalreferent(?:in)?)")]

@@ -213,6 +213,23 @@ public class DomainRuleTests
     }
 
     [Theory]
+    [InlineData("Bitte richten Sie Ihre Unterlagen an Frau Dr. Annika Weber unter Angabe der Referenznummer.")]
+    [InlineData("Wenden Sie sich an Frau Katrin Sommer oder an ihre Vertretung.")]
+    [InlineData("Ansprechpartner: Herr Klaus Meier steht Ihnen gerne zur Verfuegung.")]
+    public void The_contact_name_stops_before_the_first_word_that_is_not_capitalised(string line)
+    {
+        // The two trailing words the pattern allows for a double surname know where the name ends
+        // only by the capital letter they have to start with, and RegexOptions.IgnoreCase over the
+        // whole pattern voided it. On one line "an Frau Dr. Annika Weber unter Angabe der
+        // Referenznummer" read as "Frau Dr. Annika Weber unter", and Salutation() takes the last
+        // word for the surname: the letter opened "Sehr geehrte Frau Dr. unter".
+        var extract = PostingParser.Parse(line);
+        var field = extract.Fields.Single(f => f.Key == "contact");
+
+        Assert.DoesNotContain(field.Value.Split(' '), w => char.IsLower(w[0]));
+    }
+
+    [Theory]
     [InlineData("Eintritt: 01.03.2026", "01.03.2026")]
     [InlineData("Eintrittstermin: 01.03.2026", "01.03.2026")]
     [InlineData("Beginn: ab sofort", "ab sofort")]
