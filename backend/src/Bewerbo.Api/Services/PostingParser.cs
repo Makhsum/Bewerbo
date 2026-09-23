@@ -101,9 +101,12 @@ public static partial class PostingParser
             Value = code,
             // Quote the whole "Referenznummer SBT-2026-0417", which is what the reader recognises.
             Quote = Tidy(m.Value),
-            // A reference number that lands wrong in the Betreffzeile is an immediate tell, so it is
-            // always offered for checking rather than taken on trust.
-            Confidence = "pruefen",
+            // The code is read off a label the posting wrote itself — "Referenznummer", "Kennziffer",
+            // "Stellen-ID" — so nothing about it is inferred. It used to report "pruefen" on the
+            // grounds that a wrong Betreffzeile is an immediate tell, but that asked the user to
+            // check every reference the parser had in fact read correctly, and a marker that is
+            // always on is a marker nobody reads.
+            Confidence = "sicher",
         };
     }
 

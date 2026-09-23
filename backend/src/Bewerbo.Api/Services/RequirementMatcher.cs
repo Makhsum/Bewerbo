@@ -12,7 +12,11 @@ public record MatchedRequirement(
     RequirementState State,
     /// <summary>For belegt: the entry that proves it, named so the reader can check it.</summary>
     string Evidence,
-    /// <summary>For offen: the one action that would close it.</summary>
+    /// <summary>
+    /// For offen: the one action that would close it. Empty where this requirement has nothing of
+    /// its own to say — what holds for every nicht_belegt requirement alike ("wird im Anschreiben
+    /// nicht behauptet") is said once by the screen that groups them, not repeated on every row.
+    /// </summary>
     string Action);
 
 public record MatchResult(
@@ -64,8 +68,7 @@ public static class RequirementMatcher
         var keywords = Keywords(requirement);
         if (keywords.Count == 0)
         {
-            return new MatchedRequirement(requirement, RequirementState.NichtBelegt,
-                "", "Nicht vorhanden — wird im Anschreiben nicht behauptet");
+            return new MatchedRequirement(requirement, RequirementState.NichtBelegt, "", "");
         }
 
         foreach (var entry in profile.Experience.OrderByDescending(e => e.To is null).ThenByDescending(e => e.From))
@@ -88,8 +91,7 @@ public static class RequirementMatcher
                 $"{entry.Degree}, {entry.Institution}", "");
         }
 
-        return new MatchedRequirement(requirement, RequirementState.NichtBelegt,
-            "", "Nicht vorhanden — wird im Anschreiben nicht behauptet");
+        return new MatchedRequirement(requirement, RequirementState.NichtBelegt, "", "");
     }
 
     private static MatchedRequirement? LanguageRequirement(Profile profile, string requirement)
@@ -110,14 +112,13 @@ public static class RequirementMatcher
 
         if (skill is null)
         {
-            return new MatchedRequirement(requirement, RequirementState.NichtBelegt,
-                "", "Nicht vorhanden — wird im Anschreiben nicht behauptet");
+            return new MatchedRequirement(requirement, RequirementState.NichtBelegt, "", "");
         }
 
         if (!AtLeast(skill.Level, level))
         {
             return new MatchedRequirement(requirement, RequirementState.NichtBelegt,
-                "", $"Im Profil steht {skill.Level} — wird im Anschreiben nicht behauptet");
+                "", $"Im Profil steht {skill.Level}");
         }
 
         return skill.CertificateOnFile

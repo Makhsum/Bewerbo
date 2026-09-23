@@ -73,10 +73,10 @@
     <string name="posting_new">Вставити іншу вакансію</string>
     <string name="posting_source">Текст оригіналу · %1$d символів</string>
     <string name="posting_read_from">Прочитано з вакансії</string>
-    <string name="posting_field_missing">Не знайдено — впишіть самі</string>
-    <string name="posting_confidence_sure">Точно</string>
+    <string name="posting_field_missing">У вакансії не вказано</string>
+    <string name="posting_field_add">Впишіть</string>
     <string name="posting_confidence_check">Перевірте</string>
-    <string name="posting_confidence_missing">Немає</string>
+    <string name="posting_correct_fields">Виправити поля</string>
     <string name="posting_no_span">Показано без підсвічування: процитованих слів у тексті в такому вигляді немає.</string>
     <string name="posting_reference_note">Потрапляє в Betreffzeile</string>
     <string name="posting_employer_type_note">визначає фото і тон</string>
@@ -91,7 +91,8 @@
     <string name="match_proven">Підтверджено профілем · %1$d</string>
     <string name="match_open">Ще відкрито · %1$d</string>
     <string name="match_not_proven">Не підтверджено · %1$d</string>
-    <string name="match_guard_body">Ви вставили оголошення про вакансію, тож Bewerbo пише Anschreiben. Motivationsschreiben пишуть для навчання і стипендії — надісланий сюди, він одразу видає у вас іноземця. Нічого з позначеного «не підтверджено» в листі не стверджується.</string>
+    <string name="match_not_proven_note">Нічого з цього в Anschreiben не стверджується.</string>
+    <string name="match_guard_body">Ви вставили оголошення про вакансію, тож Bewerbo пише Anschreiben. Motivationsschreiben пишуть для навчання і стипендії — надісланий сюди, він одразу видає у вас іноземця.</string>
     <string name="match_generate_letter">Створити Anschreiben</string>
 
     <string name="application_subtitle">Те, що бачить німецький читач і система відбору кандидатів.</string>

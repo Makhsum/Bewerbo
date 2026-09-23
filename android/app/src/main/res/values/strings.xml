@@ -97,10 +97,10 @@
     <string name="posting_field_reference">Referenz</string>
     <string name="posting_field_title">Stelle</string>
     <string name="posting_field_start">Eintritt</string>
-    <string name="posting_field_missing">Not found — add it yourself</string>
-    <string name="posting_confidence_sure">Sure</string>
+    <string name="posting_field_missing">Not named in the posting</string>
+    <string name="posting_field_add">Add</string>
     <string name="posting_confidence_check">Check</string>
-    <string name="posting_confidence_missing">Missing</string>
+    <string name="posting_correct_fields">Correct the fields</string>
     <string name="posting_no_span">Shown without a highlight: the quoted words were not found in the text as they stand.</string>
     <string name="posting_reference_note">Goes into the Betreffzeile</string>
     <string name="posting_employer_type">Arbeitgebertyp</string>
@@ -118,8 +118,9 @@
     <string name="match_proven">Proven by your profile · %1$d</string>
     <string name="match_open">Still open · %1$d</string>
     <string name="match_not_proven">Not proven · %1$d</string>
+    <string name="match_not_proven_note">None of these is claimed in the Anschreiben.</string>
     <string name="match_guard_title">Anschreiben, not Motivationsschreiben</string>
-    <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to Studium and Stipendium — sent here, it marks you out as foreign. Nothing listed as not proven is claimed in the letter.</string>
+    <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to Studium and Stipendium — sent here, it marks you out as foreign.</string>
     <string name="match_tone">Ton des Anschreibens</string>
     <string name="match_generate_letter">Anschreiben erzeugen</string>
 

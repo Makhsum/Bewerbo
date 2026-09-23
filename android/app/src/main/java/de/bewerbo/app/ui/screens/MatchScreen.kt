@@ -138,6 +138,14 @@ fun MatchScreen(
             item { SectionLabel(stringResource(R.string.match_not_proven, nicht.size)) }
             item {
                 BewerboCard(Modifier.testTag("match_group_nicht_belegt")) {
+                    // What holds for the whole group is said here once. It used to be printed under
+                    // every row, so five requirements carried five copies of the same sentence.
+                    Text(
+                        stringResource(R.string.match_not_proven_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                        modifier = Modifier.testTag("match_not_proven_note"),
+                    )
                     nicht.forEach { requirement ->
                         RequirementRow(requirement, match.requirements.indexOf(requirement))
                     }

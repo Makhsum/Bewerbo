@@ -171,9 +171,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun correctField(key: String, value: String) = launch("field") {
+    /**
+     * Writes every field the correction dialog changed, in one pass.
+     *
+     * The Stellenanzeige corrects all five fields through one dialog, so each field cannot be its
+     * own launch(): five coroutines patching the same posting would leave whichever answer came
+     * back last on screen, which is not necessarily the one that had seen all five patches.
+     */
+    fun correctFields(values: Map<String, String>) = launch("field") {
         val posting = _state.value.posting ?: return@launch
-        _state.update { it.copy(posting = api.correctField(posting.id, CorrectFieldRequest(key, value))) }
+        var corrected = posting
+        values.forEach { (key, value) ->
+            corrected = api.correctField(posting.id, CorrectFieldRequest(key, value))
+        }
+        _state.update { it.copy(posting = corrected) }
     }
 
     fun setEmployerType(type: String) = launch("employer") {
