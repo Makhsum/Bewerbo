@@ -135,6 +135,36 @@ public class DomainRuleTests
     }
 
     [Theory]
+    [InlineData("Eintritt: 01.03.2026", "01.03.2026")]
+    [InlineData("Eintrittstermin: 01.03.2026", "01.03.2026")]
+    [InlineData("Beginn: ab sofort", "ab sofort")]
+    [InlineData("Eintritt zum nächstmöglichen Zeitpunkt.", "zum nächstmöglichen Zeitpunkt")]
+    [InlineData("Wir besetzen die Stelle ab sofort.", "ab sofort")]
+    public void The_starting_date_is_read_from_the_label_as_well_as_from_the_phrase(
+        string line, string expected)
+    {
+        // "Eintritt: 01.03.2026" is how most adverts write it, and only the phrases were read, so
+        // the STARTING DATE row said the posting had named none. The value is the date alone — the
+        // label was never part of it, and this field goes into the letter.
+        var extract = PostingParser.Parse(line);
+        var field = extract.Fields.SingleOrDefault(f => f.Key == "start");
+
+        Assert.NotNull(field);
+        Assert.Equal(expected, field!.Value);
+    }
+
+    [Fact]
+    public void A_date_without_a_label_is_not_read_as_the_starting_date()
+    {
+        // The other dates an advert prints are deadlines. A Bewerbungsfrist offered as the day the
+        // applicant would start is worse than the empty field the user can fill in themselves,
+        // because Confidence is "sicher" here and no pill would ask them to look at it.
+        var extract = PostingParser.Parse("Bewerbungsfrist: 15.02.2026. Wir freuen uns auf Sie.");
+
+        Assert.DoesNotContain(extract.Fields, f => f.Key == "start");
+    }
+
+    [Theory]
     [InlineData("Ihre Ansprechpartnerin ist Frau Lena Sommer, Personalreferentin.")]
     [InlineData("Wir suchen für unser Referat Finanzen eine Sachbearbeiterin.")]
     [InlineData("Eine Reform der Abläufe begleiten Sie mit.")]

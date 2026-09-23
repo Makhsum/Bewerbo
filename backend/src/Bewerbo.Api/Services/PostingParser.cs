@@ -177,11 +177,16 @@ public static partial class PostingParser
 
     private static ExtractedField? StartDate(string text)
     {
-        var m = StartRx().Match(text);
+        // The labelled form first, because it is the only place a bare date may be read: every
+        // other date in an advert is a deadline, and a Bewerbungsfrist offered as the day the
+        // applicant would start is worse than no date at all.
+        var m = StartLabelRx().Match(text);
+        if (!m.Success) m = StartRx().Match(text);
         if (!m.Success) return null;
+        var value = Tidy(m.Groups["date"].Value);
         return new ExtractedField
         {
-            Key = "start", Value = Tidy(m.Value), Quote = Tidy(m.Value), Confidence = "sicher",
+            Key = "start", Value = value, Quote = value, Confidence = "sicher",
         };
     }
 
@@ -369,7 +374,15 @@ public static partial class PostingParser
         RegexOptions.IgnoreCase)]
     private static partial Regex VacancyLeadRx();
 
-    [GeneratedRegex(@"(?:zum nächstmöglichen Zeitpunkt|ab sofort|zum \d{1,2}\.\d{1,2}\.\d{4}|ab dem \d{1,2}\.\d{1,2}\.\d{4})",
+    // "Eintritt: 01.03.2026" — the labelled form, and the only one allowed to read a plain date.
+    // An advert prints several dates and only this one is the Eintritt; the label is what tells
+    // them apart, exactly as the Referenz is read off a label the posting wrote itself. The colon
+    // is optional so that "Eintritt zum nächstmöglichen Zeitpunkt" keeps being read here too.
+    [GeneratedRegex(@"\b(?:Eintritt(?:stermin)?|Arbeitsbeginn|Starttermin|Beginn)\b\s*:?\s*(?<date>zum nächstmöglichen Zeitpunkt|ab sofort|(?:zum|ab dem)\s+\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2}\.\d{1,2}\.\d{4})",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex StartLabelRx();
+
+    [GeneratedRegex(@"(?<date>zum nächstmöglichen Zeitpunkt|ab sofort|zum \d{1,2}\.\d{1,2}\.\d{4}|ab dem \d{1,2}\.\d{1,2}\.\d{4})",
         RegexOptions.IgnoreCase)]
     private static partial Regex StartRx();
 
