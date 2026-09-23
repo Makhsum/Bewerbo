@@ -159,7 +159,12 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
                 _ => ApplicationParts.None,
             };
         }
-        return result == ApplicationParts.None ? ApplicationParts.All : result;
+
+        // What was asked for, even when that is nothing. Falling back to All here made the guard in
+        // Pdf unreachable and, worse, turned "parts=lebenslauf" with a typo in it into the whole
+        // Mappe: the caller named the parts it wanted and got three. No parts parameter at all is a
+        // different thing and still means the whole Mappe, which is what the line above says.
+        return result;
     }
 
     private static MatchResult MatchFor(Domain.Profile profile, Posting posting)
