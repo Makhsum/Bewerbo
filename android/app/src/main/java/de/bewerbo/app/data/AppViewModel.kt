@@ -3,6 +3,7 @@ package de.bewerbo.app.data
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import de.bewerbo.app.ui.defaultUiLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,8 @@ data class AppState(
     val review: Review? = null,
     val ats: AtsResult? = null,
     val degrees: List<DegreeEquivalence> = emptyList(),
+    /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
+    val uiLanguage: String = "en",
     val showDinGrid: Boolean = false,
     val lastSavedPdf: String? = null,
     val busy: String? = null,
@@ -43,6 +46,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val state: StateFlow<AppState> = _state.asStateFlow()
 
     init {
+        // Read straight out rather than inside bootstrap(): that one is a coroutine, and the first
+        // frame would be drawn in the wrong language while it waited on the network.
+        _state.update { it.copy(uiLanguage = storedUiLanguage()) }
         bootstrap()
     }
 
@@ -105,6 +111,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun profileId(): String? = _state.value.profile?.id
+
+    // -- interface language ------------------------------------------------------------------
+
+    /**
+     * The language the interface is drawn in — the phone's guess on first run, the user's from
+     * then on.
+     *
+     * The interface used to follow the phone at every start with English as the fallback, which
+     * handed an English app to somebody who had come to Germany for a German application and had
+     * bought their phone here. The phone is still where the first guess comes from, because it is
+     * usually right; it is written down once so that overruling it sticks.
+     */
+    private fun storedUiLanguage(): String {
+        prefs().getString("uiLanguage", null)?.let { return it }
+        val guess = defaultUiLanguage()
+        prefs().edit().putString("uiLanguage", guess).apply()
+        return guess
+    }
+
+    fun setUiLanguage(tag: String) {
+        prefs().edit().putString("uiLanguage", tag).apply()
+        _state.update { it.copy(uiLanguage = tag) }
+    }
 
     // -- profile ---------------------------------------------------------------------------
 

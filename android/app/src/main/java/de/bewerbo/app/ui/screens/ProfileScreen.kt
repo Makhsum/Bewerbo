@@ -43,6 +43,7 @@ import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.components.Timeline
+import de.bewerbo.app.ui.UI_LANGUAGES
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -69,7 +70,6 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
     val profile = state.profile
     val colors = LocalSemanticColors.current
     var section by remember { mutableStateOf("berufserfahrung") }
-    var languageMenuOpen by remember { mutableStateOf(false) }
 
     LazyColumn(
         Modifier
@@ -89,52 +89,61 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
-        // The input language, picked once. This is the promise of the product in one control.
+        // The two languages, each picked once and each said in full. Only the input language used
+        // to be named here, while the language of the screens themselves was the phone's and had
+        // no control at all — so the one language on the Profil screen looked like the language of
+        // the app, which is precisely what it is not. They stand together now, with the sentence
+        // below saying which is which, because apart they invite the same mistake.
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    OutlinedButton(
-                        onClick = { languageMenuOpen = true },
-                        modifier = Modifier.testTag("profile_language_selector"),
-                    ) {
-                        Icon(BewerboIcons.Globe, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(
-                            stringResource(
-                                R.string.profile_input_language,
-                                INPUT_LANGUAGES.firstOrNull { it.first == profile?.person?.inputLanguage }
-                                    ?.second ?: "",
-                            ),
-                            modifier = Modifier.padding(start = Space.s),
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = languageMenuOpen,
-                        onDismissRequest = { languageMenuOpen = false },
-                        // A menu renders in its own window and inherits nothing from the root, so
-                        // it carries its own flag or a driver cannot see any of these items.
-                        modifier = Modifier.exposeTestTags(),
-                    ) {
-                        INPUT_LANGUAGES.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                modifier = Modifier.testTag("profile_language_option_$code"),
-                                onClick = {
-                                    languageMenuOpen = false
-                                    profile?.let {
-                                        viewModel.savePerson(it.person.copy(inputLanguage = code))
-                                    }
-                                },
-                            )
-                        }
-                    }
-                }
-                Box(Modifier.padding(start = Space.s)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                // FlowRow for the reason the section rail below uses one: two buttons and the pill
+                // never fit one phone-width row, and an affordance past the right edge is one
+                // nobody knows about.
+                FlowRow(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    LanguageSelector(
+                        label = stringResource(
+                            R.string.profile_app_language,
+                            labelOf(UI_LANGUAGES, state.uiLanguage),
+                        ),
+                        icon = BewerboIcons.Globe,
+                        options = UI_LANGUAGES,
+                        testTagPrefix = "profile_ui_language",
+                        onPick = viewModel::setUiLanguage,
+                    )
+                    LanguageSelector(
+                        label = stringResource(
+                            R.string.profile_input_language,
+                            labelOf(INPUT_LANGUAGES, profile?.person?.inputLanguage),
+                        ),
+                        // A different icon from the one beside it, so the two are told apart
+                        // before either label is read.
+                        icon = BewerboIcons.Languages,
+                        options = INPUT_LANGUAGES,
+                        testTagPrefix = "profile_language",
+                        onPick = { code ->
+                            profile?.let { viewModel.savePerson(it.person.copy(inputLanguage = code)) }
+                        },
+                    )
                     StatusPill(
                         stringResource(R.string.profile_complete, profile?.completeness ?: 0),
                         if ((profile?.completeness ?: 0) >= 80) PillTone.Success else PillTone.Attention,
-                        Modifier.testTag("profile_completeness_pill"),
+                        // The pill is half the height of the buttons it shares the line with, and
+                        // a FlowRow lays its children out from the top of the line.
+                        Modifier
+                            .align(Alignment.CenterVertically)
+                            .testTag("profile_completeness_pill"),
                     )
                 }
+                Text(
+                    stringResource(R.string.profile_languages_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.muted,
+                    modifier = Modifier.testTag("profile_languages_hint"),
+                )
             }
         }
 
@@ -292,6 +301,57 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                 Text(
                     stringResource(R.string.profile_generate_cv),
                     modifier = Modifier.padding(start = Space.s),
+                )
+            }
+        }
+    }
+}
+
+/// The endonym of [code] in [options] — the name a language calls itself, which is the only name
+/// that is legible to somebody who cannot yet read the interface.
+private fun labelOf(options: List<Pair<String, String>>, code: String?): String =
+    options.firstOrNull { it.first == code }?.second.orEmpty()
+
+/**
+ * One of the two language buttons, with the menu it opens.
+ *
+ * The app language and the input language are picked the same way and differ only in their list,
+ * their label and what they write to — so they are one control used twice rather than two that
+ * drift apart.
+ */
+@Composable
+private fun LanguageSelector(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    options: List<Pair<String, String>>,
+    testTagPrefix: String,
+    onPick: (String) -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(
+            onClick = { menuOpen = true },
+            modifier = Modifier.testTag("${testTagPrefix}_selector"),
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(label, modifier = Modifier.padding(start = Space.s))
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { menuOpen = false },
+            // A menu renders in its own window and inherits nothing from the root, so it carries
+            // its own flag or a driver cannot see any of these items.
+            modifier = Modifier.exposeTestTags(),
+        ) {
+            options.forEach { (code, endonym) ->
+                DropdownMenuItem(
+                    text = { Text(endonym) },
+                    modifier = Modifier.testTag("${testTagPrefix}_option_$code"),
+                    onClick = {
+                        menuOpen = false
+                        onPick(code)
+                    },
                 )
             }
         }

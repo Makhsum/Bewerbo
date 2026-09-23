@@ -31,6 +31,8 @@
 
     <string name="profile_subtitle">Вводите всё на своём языке. Bewerbo напишет по-немецки.</string>
     <string name="profile_input_language">Язык ввода: %1$s</string>
+    <string name="profile_app_language">Язык приложения: %1$s</string>
+    <string name="profile_languages_hint">Язык приложения — это язык самих экранов. Язык ввода — тот, на котором вы пишете профиль; сама заявка всегда на немецком.</string>
     <string name="profile_complete">Заполнено на %1$d %%</string>
     <string name="profile_timeline_empty_title">Zeitstrahl пока пуст</string>
     <string name="profile_timeline_empty_body">Добавьте первую Berufserfahrung или Ausbildung. Тогда Bewerbo построит по ним Zeitstrahl и назовёт каждый Lücke, о котором спросит немецкий рекрутер.</string>

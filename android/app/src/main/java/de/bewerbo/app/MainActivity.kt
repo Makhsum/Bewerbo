@@ -39,6 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
@@ -90,53 +91,57 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
         state.lastSavedPdf?.let { snackbar.showSnackbar(it) }
     }
 
-    Box(
-        Modifier
-            // testTagsAsResourceId is set ONCE, here, above every branch of the tree. Compose test
-            // tags are invisible to Appium without it, and every screen below relies on that —
-            // which is why it is at the root rather than sprinkled per screen.
-            .semantics { testTagsAsResourceId = true }
-            .fillMaxSize(),
-    ) {
-        Scaffold(
-            // The bar has nowhere to sit while the keyboard is up: the IME inset lifted it onto
-            // the keyboard, where it ate a row of the little viewport that was left. Nobody
-            // changes tab mid-word, so it stands down until the keyboard is gone.
-            bottomBar = { if (!keyboardOpen) BottomBar(navController) },
-            snackbarHost = {
-                // The Scaffold places the host over the bottom of the window, which the keyboard
-                // covers. It keeps rising above the keyboard as it did before.
-                SnackbarHost(snackbar, modifier = Modifier.imePadding()) { data ->
-                    Snackbar(snackbarData = data, modifier = Modifier.testTag("app_message"))
-                }
-            },
-        ) { padding ->
-            NavHost(
-                navController = navController,
-                startDestination = Destination.Overview.route,
-                // The IME inset belongs to the content, not to the whole window: consumed above
-                // the Scaffold it lifted the bar along with everything else. The Scaffold's own
-                // padding goes on first and is then declared consumed, so imePadding() adds only
-                // what the keyboard needs beyond it instead of counting the system bar twice.
-                modifier = Modifier
-                    .padding(padding)
-                    .consumeWindowInsets(padding)
-                    .imePadding(),
-            ) {
-                composable(Destination.Overview.route) {
-                    OverviewScreen(state, viewModel) { route -> navController.openFromOverview(route) }
-                }
-                composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
-                composable(Destination.Posting.route) {
-                    PostingScreen(state, viewModel) { navController.navigate("abgleich") }
-                }
-                composable("abgleich") {
-                    MatchScreen(state, viewModel) {
-                        navController.navigate(Destination.Application.route)
+    // The interface language is the app's own, not the phone's, and it wraps the whole tree for
+    // the same reason testTagsAsResourceId does: every screen below reads strings through it.
+    UiLanguageProvider(state.uiLanguage) {
+        Box(
+            Modifier
+                // testTagsAsResourceId is set ONCE, here, above every branch of the tree. Compose test
+                // tags are invisible to Appium without it, and every screen below relies on that —
+                // which is why it is at the root rather than sprinkled per screen.
+                .semantics { testTagsAsResourceId = true }
+                .fillMaxSize(),
+        ) {
+            Scaffold(
+                // The bar has nowhere to sit while the keyboard is up: the IME inset lifted it onto
+                // the keyboard, where it ate a row of the little viewport that was left. Nobody
+                // changes tab mid-word, so it stands down until the keyboard is gone.
+                bottomBar = { if (!keyboardOpen) BottomBar(navController) },
+                snackbarHost = {
+                    // The Scaffold places the host over the bottom of the window, which the keyboard
+                    // covers. It keeps rising above the keyboard as it did before.
+                    SnackbarHost(snackbar, modifier = Modifier.imePadding()) { data ->
+                        Snackbar(snackbarData = data, modifier = Modifier.testTag("app_message"))
                     }
+                },
+            ) { padding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = Destination.Overview.route,
+                    // The IME inset belongs to the content, not to the whole window: consumed above
+                    // the Scaffold it lifted the bar along with everything else. The Scaffold's own
+                    // padding goes on first and is then declared consumed, so imePadding() adds only
+                    // what the keyboard needs beyond it instead of counting the system bar twice.
+                    modifier = Modifier
+                        .padding(padding)
+                        .consumeWindowInsets(padding)
+                        .imePadding(),
+                ) {
+                    composable(Destination.Overview.route) {
+                        OverviewScreen(state, viewModel) { route -> navController.openFromOverview(route) }
+                    }
+                    composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
+                    composable(Destination.Posting.route) {
+                        PostingScreen(state, viewModel) { navController.navigate("abgleich") }
+                    }
+                    composable("abgleich") {
+                        MatchScreen(state, viewModel) {
+                            navController.navigate(Destination.Application.route)
+                        }
+                    }
+                    composable(Destination.Application.route) { ApplicationScreen(state, viewModel) }
+                    composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
                 }
-                composable(Destination.Application.route) { ApplicationScreen(state, viewModel) }
-                composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
             }
         }
     }

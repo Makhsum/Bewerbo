@@ -43,6 +43,8 @@
     <!-- Profile -->
     <string name="profile_subtitle">Enter everything in your own language. Bewerbo writes the German.</string>
     <string name="profile_input_language">Input language: %1$s</string>
+    <string name="profile_app_language">App language: %1$s</string>
+    <string name="profile_languages_hint">The app language is the language of these screens. The input language is the one you write your profile in — the application itself is always German.</string>
     <string name="profile_complete">%1$d %% complete</string>
     <string name="profile_section_person">Person</string>
     <string name="profile_section_experience">Berufserfahrung</string>

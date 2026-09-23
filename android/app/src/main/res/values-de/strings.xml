@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Deutsche Oberfläche. Was hier fehlt, fällt auf values/strings.xml zurück — und das ist Absicht:
+  zurück fallen nur die Schlüssel, deren Vorgabe schon deutsch ist, weil es die Begriffe sind, die
+  in jeder Sprache deutsch bleiben (Lebenslauf, Anschreiben, DIN 5008, Anlagen, anabin, Mappe).
+  Siehe values/strings.xml für die Begründung. Ein englischer Rest bleibt damit nicht stehen.
+
+  HARTE REGEL: kein Emoji. EmojiFreeStringsTest lässt den Build sonst scheitern.
+-->
+<resources>
+    <string name="nav_overview">Übersicht</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_posting">Stellenanzeige</string>
+    <string name="nav_application">Bewerbung</string>
+    <string name="nav_locker">Mappe</string>
+
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_correct">Korrigieren</string>
+
+    <string name="overview_of_hundred">von 100</string>
+    <string name="overview_profile_complete">Profil vollständig</string>
+    <string name="overview_gaps_explained">Lücken erklärt</string>
+    <string name="overview_evidence">Nachweise abgelegt</string>
+    <string name="overview_next_steps">Nächste Schritte</string>
+    <string name="overview_active">Laufende Bewerbungen</string>
+    <string name="overview_applications_empty_title">Noch keine Bewerbung begonnen</string>
+    <string name="overview_applications_empty_body">Fügen Sie auf dem Bildschirm »Stellenanzeige« eine Anzeige ein. Jede begonnene Bewerbung steht hier mit Arbeitgeber, Referenznummer und Stand, und von hier kommen Sie in eine unfertige zurück.</string>
+    <string name="overview_your_locker">Ihre Mappe</string>
+    <string name="overview_eu_title">Ihre Daten bleiben in der EU</string>
+    <string name="overview_eu_body">Profildaten liegen verschlüsselt auf Servern in der EU und werden nach dem Export gelöscht, sobald Sie es verlangen.</string>
+
+    <string name="translation_pending_title">Die Übersetzung steht noch aus</string>
+    <string name="translation_pending_body">%1$d Einträge sind noch in Ihrer eigenen Sprache. Bewerbo schreibt das Deutsche, sobald für diese Installation ein Sprachmodell eingerichtet ist; bis dahin behalten Lebenslauf und Anschreiben für diese Einträge Ihre Formulierung.</string>
+
+    <string name="profile_subtitle">Tragen Sie alles in Ihrer eigenen Sprache ein. Bewerbo schreibt das Deutsche.</string>
+    <string name="profile_app_language">App-Sprache: %1$s</string>
+    <string name="profile_input_language">Eingabesprache: %1$s</string>
+    <string name="profile_languages_hint">Die App-Sprache ist die Sprache dieser Bildschirme. Die Eingabesprache ist die, in der Sie Ihr Profil schreiben — die Bewerbung selbst ist immer deutsch.</string>
+    <string name="profile_complete">%1$d %% vollständig</string>
+    <string name="profile_timeline_empty_title">Der Zeitstrahl ist noch leer</string>
+    <string name="profile_timeline_empty_body">Tragen Sie Ihre erste Berufserfahrung oder Ausbildung ein. Bewerbo zeichnet daraus den Zeitstrahl und benennt jede Lücke, nach der eine deutsche Personalabteilung fragen würde.</string>
+    <string name="profile_gap_headline">Lücke %1$s – %2$s (%3$d Monate)</string>
+    <string name="profile_gap_explainer">Benennen Sie sie — Umzug, Sprachkurs oder Anerkennungsverfahren — und sie ist kein Warnzeichen mehr.</string>
+    <string name="profile_gap_reason_label">Grund für die Lücke</string>
+    <string name="profile_gap_save">Grund speichern</string>
+    <string name="profile_gap_in_cv">Im Lebenslauf: »%1$s«</string>
+    <string name="profile_reference_on_file">Zeugnis abgelegt</string>
+    <string name="profile_reference_missing">Zeugnis fehlt</string>
+    <string name="profile_certificate_on_file">Zertifikat ist in der Mappe</string>
+    <string name="profile_certificate_missing">Noch kein Zertifikat abgelegt</string>
+    <string name="profile_rephrase_duties">Tätigkeiten in Ergebnisse umformulieren</string>
+    <string name="profile_anabin_open">Anerkennung offen</string>
+    <string name="profile_anabin_lookup">In anabin nachschlagen</string>
+    <string name="profile_equivalent_to">Entspricht in Deutschland: %1$s</string>
+    <string name="profile_add_experience">Position hinzufügen</string>
+
+    <string name="person_first_name">Vorname</string>
+    <string name="person_last_name">Nachname</string>
+    <string name="person_street">Straße und Hausnummer</string>
+    <string name="person_postal_code">Postleitzahl</string>
+    <string name="person_city">Ort</string>
+    <string name="person_email">E-Mail</string>
+    <string name="person_phone">Telefon</string>
+
+    <string name="experience_position">Position</string>
+    <string name="experience_employer">Arbeitgeber</string>
+    <string name="experience_location">Ort</string>
+    <string name="experience_from">Von (MM/JJJJ)</string>
+    <string name="experience_to">Bis (leer = heute)</string>
+    <string name="experience_workload">Pensum</string>
+    <string name="experience_duties">Tätigkeiten, eine je Zeile</string>
+    <string name="experience_missing">Es fehlt noch: %1$s</string>
+
+    <string name="posting_subtitle">Fügen Sie die Anzeige ein — jedes Feld unten verweist auf die Worte, aus denen es stammt.</string>
+    <string name="posting_paste_label">Stellenanzeige einfügen</string>
+    <string name="posting_paste_field">Text der Anzeige</string>
+    <string name="posting_parse">Anzeige einlesen</string>
+    <string name="posting_new">Andere Anzeige einfügen</string>
+    <string name="posting_source">Quelltext · %1$d Zeichen</string>
+    <string name="posting_read_from">Aus der Anzeige gelesen</string>
+    <string name="posting_field_missing">In der Anzeige nicht genannt</string>
+    <string name="posting_field_add">Ergänzen</string>
+    <string name="posting_confidence_check">Prüfen</string>
+    <string name="posting_correct_fields">Felder korrigieren</string>
+    <string name="posting_no_span">Ohne Hervorhebung gezeigt: die zitierten Worte stehen so nicht im Text.</string>
+    <string name="posting_reference_note">Kommt in die Betreffzeile</string>
+    <string name="posting_employer_type_note">bestimmt Foto und Register</string>
+    <string name="posting_photo_expected">Ein Foto ist hier üblich, und persönliche Angaben werden erwartet. Gesetzlich vorgeschrieben ist beides nicht — nach dem AGG darf kein Arbeitgeber sie verlangen.</string>
+    <string name="posting_photo_public">Im öffentlichen Dienst zählt die Form mehr als das Foto. Persönliche Angaben gehören dazu, das Foto nicht.</string>
+    <string name="posting_photo_unusual">Ein Foto wirkte hier deplatziert. Lassen Sie es weg und halten Sie das Register schlicht.</string>
+    <string name="posting_match">Anforderungen abgleichen</string>
+
+    <string name="match_none_title">Noch keine Anzeige eingelesen</string>
+    <string name="match_none_body">Fügen Sie zuerst auf dem Bildschirm »Stellenanzeige« eine Anzeige ein. Der Abgleich vergleicht ihre Anforderungen mit Ihrem Profil.</string>
+    <string name="match_none_read_title">Aus dieser Anzeige wurde keine Anforderung gelesen</string>
+    <string name="match_none_read_body">Bewerbo hat im Text keine Liste von Anforderungen gefunden. Über Ihr Profil sagt das nichts. Korrigieren Sie den Anzeigentext auf dem Bildschirm »Stellenanzeige«, oder schreiben Sie das Anschreiben ohne Abgleich.</string>
+    <string name="match_covered">%1$d von %2$d Anforderungen belegt</string>
+    <string name="match_proven">Durch Ihr Profil belegt · %1$d</string>
+    <string name="match_open">Noch offen · %1$d</string>
+    <string name="match_not_proven">Nicht belegt · %1$d</string>
+    <string name="match_not_proven_note">Nichts davon wird im Anschreiben behauptet.</string>
+    <string name="match_file_title">Nachweis ablegen</string>
+    <string name="match_file_body">Das Dokument kommt in Ihre Mappe, und diese Anforderung gilt als belegt.</string>
+    <string name="match_guard_title">Anschreiben, kein Motivationsschreiben</string>
+    <string name="match_guard_body">Sie haben eine Stellenanzeige eingefügt, deshalb schreibt Bewerbo ein Anschreiben. Ein Motivationsschreiben gehört zu Studium und Stipendium — hier eingereicht, weist es Sie als auswärtig aus.</string>
+    <string name="match_generate_letter">Anschreiben erzeugen</string>
+
+    <string name="application_subtitle">Was eine deutsche Leserin und ein Bewerbermanagementsystem sehen.</string>
+    <string name="application_none_title">Noch kein Anschreiben</string>
+    <string name="application_none_body">Führen Sie zuerst den Abgleich durch. Das Anschreiben wird gegen die Anforderungen geschrieben, die er findet.</string>
+    <string name="application_page_one">Seite 1 · Anschreiben · DIN 5008</string>
+    <string name="application_din_show">DIN-Raster einblenden</string>
+    <string name="application_din_hide">DIN-Raster ausblenden</string>
+    <string name="application_regenerate">Neu schreiben</string>
+    <string name="application_review_clean">Keine Hinweise</string>
+    <string name="application_ats_passed">Bestanden</string>
+    <string name="application_ats_failed">Nicht bestanden</string>
+    <string name="application_export">Export</string>
+    <string name="application_file_detail">%1$d Seiten · %2$d KB</string>
+    <string name="application_save_pdf">Als ein PDF speichern</string>
+    <string name="application_why_german_title">Warum es deutsch klingt</string>
+    <string name="application_why_german_body">Eine namentliche Anrede, die Referenznummer in der Betreffzeile, kein »Hiermit bewerbe ich mich« und kein »Teamplayer« — und das Anschreiben antwortet auf die Worte der Anzeige, statt Tugenden aufzuzählen.</string>
+    <string name="application_source_model">Dieses Anschreiben hat das Sprachmodell geschrieben, geprüft nach denselben Regeln.</string>
+    <string name="application_source_rules">Dieses Anschreiben hat der regelbasierte Schreiber verfasst — für diese Installation ist kein Sprachmodell eingerichtet.</string>
+    <string name="application_status">Stand dieser Bewerbung</string>
+    <string name="application_export_choose">Was in die Datei kommt</string>
+    <string name="application_template">Wie der Lebenslauf gesetzt ist</string>
+
+    <string name="locker_subtitle">Zeugnisse, Zertifikate und der anabin-Auszug, auf die sich das Anlagenverzeichnis beruft.</string>
+    <string name="locker_empty_title">Die Mappe ist leer</string>
+    <string name="locker_empty_body">Legen Sie die Dokumente ab, auf die sich Ihre Bewerbung beruft. Bewerbo führt hier den Nachweis; der Scan selbst bleibt auf Ihrem Gerät.</string>
+    <string name="locker_add">Dokument hinzufügen</string>
+    <string name="locker_field_title">Titel</string>
+    <string name="locker_field_note">Notiz</string>
+    <string name="locker_field_pages">Seiten</string>
+    <string name="locker_storage_title">Was hier gespeichert wird</string>
+    <string name="locker_storage_body">Bewerbo speichert den Vermerk zu einem Dokument — Titel, Art und Seitenzahl —, damit das Anlagenverzeichnis es benennen kann. Die Datei selbst wird nicht hochgeladen.</string>
+    <string name="locker_demand_title">Diese Anzeige verlangt · %1$d</string>
+    <string name="locker_demand_outstanding">Fehlt noch</string>
+    <string name="locker_demand_on_file">In der Mappe</string>
+
+    <string name="profile_add_education">Ausbildung hinzufügen</string>
+    <string name="education_degree">Abschluss oder Qualifikation</string>
+    <string name="education_institution">Einrichtung</string>
+    <string name="education_location">Ort</string>
+    <string name="education_country">Ländercode (UA, RU, DE …)</string>
+    <string name="education_from">Von (MM/JJJJ)</string>
+    <string name="education_to">Bis (leer = heute)</string>
+    <string name="profile_add_language">Sprache hinzufügen</string>
+    <string name="language_name">Sprache</string>
+    <string name="language_level">Niveau</string>
+    <string name="profile_certificate_toggle">Zertifikat ist in der Mappe</string>
+    <string name="profile_reference_toggle">Zeugnis ist in der Mappe</string>
+    <string name="profile_anabin_confirm">Diese Entsprechung übernehmen</string>
+    <string name="profile_anabin_confirm_hint">Es kommt nichts in den Lebenslauf, bevor Sie es bestätigt haben.</string>
+    <string name="profile_anabin_withdraw">Zurückziehen</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="overview_application_count">
+        <item quantity="one">%1$d Bewerbung</item>
+        <item quantity="other">%1$d Bewerbungen</item>
+    </plurals>
+    <plurals name="profile_gap_count">
+        <item quantity="one">%1$d Lücke</item>
+        <item quantity="other">%1$d Lücken</item>
+    </plurals>
+    <plurals name="application_review_hint_count">
+        <item quantity="one">%1$d Hinweis</item>
+        <item quantity="other">%1$d Hinweise</item>
+    </plurals>
+    <plurals name="locker_page_count">
+        <item quantity="one">%1$d Seite</item>
+        <item quantity="other">%1$d Seiten</item>
+    </plurals>
+</resources>
