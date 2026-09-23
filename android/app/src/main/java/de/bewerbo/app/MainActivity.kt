@@ -146,10 +146,16 @@ private fun BottomBar(navController: NavHostController) {
                 selected = current == destination.route ||
                     (destination == Destination.Posting && current == "abgleich"),
                 onClick = {
+                    // The Abgleich lives inside the Posting tab, so restoreState put the user
+                    // back on the Abgleich when they tapped "Stellenanzeige" from it — the tab
+                    // they pressed to get BACK to the posting did nothing at all, and only the
+                    // system back gesture returned, which nothing on screen suggests. Tapping the
+                    // tab you are already inside goes to the root of it.
+                    val insidePosting = destination == Destination.Posting && current == "abgleich"
                     navController.navigate(destination.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
-                        restoreState = true
+                        restoreState = !insidePosting
                     }
                 },
                 icon = {
