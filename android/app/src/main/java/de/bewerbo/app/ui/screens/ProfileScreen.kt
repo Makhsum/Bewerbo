@@ -445,7 +445,12 @@ private fun ExperienceCard(
                     listOfNotNull(
                         entry.employer.ifBlank { null },
                         entry.location.ifBlank { null },
-                        "${entry.from.take(7)} – ${entry.to?.take(7) ?: "heute"}",
+                        // The open end is a word, not a blank: written as a literal "heute" it
+                        // stood in an English and a Russian screen too, and it is not one of the
+                        // fourteen German terms the user meets outside the app.
+                        "${entry.from.take(7)} – ${
+                            entry.to?.take(7) ?: stringResource(R.string.profile_entry_ongoing)
+                        }",
                     ).joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.muted,
@@ -671,7 +676,11 @@ private fun EducationCard(
                     listOfNotNull(
                         entry.institution.ifBlank { null },
                         entry.location.ifBlank { null },
-                        "${entry.from.take(4)} – ${entry.to?.take(4) ?: ""}",
+                        // A qualification still being read for ended the line on a dash with
+                        // nothing behind it — "2013 –". Same word the position card uses.
+                        "${entry.from.take(4)} – ${
+                            entry.to?.take(4) ?: stringResource(R.string.profile_entry_ongoing)
+                        }",
                     ).joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.muted,

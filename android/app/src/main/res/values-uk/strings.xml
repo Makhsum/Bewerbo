@@ -163,6 +163,7 @@
     <string name="profile_timeline">Хронологія: %1$d – %2$d</string>
     <string name="profile_timeline_empty_title">Хронологія ще порожня</string>
     <string name="profile_timeline_empty_body">Додайте першу посаду або освіту. Тоді Bewerbo побудує за ними хронологію і назве кожну прогалину, про яку запитає німецький рекрутер.</string>
+    <string name="profile_entry_ongoing">до сьогодні</string>
     <string name="profile_gap_headline">Прогалина %1$s – %2$s (%3$d міс.)</string>
     <string name="profile_gap_explainer">Назвіть причину — переїзд, мовні курси, визнання диплома — і вона перестане бути тривожним сигналом.</string>
     <string name="profile_gap_reason_label">Причина прогалини</string>

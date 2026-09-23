@@ -164,6 +164,7 @@
     <string name="profile_timeline">Zeitstrahl %1$d – %2$d</string>
     <string name="profile_timeline_empty_title">Der Zeitstrahl ist noch leer</string>
     <string name="profile_timeline_empty_body">Tragen Sie Ihre erste Station oder Ausbildung ein. Bewerbo zeichnet daraus den Zeitstrahl und benennt jede Lücke, nach der eine deutsche Personalabteilung fragen würde.</string>
+    <string name="profile_entry_ongoing">heute</string>
     <string name="profile_gap_headline">Lücke %1$s – %2$s (%3$d Monate)</string>
     <string name="profile_gap_explainer">Benennen Sie sie — Umzug, Sprachkurs oder Anerkennungsverfahren — und sie ist kein Warnzeichen mehr.</string>
     <string name="profile_gap_reason_label">Grund für die Lücke</string>

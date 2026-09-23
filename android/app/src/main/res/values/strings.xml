@@ -183,6 +183,7 @@
     <string name="profile_timeline">Timeline %1$d – %2$d</string>
     <string name="profile_timeline_empty_title">The timeline is still empty</string>
     <string name="profile_timeline_empty_body">Add your first position or qualification. Bewerbo then draws the timeline from it and names every gap a German recruiter would ask about.</string>
+    <string name="profile_entry_ongoing">today</string>
     <string name="profile_gap_headline">Gap %1$s – %2$s (%3$d months)</string>
     <string name="profile_gap_explainer">Name it — a move, a language course, a recognition procedure — and it stops being a warning sign.</string>
     <string name="profile_gap_reason_label">Reason for the gap</string>

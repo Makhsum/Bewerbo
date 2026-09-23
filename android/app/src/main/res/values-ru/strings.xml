@@ -161,6 +161,7 @@
     <string name="profile_timeline">Хронология: %1$d – %2$d</string>
     <string name="profile_timeline_empty_title">Хронология пока пуста</string>
     <string name="profile_timeline_empty_body">Добавьте первую должность или образование. Тогда Bewerbo построит по ним хронологию и назовёт каждый пробел, о котором спросит немецкий рекрутер.</string>
+    <string name="profile_entry_ongoing">по настоящее время</string>
     <string name="profile_gap_headline">Пробел %1$s – %2$s (%3$d мес.)</string>
     <string name="profile_gap_explainer">Назовите причину — переезд, языковые курсы, признание диплома — и она перестанет быть тревожным сигналом.</string>
     <string name="profile_gap_reason_label">Причина пробела</string>
