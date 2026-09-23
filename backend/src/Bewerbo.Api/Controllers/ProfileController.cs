@@ -6,6 +6,7 @@ using Bewerbo.Api.Rendering;
 using Bewerbo.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using static Bewerbo.Api.Contracts.DtoMapping;
 
@@ -205,6 +206,98 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
 
         var name = $"Lebenslauf_{profile.FirstName}_{profile.LastName}.pdf";
         return File(pdf, "application/pdf", name);
+    }
+
+    // -- the account's own data ------------------------------------------------------------------
+
+    /// <summary>
+    /// Everything this installation holds about the account — Art. 15 and Art. 20 DSGVO in one
+    /// answer, because they are the same question asked twice: the settings screen lists the
+    /// categories off this body, and saves the very same body as the file the user takes away.
+    ///
+    /// The postings and the applications are read separately from the profile because they are not
+    /// part of it: a <see cref="Posting"/> carries a ProfileId with no relationship behind it.
+    /// That is the same fact <see cref="AccountErasure"/> exists for, seen from the other side.
+    /// </summary>
+    [HttpGet("{id:guid}/data")]
+    public async Task<IActionResult> GetData(Guid id)
+    {
+        var profile = await db.FullProfileAsync(id);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
+
+        var postings = await db.Postings.Where(p => p.ProfileId == id).ToListAsync();
+        var applications = await db.Applications.Where(a => a.ProfileId == id).ToListAsync();
+
+        var person = new PersonDto(profile.InputLanguage, profile.FirstName, profile.LastName,
+            profile.Street, profile.PostalCode, profile.City, profile.Phone, profile.Email,
+            profile.BirthDate is null ? null : Iso(profile.BirthDate.Value),
+            profile.Template.ToString());
+
+        return Ok(new DataExportDto(
+            profile.Id,
+            DateTimeOffset.UtcNow.ToString("o"),
+            Categories(profile, person, postings.Count, applications.Count),
+            person,
+            profile.Experience.Select(e => e.ToDto()).ToList(),
+            profile.Education.Select(e => e.ToDto()).ToList(),
+            profile.Languages.Select(l => l.ToDto()).ToList(),
+            profile.Gaps.Select(g => new GapDto(Iso(g.From), Iso(g.To),
+                TimelineService.MonthsBetween(g.From, g.To),
+                !string.IsNullOrWhiteSpace(g.Reason), g.Reason, g.GermanWording)).ToList(),
+            profile.Documents.Select(d => d.ToDto()).ToList(),
+            postings.Select(p => new ExportedPostingDto(p.Id, p.Company, p.JobTitle, p.Reference,
+                p.ParsedAt.ToString("o"), p.SourceText)).ToList(),
+            applications.Select(a =>
+            {
+                var letter = System.Text.Json.JsonSerializer.Deserialize<LetterContent>(a.LetterJson)
+                             ?? new LetterContent();
+                return new ExportedApplicationDto(a.Id, a.PostingId, a.Tone.ToString(),
+                    a.Status.ToString(), a.CreatedAt.ToString("o"),
+                    a.SentAt?.ToString("o"),
+                    new LetterDto(letter.Salutation, letter.Subject, letter.Paragraphs,
+                        letter.Closing, letter.Attachments));
+            }).ToList()));
+    }
+
+    /// <summary>
+    /// Erases the account and everything held under it — Art. 17 DSGVO. The work is in
+    /// <see cref="AccountErasure"/>, which is where the one record the cascade does not reach is
+    /// dealt with.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id) =>
+        await AccountErasure.EraseAsync(db, id)
+            ? NoContent()
+            : NotFoundProblem(ProfileMissing, ProfileMissingKind);
+
+    /// <summary>
+    /// What is held, counted by category. Keys and not sentences: the screen writes the names, and a
+    /// category the user has nothing in is still listed — "no documents" is an answer to "what do
+    /// you have about me", and leaving it out would read as something withheld.
+    ///
+    /// <c>person</c> is counted in FILLED DETAILS rather than as one record, because that is the
+    /// question being asked: "how much of me is here", not "is there a row".
+    /// </summary>
+    private static List<DataCategoryDto> Categories(
+        Domain.Profile profile, PersonDto person, int postings, int applications)
+    {
+        var details = new[]
+        {
+            person.FirstName, person.LastName, person.Street, person.PostalCode, person.City,
+            person.Phone, person.Email, person.BirthDate,
+        };
+
+        return
+        [
+            new DataCategoryDto("person", details.Count(d => !string.IsNullOrWhiteSpace(d))),
+            new DataCategoryDto("berufserfahrung", profile.Experience.Count),
+            new DataCategoryDto("ausbildung", profile.Education.Count),
+            new DataCategoryDto("sprachen", profile.Languages.Count),
+            new DataCategoryDto("luecken", profile.Gaps.Count),
+            new DataCategoryDto("anlagen", profile.Documents.Count),
+            new DataCategoryDto("stellenanzeigen", postings),
+            new DataCategoryDto("bewerbungen", applications),
+        ];
     }
 
     internal const string ProfileMissing = "Es gibt kein Profil mit dieser Id.";

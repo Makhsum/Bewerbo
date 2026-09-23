@@ -89,6 +89,27 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     suspend fun degrees(country: String?): List<DegreeEquivalence> =
         client.get("$baseUrl/api/recognition/degrees" + (country?.let { "?country=$it" } ?: "")).body()
 
+    // -- the account's own data ---------------------------------------------------------------
+
+    /// What the server holds about this account, for the settings screen to list.
+    suspend fun accountData(id: String): DataExport =
+        client.get("$baseUrl/api/profile/$id/data").body()
+
+    /// The same answer, written to a file as it arrived. Deliberately the raw body rather than
+    /// [accountData] re-serialised: what the user takes away should be what the server sent, and the
+    /// client only models the part of it that it draws.
+    suspend fun accountDataFile(id: String, into: File): File =
+        download(client.get("$baseUrl/api/profile/$id/data"), into)
+
+    /// Erases the account and everything held under it.
+    suspend fun deleteAccount(id: String) {
+        client.delete("$baseUrl/api/profile/$id")
+    }
+
+    /// Who runs this installation, and whether a model outside it writes the Anschreiben — the two
+    /// facts the legal pages need and the app cannot know by itself.
+    suspend fun legal(): LegalInfo = client.get("$baseUrl/api/legal").body()
+
     suspend fun lebenslaufPdf(id: String, into: File): File =
         download(client.post("$baseUrl/api/profile/$id/lebenslauf"), into)
 

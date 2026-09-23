@@ -57,6 +57,7 @@
     <string name="error_application_missing">This application is no longer on the server.</string>
     <string name="error_document_missing">This document is no longer on the server.</string>
     <string name="error_unknown">That did not work. Please try again.</string>
+    <string name="error_account_key_invalid">That is not an account key. Copy it from the settings on the other device.</string>
 
     <!-- The outstanding steps. The server says WHICH step it is and what goes into it; the
          sentence is written here, because the server never learns the interface language. -->
@@ -164,7 +165,7 @@
     <string name="profile_subtitle">Enter everything in your own language. Bewerbo writes the German.</string>
     <string name="profile_input_language">Input language: %1$s</string>
     <string name="profile_app_language">App language: %1$s</string>
-    <string name="profile_languages_hint">The app language is the language of these screens. The input language is the one you write your profile in — the application itself is always German.</string>
+    <string name="profile_languages_hint">The input language is the one you write your profile in — the application itself is always German. The language of these screens is in the settings.</string>
     <string name="profile_complete">%1$d %% complete</string>
     <string name="profile_section_person">Person</string>
     <string name="profile_section_experience">Work experience</string>
@@ -354,4 +355,82 @@
     <string name="timeline_legend_work">Work</string>
     <string name="timeline_legend_gap">Gap</string>
     <string name="application_template">How the Lebenslauf is laid out</string>
+
+    <!-- The kept terms the legal pages brought with them. -->
+    <string name="term_agb">the terms of use every German service states: what it does, and what it does not promise</string>
+    <string name="term_impressum">the page on which a German service names who runs it, which the law requires</string>
+    <string name="term_dsgvo">the European data-protection law your right to see, take and delete your data comes from</string>
+
+    <!-- Settings: the account, the language of the interface, what is held about the user, and the
+         legal pages. Reached from the Overview, because it is not a place the user works in. -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Your account, the language of the app, your data and the legal pages.</string>
+    <string name="settings_open">Open the settings</string>
+    <string name="settings_back">Back</string>
+
+    <string name="settings_account">Your account</string>
+    <string name="settings_account_unnamed">Not named yet</string>
+    <string name="settings_account_hint">Bewerbo asks for no password and no e-mail address. The key below IS your account: enter it on another device to carry everything there, and keep it to yourself.</string>
+    <string name="settings_account_key">Account key</string>
+    <string name="settings_account_switch">Continue with another account</string>
+    <string name="settings_account_switch_body">Enter the key shown on the other device. This device then works on that account; nothing is deleted from the account you leave.</string>
+    <string name="settings_account_switch_confirm">Continue</string>
+
+    <string name="settings_language">Language of the app</string>
+    <string name="settings_language_hint">The language everything you read here is written in. The language you write your PROFILE in belongs to the profile, so it is set there.</string>
+
+    <string name="settings_data">What is held about you</string>
+    <string name="settings_data_hint">A Lebenslauf is personal data, and the law gives you three things because of it: to see what is held, to take a copy with you, and to have it deleted. All three are here.</string>
+    <string name="settings_data_export">Save a copy</string>
+    <string name="settings_data_export_hint">Written into the documents of the app as one file, exactly as the server holds it.</string>
+    <string name="settings_data_delete">Delete the account and everything in it</string>
+    <string name="settings_delete_title">Delete everything?</string>
+    <string name="settings_delete_body">What you entered about yourself, the documents on file, the postings you pasted and every application are deleted from the server. This cannot be undone. Bewerbo then opens an empty account, so you can begin again.</string>
+
+    <!-- What is held, by category. Counted rather than described: a zero is an answer to the
+         question too, and a category left out reads as one being withheld. -->
+    <string name="data_category_person">Details about you</string>
+    <string name="data_category_berufserfahrung">Jobs you have held</string>
+    <string name="data_category_ausbildung">What you studied</string>
+    <string name="data_category_sprachen">Languages</string>
+    <string name="data_category_luecken">Gaps you explained</string>
+    <string name="data_category_anlagen">Documents on file</string>
+    <string name="data_category_stellenanzeigen">Postings you pasted</string>
+    <string name="data_category_bewerbungen">Applications written</string>
+
+    <string name="settings_legal">Legal</string>
+    <string name="legal_terms">Terms of use (AGB)</string>
+    <string name="legal_privacy">Privacy notice</string>
+    <string name="legal_imprint">Imprint</string>
+
+    <!-- The terms. Short paragraphs and not clauses: the reader is applying for a job in a foreign
+         language, and a wall of legal prose is a page nobody reads. -->
+    <string name="legal_terms_scope">These terms hold between you and the operator named in the Impressum for as long as you use Bewerbo. Using the app means accepting them.</string>
+    <string name="legal_terms_service">What Bewerbo does: it turns the profile you enter into a German Lebenslauf and Anschreiben and exports them as one PDF. It is a writing aid. It does not apply on your behalf, it does not deal with an employer for you, and it cannot promise that an application succeeds.</string>
+    <string name="legal_terms_yours">What you enter stays yours, and it is yours to get right. The app lays out what you write; it cannot know whether it is true. A statement in a Lebenslauf that does not hold is a matter between you and the employer.</string>
+    <string name="legal_terms_check">The German may be written by a language model. Read it before you send it. What a foreign qualification counts for here is written into a document only after you have confirmed it yourself.</string>
+    <string name="legal_terms_liability">The app costs nothing and is provided as it is. The operator answers without limit for intent, for gross negligence and for injury to life, body or health; beyond that only for breaking an obligation this agreement stands on, and then only for the damage such use typically causes.</string>
+    <string name="legal_terms_end">You can delete your account at any time, on the settings screen, and that ends this agreement. The operator may close an account used to attack or abuse the service.</string>
+    <string name="legal_terms_law">German law applies.</string>
+
+    <!-- The privacy notice. Every sentence here has to be true of THIS installation, which is why
+         the paragraph about the language model is chosen by what the server reports. -->
+    <string name="legal_privacy_controller">Responsible for what happens to your data is the operator named in the Impressum, where you also find how to reach them.</string>
+    <string name="legal_privacy_stored">Held are: what you enter about yourself — name, address, telephone, e-mail, date of birth, the jobs you have held, what you studied, your languages and the reasons you gave for gaps; for each document on file its title, kind and number of pages; the postings you paste in; and the applications the app writes.</string>
+    <string name="legal_privacy_files">The documents themselves are not uploaded. A Zeugnis stays on your device — Bewerbo keeps only the entry the Anlagenverzeichnis needs in order to name it.</string>
+    <string name="legal_privacy_why">Why: to produce the documents you asked for, which is the agreement between us — Art. 6 (1) (b) DSGVO. Nothing here is used for advertising and nothing is passed on for money.</string>
+    <string name="legal_privacy_model">The German is written by a language model outside this server: for that, and for nothing else, what you entered is sent to %1$s.</string>
+    <string name="legal_privacy_model_none">No language model is in use on this installation. What you enter is turned into German by rules on the server itself, and leaves it only in the file you export yourself.</string>
+    <string name="legal_privacy_kept">Held until you delete the account. Deleting it takes your details, the documents on file, your postings and your applications with it, at once.</string>
+    <string name="legal_privacy_rights">Your rights, Art. 15 to 21 DSGVO: to see what is held, to have it corrected, to have it deleted, to have its use restricted, to take a copy with you, and to object. Seeing it, taking it and deleting it are on the settings screen. You may also complain to a data-protection authority.</string>
+
+    <!-- The Impressum. The particulars come from the installation, never from this file: an address
+         compiled into the app would be wrong for every deployment but one. -->
+    <string name="legal_imprint_intro">The particulars German law requires a service open to the public to state.</string>
+    <string name="legal_imprint_missing">This installation has not said who operates it. Until it does, the Impressum the law asks for is missing, and the app must not be offered to the public.</string>
+    <string name="legal_imprint_operator">Operator</string>
+    <string name="legal_imprint_address">Address</string>
+    <string name="legal_imprint_represented">Represented by</string>
+    <string name="legal_imprint_register">Register</string>
+    <string name="legal_imprint_contact">Contact</string>
 </resources>

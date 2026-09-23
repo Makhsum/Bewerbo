@@ -64,6 +64,19 @@ builder.Services.AddSingleton(new LlmOptions
              ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"),
     Model = builder.Configuration["Anthropic:Model"] ?? "claude-opus-5",
 });
+// Who runs this installation, for the Impressum. Configuration and not a resource string, because
+// an address compiled into the app would be wrong for every deployment but one — see LegalOptions.
+builder.Services.AddSingleton(new Bewerbo.Api.Legal.LegalOptions
+{
+    OperatorName = builder.Configuration["Legal:OperatorName"] ?? "",
+    Street = builder.Configuration["Legal:Street"] ?? "",
+    PostalCode = builder.Configuration["Legal:PostalCode"] ?? "",
+    City = builder.Configuration["Legal:City"] ?? "",
+    Country = builder.Configuration["Legal:Country"] ?? "",
+    Email = builder.Configuration["Legal:Email"] ?? "",
+    Represented = builder.Configuration["Legal:Represented"] ?? "",
+    Register = builder.Configuration["Legal:Register"] ?? "",
+});
 builder.Services.AddHttpClient<ILanguageModel, LlmClient>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(90);

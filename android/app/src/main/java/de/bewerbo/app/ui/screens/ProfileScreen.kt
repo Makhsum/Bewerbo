@@ -38,13 +38,14 @@ import de.bewerbo.app.data.LanguageSkill
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.LabelledField
+import de.bewerbo.app.ui.components.LanguageSelector
+import de.bewerbo.app.ui.components.labelOf
 import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.components.Timeline
 import de.bewerbo.app.ui.TermNote
-import de.bewerbo.app.ui.UI_LANGUAGES
 import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -91,11 +92,10 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
-        // The two languages, each picked once and each said in full. Only the input language used
-        // to be named here, while the language of the screens themselves was the phone's and had
-        // no control at all — so the one language on the Profil screen looked like the language of
-        // the app, which is precisely what it is not. They stand together now, with the sentence
-        // below saying which is which, because apart they invite the same mistake.
+        // The INPUT language — the one the user writes their profile in, which is profile data and
+        // saved with it. The language of the screens themselves is the app's own preference and it
+        // stands in the settings; the sentence below says so, because the two invite exactly one
+        // mistake and naming only one of them here is what used to cause it.
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 // FlowRow for the reason the section rail below uses one: two buttons and the pill
@@ -108,21 +108,9 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                 ) {
                     LanguageSelector(
                         label = stringResource(
-                            R.string.profile_app_language,
-                            labelOf(UI_LANGUAGES, state.uiLanguage),
-                        ),
-                        icon = BewerboIcons.Globe,
-                        options = UI_LANGUAGES,
-                        testTagPrefix = "profile_ui_language",
-                        onPick = viewModel::setUiLanguage,
-                    )
-                    LanguageSelector(
-                        label = stringResource(
                             R.string.profile_input_language,
                             labelOf(INPUT_LANGUAGES, profile?.person?.inputLanguage),
                         ),
-                        // A different icon from the one beside it, so the two are told apart
-                        // before either label is read.
                         icon = BewerboIcons.Languages,
                         options = INPUT_LANGUAGES,
                         testTagPrefix = "profile_language",
@@ -321,57 +309,6 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                 // The button names the Lebenslauf, and the Profil screen is where the user reaches
                 // it first — the Übersicht only mentions it once the profile is filled.
                 TermNote(germanTerm("lebenslauf"))
-            }
-        }
-    }
-}
-
-/// The endonym of [code] in [options] — the name a language calls itself, which is the only name
-/// that is legible to somebody who cannot yet read the interface.
-private fun labelOf(options: List<Pair<String, String>>, code: String?): String =
-    options.firstOrNull { it.first == code }?.second.orEmpty()
-
-/**
- * One of the two language buttons, with the menu it opens.
- *
- * The app language and the input language are picked the same way and differ only in their list,
- * their label and what they write to — so they are one control used twice rather than two that
- * drift apart.
- */
-@Composable
-private fun LanguageSelector(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    options: List<Pair<String, String>>,
-    testTagPrefix: String,
-    onPick: (String) -> Unit,
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-
-    Box {
-        OutlinedButton(
-            onClick = { menuOpen = true },
-            modifier = Modifier.testTag("${testTagPrefix}_selector"),
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(label, modifier = Modifier.padding(start = Space.s))
-        }
-        DropdownMenu(
-            expanded = menuOpen,
-            onDismissRequest = { menuOpen = false },
-            // A menu renders in its own window and inherits nothing from the root, so it carries
-            // its own flag or a driver cannot see any of these items.
-            modifier = Modifier.exposeTestTags(),
-        ) {
-            options.forEach { (code, endonym) ->
-                DropdownMenuItem(
-                    text = { Text(endonym) },
-                    modifier = Modifier.testTag("${testTagPrefix}_option_$code"),
-                    onClick = {
-                        menuOpen = false
-                        onPick(code)
-                    },
-                )
             }
         }
     }

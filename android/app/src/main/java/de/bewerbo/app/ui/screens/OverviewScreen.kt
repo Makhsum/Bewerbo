@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -69,6 +70,7 @@ fun OverviewScreen(
     flowLabel: Int,
     onOpenFlow: () -> Unit,
     onBeginAnother: (() -> Unit)?,
+    onOpenSettings: () -> Unit,
     navigate: (String) -> Unit,
 ) {
     val overview = state.overview
@@ -90,20 +92,31 @@ fun OverviewScreen(
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
         item {
-            Column {
-                Text(stringResource(R.string.nav_overview), style = MaterialTheme.typography.headlineLarge)
-                if (overview != null) {
-                    Text(
-                        listOfNotNull(
-                            overview.displayName.ifBlank { null },
-                            overview.city.ifBlank { null },
-                            pluralStringResource(
-                                R.plurals.overview_application_count,
-                                overview.applicationCount, overview.applicationCount,
-                            ),
-                        ).joinToString("  ·  "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.muted,
+            // The gear sits beside the headline of the first screen, which is the one place every
+            // user passes and the only screen the settings are reached from — they are not a place
+            // on the bar, so they need a door, and this is where an Android user looks for it.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.nav_overview), style = MaterialTheme.typography.headlineLarge)
+                    if (overview != null) {
+                        Text(
+                            listOfNotNull(
+                                overview.displayName.ifBlank { null },
+                                overview.city.ifBlank { null },
+                                pluralStringResource(
+                                    R.plurals.overview_application_count,
+                                    overview.applicationCount, overview.applicationCount,
+                                ),
+                            ).joinToString("  ·  "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.muted,
+                        )
+                    }
+                }
+                IconButton(onClick = onOpenSettings, modifier = Modifier.testTag("overview_btn_settings")) {
+                    Icon(
+                        BewerboIcons.Settings,
+                        contentDescription = stringResource(R.string.settings_open),
                     )
                 }
             }

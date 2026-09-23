@@ -222,6 +222,18 @@ object BewerboIcons {
 
     val ChevronRight: ImageVector = icon("chevron_right", "M9.6 5.4 16.2 12l-6.6 6.6")
 
+    /// The way back out of a screen that was opened from another one — the settings and the legal
+    /// pages are the first of those; every other destination is reached from the bar or the rail.
+    val ChevronLeft: ImageVector = icon("chevron_left", "M14.4 5.4 7.8 12l6.6 6.6")
+
+    val Trash: ImageVector = icon(
+        "trash",
+        "M4.8 7.4h14.4",
+        "M9.4 7.4V5.6c0-.6.5-1 1-1h3.2c.6 0 1 .4 1 1v1.8",
+        "M6.6 7.4l.9 11.4c0 .6.5 1 1 1h7c.6 0 1-.4 1-1l.9-11.4",
+        "M10.4 10.8v5.6", "M13.6 10.8v5.6",
+    )
+
     val Globe: ImageVector = icon(
         "globe",
         "M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16z",

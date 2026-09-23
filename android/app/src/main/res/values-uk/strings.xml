@@ -42,6 +42,7 @@
     <string name="error_application_missing">Цієї заявки більше немає на сервері.</string>
     <string name="error_document_missing">Цього документа більше немає на сервері.</string>
     <string name="error_unknown">Не вийшло. Спробуйте ще раз.</string>
+    <string name="error_account_key_invalid">Це не ключ облікового запису. Скопіюйте його з налаштувань іншого пристрою.</string>
 
     <!-- Відкриті кроки. Сервер каже, ЯКИЙ це крок і що в нього підставити; сама фраза
          пишеться тут, бо мова інтерфейсу серверу невідома. -->
@@ -144,7 +145,7 @@
     <string name="profile_subtitle">Вводьте все своєю мовою. Bewerbo напише німецькою.</string>
     <string name="profile_input_language">Мова введення: %1$s</string>
     <string name="profile_app_language">Мова застосунку: %1$s</string>
-    <string name="profile_languages_hint">Мова застосунку — це мова самих екранів. Мова введення — та, якою ви пишете профіль; сама заявка завжди німецькою.</string>
+    <string name="profile_languages_hint">Мова введення — та, якою ви пишете профіль; сама заявка завжди німецькою. Мова цих екранів — у налаштуваннях.</string>
     <string name="profile_complete">Заповнено на %1$d %%</string>
     <string name="profile_section_person">Особисті дані</string>
     <string name="profile_section_experience">Досвід роботи</string>
@@ -321,4 +322,71 @@
     <string name="timeline_legend_work">Робота</string>
     <string name="timeline_legend_gap">Прогалина</string>
     <string name="application_template">Як оформлено Lebenslauf</string>
+
+    <string name="term_agb">умови користування, які подає кожна німецька служба: що вона робить і чого не обіцяє</string>
+    <string name="term_impressum">сторінка, на якій німецька служба називає, хто нею опікується — цього вимагає закон</string>
+    <string name="term_dsgvo">європейський закон про захист даних, з якого походить ваше право бачити, забрати й видалити свої дані</string>
+
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_subtitle">Ваш обліковий запис, мова застосунку, ваші дані та правові сторінки.</string>
+    <string name="settings_open">Відкрити налаштування</string>
+    <string name="settings_back">Назад</string>
+
+    <string name="settings_account">Ваш обліковий запис</string>
+    <string name="settings_account_unnamed">Поки без імені</string>
+    <string name="settings_account_hint">Bewerbo не питає ні пароля, ні адреси пошти. Ключ нижче І Є вашим обліковим записом: введіть його на іншому пристрої, щоб перенести туди все, і нікому його не показуйте.</string>
+    <string name="settings_account_key">Ключ облікового запису</string>
+    <string name="settings_account_switch">Продовжити з іншим обліковим записом</string>
+    <string name="settings_account_switch_body">Введіть ключ, який показано на іншому пристрої. Цей пристрій працюватиме з тим записом; з того, який ви залишаєте, нічого не видаляється.</string>
+    <string name="settings_account_switch_confirm">Продовжити</string>
+
+    <string name="settings_language">Мова застосунку</string>
+    <string name="settings_language_hint">Мова, якою тут написано все. Мова, якою ви пишете ПРОФІЛЬ, належить профілю й налаштовується там.</string>
+
+    <string name="settings_data">Що про вас зберігається</string>
+    <string name="settings_data_hint">Lebenslauf — це персональні дані, і саме тому закон дає вам три речі: бачити, що зберігається, забрати копію та вимагати видалення. Усі три — тут.</string>
+    <string name="settings_data_export">Зберегти копію</string>
+    <string name="settings_data_export_hint">Записується одним файлом до документів застосунку — точно так, як це тримає сервер.</string>
+    <string name="settings_data_delete">Видалити обліковий запис і все в ньому</string>
+    <string name="settings_delete_title">Видалити все?</string>
+    <string name="settings_delete_body">Те, що ви про себе внесли, відкладені документи, вставлені оголошення та кожна заявка видаляються з сервера. Це не можна скасувати. Після цього Bewerbo відкриє порожній обліковий запис, щоб ви могли почати заново.</string>
+
+    <string name="data_category_person">Відомості про вас</string>
+    <string name="data_category_berufserfahrung">Місця роботи</string>
+    <string name="data_category_ausbildung">Освіта</string>
+    <string name="data_category_sprachen">Мови</string>
+    <string name="data_category_luecken">Пояснені перерви</string>
+    <string name="data_category_anlagen">Відкладені документи</string>
+    <string name="data_category_stellenanzeigen">Вставлені оголошення</string>
+    <string name="data_category_bewerbungen">Написані заявки</string>
+
+    <string name="settings_legal">Правові відомості</string>
+    <string name="legal_terms">Умови користування (AGB)</string>
+    <string name="legal_privacy">Політика конфіденційності</string>
+    <string name="legal_imprint">Impressum</string>
+
+    <string name="legal_terms_scope">Ці умови діють між вами та власником, названим в Impressum, поки ви користуєтеся Bewerbo. Користуватися застосунком означає прийняти їх.</string>
+    <string name="legal_terms_service">Що робить Bewerbo: перетворює профіль, який ви вносите, на німецький Lebenslauf і Anschreiben та видає їх одним PDF. Це допомога в письмі. Він не подає заявку за вас, не виступає за вас перед роботодавцем і не може обіцяти, що заявка матиме успіх.</string>
+    <string name="legal_terms_yours">Те, що ви вносите, залишається вашим — і за правильність відповідаєте ви. Застосунок оформлює те, що ви написали; правда це чи ні, він знати не може. Відомість у Lebenslauf, яка не підтвердиться, — справа між вами та роботодавцем.</string>
+    <string name="legal_terms_check">Німецький текст може бути написаний мовною моделлю. Прочитайте його, перш ніж надсилати. Те, чому дорівнює іноземна кваліфікація тут, потрапляє до документа лише після того, як ви самі це підтвердили.</string>
+    <string name="legal_terms_liability">Застосунок безкоштовний і надається як є. Власник відповідає без обмежень за умисел, за грубу необережність і за шкоду життю, тілу та здоров’ю; поза цим — лише за порушення обов’язку, на якому тримається ця угода, і тільки за шкоду, звичайну за такого користування.</string>
+    <string name="legal_terms_end">Ви можете видалити обліковий запис будь-коли на екрані налаштувань; цим угода припиняється. Власник має право закрити запис, з якого службу атакують або використовують на шкоду.</string>
+    <string name="legal_terms_law">Застосовується німецьке право.</string>
+
+    <string name="legal_privacy_controller">За те, що відбувається з вашими даними, відповідає власник, названий в Impressum; там же вказано, як з ним зв’язатися.</string>
+    <string name="legal_privacy_stored">Зберігається: те, що ви про себе вносите — ім’я, адреса, телефон, пошта, дата народження, ваші місця роботи, освіта, мови та причини, які ви вказали для перерв; до кожного відкладеного документа — назва, вид і кількість сторінок; оголошення, які ви вставляєте; і заявки, які пише застосунок.</string>
+    <string name="legal_privacy_files">Самі документи не завантажуються. Zeugnis залишається на вашому пристрої — Bewerbo тримає лише запис, потрібний Anlagenverzeichnis, щоб його назвати.</string>
+    <string name="legal_privacy_why">Для чого: щоб виготовити документи, про які ви попросили — це і є угода між нами, ст. 6 (1) (b) DSGVO. Ніщо з цього не йде на рекламу й не передається за гроші.</string>
+    <string name="legal_privacy_model">Німецький текст пише мовна модель поза цим сервером: для цього — і ні для чого іншого — внесене вами йде на %1$s.</string>
+    <string name="legal_privacy_model_none">На цій установці мовна модель не використовується. Внесене вами перекладається німецькою за правилами на самому сервері й полишає його лише у файлі, який ви вивантажуєте самі.</string>
+    <string name="legal_privacy_kept">Зберігається, поки ви не видалите обліковий запис. Видалення відразу забирає ваші відомості, відкладені документи, оголошення та заявки.</string>
+    <string name="legal_privacy_rights">Ваші права, ст. 15–21 DSGVO: дізнатися, що зберігається, виправити, видалити, обмежити обробку, забрати копію та заперечити. Дізнатися, забрати й видалити можна на екрані налаштувань. Ви також маєте право поскаржитися до наглядового органу із захисту даних.</string>
+
+    <string name="legal_imprint_intro">Відомості, яких закон вимагає від загальнодоступної служби.</string>
+    <string name="legal_imprint_missing">Ця установка не вказала, хто нею опікується. Поки це так, потрібного законом Impressum немає, і застосунок не можна пропонувати публічно.</string>
+    <string name="legal_imprint_operator">Власник</string>
+    <string name="legal_imprint_address">Адреса</string>
+    <string name="legal_imprint_represented">В особі</string>
+    <string name="legal_imprint_register">Реєстр</string>
+    <string name="legal_imprint_contact">Зв’язок</string>
 </resources>

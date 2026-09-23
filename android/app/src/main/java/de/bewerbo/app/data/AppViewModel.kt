@@ -47,10 +47,16 @@ data class AppState(
     val previewFailed: Boolean = false,
     /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
     val pendingEmail: EmailDraft? = null,
+    /// What the server holds about the account, for the settings screen to list. Null until the
+    /// settings have been opened — no other screen reads it, so nothing fetches it before then.
+    val accountData: DataExport? = null,
+    /// Who runs this installation and whether a model outside it writes the Anschreiben. Fetched
+    /// with [accountData]; null while it has not been.
+    val legal: LegalInfo? = null,
     /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
     val uiLanguage: String = "en",
     val showDinGrid: Boolean = false,
-    val lastSavedPdf: String? = null,
+    val lastSavedFile: String? = null,
     val busy: String? = null,
 )
 
@@ -178,6 +184,83 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(uiLanguage = tag) }
     }
 
+    // -- the account and its data ------------------------------------------------------------
+
+    /**
+     * What the settings screen reads: everything held about this account, and the two facts the
+     * legal pages cannot be written without.
+     *
+     * Fetched when that screen opens rather than at start-up. Nothing else in the app reads either
+     * of them, and a user who never opens the settings should not pay for two calls at every launch.
+     */
+    fun loadSettings() = launch("settings") {
+        val id = profileId() ?: return@launch
+        _state.update { it.copy(accountData = api.accountData(id), legal = api.legal()) }
+    }
+
+    /**
+     * Writes the copy of everything held about the account — Art. 15 and Art. 20 DSGVO.
+     *
+     * It lands where a produced Lebenslauf lands, through the same helper, so it is a file the user
+     * can reach with the phone's own file app and hand on. The bytes are the server's answer as it
+     * arrived rather than anything rebuilt here: a copy that has been through this app twice is not
+     * evidence of what the server holds.
+     */
+    fun exportAccountData() = launch("export") {
+        val id = profileId() ?: return@launch
+        val file = api.accountDataFile(id, getApplication<Application>().documentFile(ACCOUNT_DATA_FILE))
+        _state.update { it.copy(lastSavedFile = describe(file)) }
+    }
+
+    /**
+     * Erases the account and everything held under it — Art. 17 DSGVO — and opens an empty one.
+     *
+     * A new account straight afterwards, because there is no app without one: every screen reads
+     * from a profile, and leaving the user on a deleted id would look exactly like the start failure
+     * [retryStart] exists for. The interface language is deliberately kept: it is a preference of
+     * this device, not something held about the person.
+     */
+    fun deleteAccount() = launch("account") {
+        val id = profileId() ?: return@launch
+        api.deleteAccount(id)
+        prefs().edit().remove("profileId").remove("postingId").remove("applicationId").apply()
+        _state.update { AppState(uiLanguage = it.uiLanguage, writer = it.writer) }
+        bootstrap()
+    }
+
+    /**
+     * Continues on this device with an account that already exists, named by its key.
+     *
+     * This is what makes it an account of the user's OWN rather than a record of one phone: the key
+     * the settings screen shows is what carries a profile to a new device, and the app has no
+     * password to ask for because it never had one.
+     *
+     * The key is checked here before the call, because a mistyped one is the ordinary case and the
+     * router refuses a non-Guid id before a controller sees it — that answer carries no kind, so the
+     * snackbar would have had nothing to say. The profile is fetched BEFORE anything is written
+     * down: a key for an account that is gone must leave the user on the one they were on.
+     */
+    fun useAccount(key: String) = launch("account") {
+        val trimmed = key.trim()
+        if (runCatching { java.util.UUID.fromString(trimmed) }.isFailure) {
+            _state.update { it.copy(error = ErrorMessage(ACCOUNT_KEY_INVALID)) }
+            return@launch
+        }
+
+        val profile = api.profile(trimmed)
+        prefs().edit()
+            .putString("profileId", profile.id)
+            .remove("postingId")
+            .remove("applicationId")
+            .apply()
+        _state.update {
+            AppState(
+                uiLanguage = it.uiLanguage, writer = it.writer, profile = profile, loading = false,
+            )
+        }
+        refreshDerived()
+    }
+
     // -- profile ---------------------------------------------------------------------------
 
     fun savePerson(person: Person) = launch("person") {
@@ -218,7 +301,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         val name = "Lebenslauf.pdf"
         val file = api.lebenslaufPdf(id, getApplication<Application>().documentFile(name))
-        _state.update { it.copy(lastSavedPdf = describe(file)) }
+        _state.update { it.copy(lastSavedFile = describe(file)) }
     }
 
     // -- posting ---------------------------------------------------------------------------
@@ -395,7 +478,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val file = api.applicationPdf(
             application.id, parts, getApplication<Application>().documentFile(name),
         )
-        _state.update { it.copy(lastSavedPdf = describe(file)) }
+        _state.update { it.copy(lastSavedFile = describe(file)) }
 
         // The export panel shows the page count and size from the last ATS check. Adding a
         // document to the Mappe changes both — without this the panel keeps claiming the figures
@@ -431,7 +514,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
         _state.update {
             it.copy(
-                lastSavedPdf = describe(file),
+                lastSavedFile = describe(file),
                 // The address the posting handed the application to, when it named one. It is an
                 // extracted field like any other, so a wrong one is corrected on the Stellenanzeige
                 // screen rather than here — and the mail app has the last word either way.
@@ -533,6 +616,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     companion object {
+        /// The kind for a key the user typed that is not an account key at all. Client-side, like
+        /// [UNREACHABLE]: no server answer carries it.
+        const val ACCOUNT_KEY_INVALID = "account_key_invalid"
+
+        /// The name the exported copy is saved under. Not localised on purpose: it is a file name
+        /// the user may have to name to somebody, and it is the same file whichever language the
+        /// interface is in.
+        private const val ACCOUNT_DATA_FILE = "Bewerbo-Daten.json"
+
         /// The kind for "the server was not reached at all", which no ProblemDetails can carry.
         const val UNREACHABLE = "unreachable"
     }

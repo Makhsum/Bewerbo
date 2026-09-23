@@ -66,6 +66,12 @@ val GERMAN_TERMS = listOf(
     GermanTerm("anabin", "anabin", R.string.term_anabin),
     GermanTerm("DIN 5008", "din_5008", R.string.term_din_5008, listOf("DIN")),
     GermanTerm("AGG", "agg", R.string.term_agg),
+    // The three the legal pages brought with them. Each is met outside the app before it is met
+    // inside it: every German service footer carries AGB and Impressum, and DSGVO is the name of
+    // the law the user's own rights come from.
+    GermanTerm("AGB", "agb", R.string.term_agb),
+    GermanTerm("Impressum", "impressum", R.string.term_impressum),
+    GermanTerm("DSGVO", "dsgvo", R.string.term_dsgvo),
 )
 
 /// The term by its [slug], so a screen names the one it introduces rather than an index.

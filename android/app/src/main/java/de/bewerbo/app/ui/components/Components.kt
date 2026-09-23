@@ -25,6 +25,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import de.bewerbo.app.R
+import de.bewerbo.app.ui.icons.BewerboIcons
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -335,6 +346,96 @@ fun Callout(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = Space.xs),
+                )
+            }
+        }
+    }
+}
+
+
+/// The endonym of [code] in [options] — the name a language calls itself, which is the only name
+/// that is legible to somebody who cannot yet read the interface.
+fun labelOf(options: List<Pair<String, String>>, code: String?): String =
+    options.firstOrNull { it.first == code }?.second.orEmpty()
+
+/**
+ * A language button with the menu it opens.
+ *
+ * The app language and the input language are picked the same way and differ only in their list,
+ * their label and what they write to — so they are one control used twice rather than two that
+ * drift apart. It stood on the Profil screen while both of them did; the interface language moved
+ * to the settings and the input language stayed behind, which is what brought it here.
+ */
+@Composable
+fun LanguageSelector(
+    label: String,
+    icon: ImageVector,
+    options: List<Pair<String, String>>,
+    testTagPrefix: String,
+    onPick: (String) -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(
+            onClick = { menuOpen = true },
+            modifier = Modifier.testTag("${testTagPrefix}_selector"),
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(label, modifier = Modifier.padding(start = Space.s))
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { menuOpen = false },
+            // A menu renders in its own window and inherits nothing from the root, so it carries
+            // its own flag or a driver cannot see any of these items.
+            modifier = Modifier.exposeTestTags(),
+        ) {
+            options.forEach { (code, endonym) ->
+                DropdownMenuItem(
+                    text = { Text(endonym) },
+                    modifier = Modifier.testTag("${testTagPrefix}_option_$code"),
+                    onClick = {
+                        menuOpen = false
+                        onPick(code)
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The head of a screen that was opened FROM another one, with the way back out of it.
+ *
+ * Every other destination is reached from the bottom bar or from the flow rail, and each writes its
+ * own headline; the settings and the legal pages are the first that are not, so they are the first
+ * that have to say how to leave. One component, so that the two look alike and the next screen of
+ * the kind does not invent a third arrangement.
+ */
+@Composable
+fun ScreenHeader(
+    title: String,
+    onBack: () -> Unit,
+    subtitle: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(bottom = Space.s),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack, modifier = Modifier.testTag("screen_back")) {
+            Icon(BewerboIcons.ChevronLeft, contentDescription = stringResource(R.string.settings_back))
+        }
+        Column(Modifier.padding(start = Space.xs)) {
+            Text(title, style = MaterialTheme.typography.headlineSmall)
+            if (subtitle != null) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalSemanticColors.current.muted,
                 )
             }
         }

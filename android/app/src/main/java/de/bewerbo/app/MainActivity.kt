@@ -58,11 +58,14 @@ import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.errorMessage
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
+import de.bewerbo.app.ui.screens.LegalPage
+import de.bewerbo.app.ui.screens.LegalScreen
 import de.bewerbo.app.ui.screens.LockerScreen
 import de.bewerbo.app.ui.screens.MatchScreen
 import de.bewerbo.app.ui.screens.OverviewScreen
 import de.bewerbo.app.ui.screens.PostingScreen
 import de.bewerbo.app.ui.screens.ProfileScreen
+import de.bewerbo.app.ui.screens.SettingsScreen
 import de.bewerbo.app.ui.theme.BewerboTheme
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -114,6 +117,16 @@ enum class FlowStep(val route: String, val tag: String, val label: Int) {
     Application("bewerbung", "flow_bewerbung", R.string.nav_application),
 }
 
+/**
+ * The settings, which are neither a place nor a step.
+ *
+ * A place is somewhere the user works, and the bar carries the three of those; a step is part of
+ * producing an application. The settings are where the app is set up and read about — opened from
+ * the Übersicht, left by the arrow they carry. That is why this is a route on its own rather than a
+ * fourth entry in [Destination], and NavigationShapeTest is what keeps it from becoming one.
+ */
+const val SettingsRoute = "einstellungen"
+
 @OptIn(
     androidx.compose.ui.ExperimentalComposeUiApi::class,
     androidx.compose.foundation.layout.ExperimentalLayoutApi::class,
@@ -138,8 +151,8 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                 viewModel.dismissError()
             }
         }
-        LaunchedEffect(state.lastSavedPdf) {
-            state.lastSavedPdf?.let { snackbar.showSnackbar(it) }
+        LaunchedEffect(state.lastSavedFile) {
+            state.lastSavedFile?.let { snackbar.showSnackbar(it) }
         }
 
         Box(
@@ -195,6 +208,7 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                             // stopped being a tab. Beginning another drops the current posting the way
                             // the first step's own "Andere Anzeige einfügen" does; the application it
                             // produced stays, and is reached from the list below.
+                            onOpenSettings = { navController.openSettings() },
                             onBeginAnother = if (beginning) {
                                 null
                             } else {
@@ -207,6 +221,22 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                     }
                     composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
                     composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
+
+                    // The settings and the legal pages. The pages are pushed ON TOP of the
+                    // settings and leave by popping, which is what makes the arrow in their header
+                    // lead back to the list they were opened from.
+                    composable(SettingsRoute) {
+                        SettingsScreen(
+                            state,
+                            viewModel,
+                            onBack = { navController.openFromOverview(Destination.Overview.route) },
+                        ) { page -> navController.navigate(page.route) }
+                    }
+                    LegalPage.entries.forEach { page ->
+                        composable(page.route) {
+                            LegalScreen(page, state, viewModel) { navController.popBackStack() }
+                        }
+                    }
 
                     // The flow. Each step is drawn inside the same rail, which is what says where
                     // along the path the user is — and the screen's own primary button is the move
@@ -238,6 +268,21 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Opens the settings from the Übersicht.
+ *
+ * The Übersicht is popped and its state saved, the way the bar and every other link out of it do
+ * it — a screen pushed on top of the Übersicht is what made the bar bring the user back to the
+ * pushed screen instead of the list. Nothing is RESTORED here, and that is the difference to
+ * [openFromOverview]: the settings open on the settings, not on whichever legal page was read last.
+ */
+private fun NavHostController.openSettings() {
+    navigate(SettingsRoute) {
+        popUpTo(graph.startDestinationId) { saveState = true }
+        launchSingleTop = true
     }
 }
 

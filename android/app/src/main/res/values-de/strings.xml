@@ -43,6 +43,7 @@
     <string name="error_application_missing">Diese Bewerbung liegt nicht mehr auf dem Server.</string>
     <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
     <string name="error_unknown">Das hat nicht geklappt. Bitte versuchen Sie es erneut.</string>
+    <string name="error_account_key_invalid">Das ist kein Kontoschlüssel. Kopieren Sie ihn aus den Einstellungen des anderen Geräts.</string>
 
     <!-- Die offenen Schritte. Der Server sagt, WELCHER Schritt es ist und was hineingehört; der
          Satz wird hier geschrieben, weil der Server die Oberflächensprache nie erfährt. -->
@@ -145,7 +146,7 @@
     <string name="profile_subtitle">Tragen Sie alles in Ihrer eigenen Sprache ein. Bewerbo schreibt das Deutsche.</string>
     <string name="profile_app_language">App-Sprache: %1$s</string>
     <string name="profile_input_language">Eingabesprache: %1$s</string>
-    <string name="profile_languages_hint">Die App-Sprache ist die Sprache dieser Bildschirme. Die Eingabesprache ist die, in der Sie Ihr Profil schreiben — die Bewerbung selbst ist immer deutsch.</string>
+    <string name="profile_languages_hint">Die Eingabesprache ist die, in der Sie Ihr Profil schreiben — die Bewerbung selbst ist immer deutsch. Die Sprache dieser Bildschirme steht in den Einstellungen.</string>
     <string name="profile_complete">%1$d %% vollständig</string>
     <string name="profile_section_person">Person</string>
     <string name="profile_section_experience">Berufserfahrung</string>
@@ -322,4 +323,71 @@
     <string name="timeline_legend_work">Beruf</string>
     <string name="timeline_legend_gap">Lücke</string>
     <string name="application_template">Wie der Lebenslauf gesetzt ist</string>
+
+    <string name="term_agb">die Nutzungsbedingungen, die jeder deutsche Dienst angibt: was er tut und was er nicht verspricht</string>
+    <string name="term_impressum">die Seite, auf der ein deutscher Dienst nennt, wer ihn betreibt — gesetzlich verlangt</string>
+    <string name="term_dsgvo">das europäische Datenschutzrecht, aus dem Ihr Recht auf Einsicht, Kopie und Löschung kommt</string>
+
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_subtitle">Ihr Konto, die Sprache der App, Ihre Daten und die rechtlichen Seiten.</string>
+    <string name="settings_open">Einstellungen öffnen</string>
+    <string name="settings_back">Zurück</string>
+
+    <string name="settings_account">Ihr Konto</string>
+    <string name="settings_account_unnamed">Noch ohne Namen</string>
+    <string name="settings_account_hint">Bewerbo verlangt kein Passwort und keine E-Mail-Adresse. Der Schlüssel unten IST Ihr Konto: Geben Sie ihn auf einem anderen Gerät ein, um alles dorthin mitzunehmen, und behalten Sie ihn für sich.</string>
+    <string name="settings_account_key">Kontoschlüssel</string>
+    <string name="settings_account_switch">Mit einem anderen Konto weiterarbeiten</string>
+    <string name="settings_account_switch_body">Geben Sie den Schlüssel ein, der auf dem anderen Gerät steht. Dieses Gerät arbeitet dann an jenem Konto; aus dem Konto, das Sie verlassen, wird nichts gelöscht.</string>
+    <string name="settings_account_switch_confirm">Weiter</string>
+
+    <string name="settings_language">Sprache der App</string>
+    <string name="settings_language_hint">Die Sprache, in der hier alles steht. Die Sprache, in der Sie Ihr PROFIL schreiben, gehört zum Profil und wird dort eingestellt.</string>
+
+    <string name="settings_data">Was über Sie gespeichert ist</string>
+    <string name="settings_data_hint">Ein Lebenslauf sind personenbezogene Daten, und deshalb gibt das Gesetz Ihnen drei Dinge: zu sehen, was gespeichert ist, eine Kopie mitzunehmen und alles löschen zu lassen. Alle drei stehen hier.</string>
+    <string name="settings_data_export">Kopie speichern</string>
+    <string name="settings_data_export_hint">Wird als eine Datei in die Dokumente der App geschrieben, genau so, wie der Server sie hält.</string>
+    <string name="settings_data_delete">Konto und alles darin löschen</string>
+    <string name="settings_delete_title">Alles löschen?</string>
+    <string name="settings_delete_body">Was Sie über sich eingetragen haben, die abgelegten Dokumente, die eingefügten Stellenanzeigen und jede Bewerbung werden vom Server gelöscht. Das lässt sich nicht zurücknehmen. Bewerbo öffnet danach ein leeres Konto, damit Sie neu beginnen können.</string>
+
+    <string name="data_category_person">Angaben zu Ihnen</string>
+    <string name="data_category_berufserfahrung">Berufserfahrung</string>
+    <string name="data_category_ausbildung">Ausbildung</string>
+    <string name="data_category_sprachen">Sprachen</string>
+    <string name="data_category_luecken">Erklärte Lücken</string>
+    <string name="data_category_anlagen">Abgelegte Dokumente</string>
+    <string name="data_category_stellenanzeigen">Eingefügte Stellenanzeigen</string>
+    <string name="data_category_bewerbungen">Geschriebene Bewerbungen</string>
+
+    <string name="settings_legal">Rechtliches</string>
+    <string name="legal_terms">Nutzungsbedingungen (AGB)</string>
+    <string name="legal_privacy">Datenschutzerklärung</string>
+    <string name="legal_imprint">Impressum</string>
+
+    <string name="legal_terms_scope">Diese Bedingungen gelten zwischen Ihnen und dem im Impressum genannten Betreiber, solange Sie Bewerbo nutzen. Wer die App nutzt, nimmt sie an.</string>
+    <string name="legal_terms_service">Was Bewerbo tut: Es macht aus dem Profil, das Sie eintragen, einen deutschen Lebenslauf und ein Anschreiben und gibt beides als ein PDF aus. Es ist eine Schreibhilfe. Es bewirbt sich nicht für Sie, es tritt für Sie nicht gegenüber einem Arbeitgeber auf, und es kann keinen Erfolg einer Bewerbung versprechen.</string>
+    <string name="legal_terms_yours">Was Sie eintragen, bleibt Ihres — und es ist Ihre Sache, dass es stimmt. Die App setzt, was Sie schreiben; ob es wahr ist, kann sie nicht wissen. Eine Angabe im Lebenslauf, die nicht trägt, ist eine Sache zwischen Ihnen und dem Arbeitgeber.</string>
+    <string name="legal_terms_check">Das Deutsche kann von einem Sprachmodell geschrieben sein. Lesen Sie es, bevor Sie es versenden. Was eine ausländische Qualifikation hier gilt, kommt erst in ein Dokument, nachdem Sie es selbst bestätigt haben.</string>
+    <string name="legal_terms_liability">Die App kostet nichts und wird bereitgestellt, wie sie ist. Der Betreiber haftet unbeschränkt für Vorsatz, für grobe Fahrlässigkeit und für Verletzungen von Leben, Körper und Gesundheit; darüber hinaus nur für die Verletzung einer Pflicht, auf der dieser Vertrag beruht, und dann nur für den bei solcher Nutzung typischen Schaden.</string>
+    <string name="legal_terms_end">Sie können Ihr Konto jederzeit auf dem Einstellungsbildschirm löschen; damit endet dieser Vertrag. Der Betreiber darf ein Konto schließen, mit dem der Dienst angegriffen oder missbraucht wird.</string>
+    <string name="legal_terms_law">Es gilt deutsches Recht.</string>
+
+    <string name="legal_privacy_controller">Verantwortlich dafür, was mit Ihren Daten geschieht, ist der im Impressum genannte Betreiber. Dort steht auch, wie Sie ihn erreichen.</string>
+    <string name="legal_privacy_stored">Gespeichert sind: was Sie über sich eintragen — Name, Adresse, Telefon, E-Mail, Geburtsdatum, Ihre Stellen, Ihre Ausbildung, Ihre Sprachen und die Gründe, die Sie für Lücken angegeben haben; zu jedem abgelegten Dokument Titel, Art und Seitenzahl; die Stellenanzeigen, die Sie einfügen; und die Bewerbungen, die die App schreibt.</string>
+    <string name="legal_privacy_files">Die Dokumente selbst werden nicht hochgeladen. Ein Zeugnis bleibt auf Ihrem Gerät — Bewerbo behält nur den Eintrag, den das Anlagenverzeichnis braucht, um es zu benennen.</string>
+    <string name="legal_privacy_why">Wozu: um die Unterlagen herzustellen, um die Sie gebeten haben — das ist die Vereinbarung zwischen uns, Art. 6 Abs. 1 lit. b DSGVO. Nichts davon wird für Werbung genutzt und nichts gegen Geld weitergegeben.</string>
+    <string name="legal_privacy_model">Das Deutsche schreibt ein Sprachmodell außerhalb dieses Servers: dafür, und für nichts anderes, geht das, was Sie eingetragen haben, an %1$s.</string>
+    <string name="legal_privacy_model_none">Auf dieser Installation ist kein Sprachmodell im Einsatz. Was Sie eintragen, wird auf dem Server selbst nach Regeln ins Deutsche gebracht und verlässt ihn nur in der Datei, die Sie selbst ausgeben.</string>
+    <string name="legal_privacy_kept">Gespeichert, bis Sie das Konto löschen. Das Löschen nimmt Ihre Angaben, die abgelegten Dokumente, Ihre Stellenanzeigen und Ihre Bewerbungen sofort mit.</string>
+    <string name="legal_privacy_rights">Ihre Rechte, Art. 15 bis 21 DSGVO: Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Auskunft, Kopie und Löschung stehen auf dem Einstellungsbildschirm. Sie können sich auch bei einer Datenschutzaufsichtsbehörde beschweren.</string>
+
+    <string name="legal_imprint_intro">Die Angaben, die das Gesetz von einem öffentlich zugänglichen Dienst verlangt.</string>
+    <string name="legal_imprint_missing">Diese Installation hat nicht angegeben, wer sie betreibt. Solange das so ist, fehlt das Impressum, das das Gesetz verlangt, und die App darf nicht öffentlich angeboten werden.</string>
+    <string name="legal_imprint_operator">Betreiber</string>
+    <string name="legal_imprint_address">Anschrift</string>
+    <string name="legal_imprint_represented">Vertreten durch</string>
+    <string name="legal_imprint_register">Register</string>
+    <string name="legal_imprint_contact">Kontakt</string>
 </resources>

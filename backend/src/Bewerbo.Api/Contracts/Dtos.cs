@@ -205,3 +205,64 @@ public static class DtoMapping
 /// a Cyrillic bullet in a "German" CV is the exact failure the product exists to prevent.
 /// </summary>
 public record TranslationDto(bool Available, int Pending, IReadOnlyList<string> PendingExamples);
+
+/// <summary>
+/// One kind of thing this installation holds about an account, and how much of it there is.
+///
+/// <paramref name="Key"/> and not a sentence, for the reason every other answer of this API carries
+/// a kind: the server does not learn the interface language, so the screen writes "3 Sprachen" or
+/// "3 языка" from the key. See <see cref="NextStepDto"/>.
+/// </summary>
+public record DataCategoryDto(string Key, int Count);
+
+/// <summary>One posting the user pasted, as it is handed back to them.</summary>
+public record ExportedPostingDto(
+    Guid Id, string Company, string JobTitle, string Reference, string ParsedAt, string SourceText);
+
+/// <summary>One application the user produced, with the letter as it was written.</summary>
+public record ExportedApplicationDto(
+    Guid Id, Guid PostingId, string Tone, string Status, string CreatedAt, string? SentAt,
+    LetterDto Letter);
+
+/// <summary>
+/// Everything held about one account, in one document — Art. 15 and Art. 20 DSGVO in a single
+/// answer, because they are the same question asked twice.
+///
+/// <paramref name="Categories"/> is what the settings screen SHOWS: the user finds out what is
+/// stored without having to read a JSON file. The members below it are the copy they take with
+/// them, and the client saves this very body as the file rather than re-writing it, so what the
+/// user receives is what the server holds.
+/// </summary>
+public record DataExportDto(
+    Guid AccountId,
+    string ExportedAt,
+    IReadOnlyList<DataCategoryDto> Categories,
+    PersonDto Person,
+    IReadOnlyList<ExperienceDto> Experience,
+    IReadOnlyList<EducationDto> Education,
+    IReadOnlyList<LanguageDto> Languages,
+    IReadOnlyList<GapDto> Gaps,
+    IReadOnlyList<DocumentDto> Documents,
+    IReadOnlyList<ExportedPostingDto> Postings,
+    IReadOnlyList<ExportedApplicationDto> Applications);
+
+/// <summary>
+/// The operator of this installation, for the Impressum. <paramref name="Stated"/> false means the
+/// deployment has not said who it is — the page then says that, rather than showing a gap that
+/// reads as an address.
+/// </summary>
+public record LegalOperatorDto(
+    bool Stated, string Name, string Street, string PostalCode, string City, string Country,
+    string Email, string Represented, string Register);
+
+/// <summary>
+/// What the legal pages cannot be written without knowing, because it depends on the deployment
+/// rather than on the app.
+///
+/// <paramref name="ModelProcessor"/> is the host the letter is actually written by, empty when no
+/// model is configured and the rule-based writer runs instead — the one sentence of a privacy
+/// notice that must never be a guess. It is derived from the endpoint the API calls, so it cannot
+/// drift from what the installation really does; the screen puts it into its own sentence, as it
+/// does with every other argument this API sends.
+/// </summary>
+public record LegalDto(LegalOperatorDto Operator, string ModelProcessor);

@@ -613,6 +613,7 @@ private fun AtsFinding.arg(index: Int): String = detailArgs.getOrElse(index) { "
 @Composable
 fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     AppViewModel.UNREACHABLE -> stringResource(R.string.error_unreachable)
+    AppViewModel.ACCOUNT_KEY_INVALID -> stringResource(R.string.error_account_key_invalid)
     "profile_missing" -> stringResource(R.string.error_profile_missing)
     "posting_missing" -> stringResource(R.string.error_posting_missing)
     "application_missing" -> stringResource(R.string.error_application_missing)

@@ -329,3 +329,43 @@ data class GapWordingResponse(@SerialName("reason") val reason: String = "", val
 /// the fallback for a kind this build does not know. Same division as [NextStep].
 @Serializable
 data class ApiProblem(val detail: String = "", val kind: String = "")
+
+/// One kind of thing the server holds about the account, and how much of it. [key] and not a
+/// sentence, for the reason a [NextStep] carries a kind: the settings screen writes the name in the
+/// user's language. "person" counts the personal details that are filled in, not records.
+@Serializable
+data class DataCategory(val key: String, val count: Int)
+
+/// What is stored about the account, as the settings screen shows it. Only the part that is drawn
+/// is modelled — the rest of the export is the file the user takes away, and it is written to disk
+/// as the server sent it rather than re-serialised from here.
+@Serializable
+data class DataExport(
+    val accountId: String = "",
+    val exportedAt: String = "",
+    val categories: List<DataCategory> = emptyList(),
+)
+
+/// The operator of this installation, for the Impressum. [stated] false means the deployment has
+/// not said who it is; the page then says so instead of showing empty lines that read as an address.
+@Serializable
+data class LegalOperator(
+    val stated: Boolean = false,
+    val name: String = "",
+    val street: String = "",
+    val postalCode: String = "",
+    val city: String = "",
+    val country: String = "",
+    val email: String = "",
+    val represented: String = "",
+    val register: String = "",
+)
+
+/// What the legal pages cannot be written without asking the server, because it belongs to the
+/// deployment and not to the app. [modelProcessor] is the host that writes the Anschreiben, empty
+/// when the rule-based writer runs and nothing the user typed leaves the server.
+@Serializable
+data class LegalInfo(
+    @SerialName("operator") val operatorDetails: LegalOperator = LegalOperator(),
+    val modelProcessor: String = "",
+)
