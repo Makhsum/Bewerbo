@@ -43,6 +43,15 @@ public static class ProfileEndpoints
                 var profile = await Full(db, id);
                 if (profile is null) return Results.NotFound();
 
+                // A positional record deserialises an omitted member as null even where the type
+                // says it is not nullable, so leaving "industry" out of the JSON used to reach the
+                // database as null and come back as a 500 with an empty body — no clue which field
+                // was at fault. Say what is wrong, and treat the genuinely optional ones as empty.
+                if (Missing(entries, e => e.Position, "position") is { } bad)
+                {
+                    return Results.BadRequest(bad);
+                }
+
                 db.Experience.RemoveRange(profile.Experience);
                 foreach (var e in entries)
                 {
@@ -50,13 +59,13 @@ public static class ProfileEndpoints
                     {
                         ProfileId = id,
                         Position = e.Position,
-                        Employer = e.Employer,
-                        Location = e.Location,
+                        Employer = e.Employer ?? "",
+                        Location = e.Location ?? "",
                         From = ParseDate(e.From),
                         To = ParseNullableDate(e.To),
-                        Workload = e.Workload,
-                        Industry = e.Industry,
-                        Duties = e.Duties,
+                        Workload = e.Workload ?? "",
+                        Industry = e.Industry ?? "",
+                        Duties = e.Duties ?? "",
                         ReferenceOnFile = e.ReferenceOnFile,
                     });
                 }
@@ -70,6 +79,11 @@ public static class ProfileEndpoints
                 var profile = await Full(db, id);
                 if (profile is null) return Results.NotFound();
 
+                if (Missing(entries, e => e.Degree, "degree") is { } bad)
+                {
+                    return Results.BadRequest(bad);
+                }
+
                 db.Education.RemoveRange(profile.Education);
                 foreach (var e in entries)
                 {
@@ -77,9 +91,9 @@ public static class ProfileEndpoints
                     {
                         ProfileId = id,
                         Degree = e.Degree,
-                        Institution = e.Institution,
-                        Location = e.Location,
-                        Country = e.Country,
+                        Institution = e.Institution ?? "",
+                        Location = e.Location ?? "",
+                        Country = e.Country ?? "",
                         From = ParseDate(e.From),
                         To = ParseNullableDate(e.To),
                         AnabinAssessment = e.AnabinAssessment,
@@ -100,12 +114,17 @@ public static class ProfileEndpoints
                 var profile = await Full(db, id);
                 if (profile is null) return Results.NotFound();
 
+                if (Missing(entries, l => l.Language, "language") is { } bad)
+                {
+                    return Results.BadRequest(bad);
+                }
+
                 db.Languages.RemoveRange(profile.Languages);
                 foreach (var l in entries)
                 {
                     db.Languages.Add(new LanguageSkill
                     {
-                        ProfileId = id, Language = l.Language, Level = l.Level,
+                        ProfileId = id, Language = l.Language, Level = l.Level ?? "",
                         CertificateOnFile = l.CertificateOnFile,
                     });
                 }
@@ -196,6 +215,22 @@ public static class ProfileEndpoints
         profile.Email = person.Email;
         profile.BirthDate = ParseNullableDate(person.BirthDate);
         profile.Template = ParseEnum(person.Template, CvTemplate.Klassisch);
+    }
+
+    /// <summary>
+    /// The one field an entry cannot be without, checked before anything reaches the database.
+    /// Returns the message to send back, or null when every entry has it.
+    /// </summary>
+    private static string? Missing<T>(T[] entries, Func<T, string?> required, string name)
+    {
+        for (var i = 0; i < entries.Length; i++)
+        {
+            if (string.IsNullOrWhiteSpace(required(entries[i])))
+            {
+                return $"Entry {i} has no \"{name}\".";
+            }
+        }
+        return null;
     }
 
     internal static Task<Profile?> Full(BewerboDbContext db, Guid id) =>
