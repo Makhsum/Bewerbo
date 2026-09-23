@@ -305,7 +305,15 @@ public static partial class PostingParser
         RegexOptions.IgnoreCase)]
     private static partial Regex AddressRx();
 
-    [GeneratedRegex(@"(?:Referenz(?:nummer)?|Kennziffer|Stellen-?ID|Ref\.?)\s*:?\s*(?<code>[A-Z0-9][A-Z0-9/-]{3,})",
+    // The label has to be a WORD, which is what the two \b anchors are for. Without them the "Ref"
+    // alternative matched the ref inside an ordinary German word and read the rest of it as the
+    // code: "Frau Lena Sommer, Personalreferentin" produced the Referenz "erentin", and a Referat
+    // or eine Reform would have produced "erat" and "orm" the same way. That is the worst shape a
+    // parser bug can take here, because Reference() reports "sicher" — correctly, since the code is
+    // read off a label the posting wrote itself — so no pill ever fired and the invented code went
+    // into the Betreffzeile unchallenged. The real "Kennziffer NWH-2026-07" later in the same advert
+    // was never reached, because this match came first.
+    [GeneratedRegex(@"\b(?:Referenz(?:nummer)?|Kennziffer|Stellen-?ID|Ref)\b\.?\s*:?\s*(?<code>[A-Z0-9][A-Z0-9/-]{3,})",
         RegexOptions.IgnoreCase)]
     private static partial Regex ReferenceRx();
 

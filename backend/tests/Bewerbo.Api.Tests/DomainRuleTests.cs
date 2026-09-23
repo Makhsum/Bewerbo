@@ -117,6 +117,49 @@ public class DomainRuleTests
     }
 
     [Theory]
+    [InlineData("Ihre Ansprechpartnerin ist Frau Lena Sommer, Personalreferentin.")]
+    [InlineData("Wir suchen für unser Referat Finanzen eine Sachbearbeiterin.")]
+    [InlineData("Eine Reform der Abläufe begleiten Sie mit.")]
+    public void A_ref_inside_an_ordinary_German_word_is_not_a_Referenznummer(string line)
+    {
+        // "Personalreferentin" produced the Referenz "erentin", and Referat und Reform would have
+        // produced "erat" and "orm". Reference() reports "sicher" — rightly, the code is read off a
+        // label the posting wrote itself — so no pill fired and the invented code went into the
+        // Betreffzeile with nothing asking the user to look at it.
+        var extract = PostingParser.Parse(line);
+
+        Assert.DoesNotContain(extract.Fields, f => f.Key == "reference");
+    }
+
+    [Fact]
+    public void The_Kennziffer_is_read_even_when_a_word_containing_ref_comes_first()
+    {
+        // The two live in one advert, and the false match came first, so it won and the real code
+        // was never reached at all.
+        var extract = PostingParser.Parse(
+            "Ihre Ansprechpartnerin ist Frau Lena Sommer, Personalreferentin. Wir freuen uns auf "
+            + "Ihre Unterlagen unter der Kennziffer NWH-2026-07.");
+
+        Assert.Equal("NWH-2026-07", extract.Fields.Single(f => f.Key == "reference").Value);
+    }
+
+    [Theory]
+    [InlineData("Bitte geben Sie die Referenznummer SBT-2026-0417 an.", "SBT-2026-0417")]
+    [InlineData("Referenz LOG-2026-11", "LOG-2026-11")]
+    [InlineData("Kennziffer: NWH-2026-07", "NWH-2026-07")]
+    [InlineData("Stellen-ID 4711-AB", "4711-AB")]
+    [InlineData("Ref. SBT-2026-0417", "SBT-2026-0417")]
+    [InlineData("Ref 4711-AB", "4711-AB")]
+    public void Every_label_a_posting_writes_its_reference_under_is_still_read(string line, string expected)
+    {
+        // The word boundaries must not cost the abbreviated forms: "Ref." and a bare "Ref" before
+        // the code are both how an advert writes it.
+        var extract = PostingParser.Parse(line);
+
+        Assert.Equal(expected, extract.Fields.Single(f => f.Key == "reference").Value);
+    }
+
+    [Theory]
     [InlineData("Klinikum München Süd sucht eine Pflegefachkraft (m/w/d).", "Klinikum München Süd")]
     [InlineData("Das Universitätsklinikum Heidelberg sucht Verstärkung.", "Universitätsklinikum Heidelberg")]
     [InlineData("Die Stadt Augsburg sucht eine Sachbearbeiterin.", "Stadt Augsburg")]
