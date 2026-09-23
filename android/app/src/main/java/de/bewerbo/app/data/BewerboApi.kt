@@ -136,3 +136,7 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
 /// Where a produced PDF lands on the device, under the app's own files so nothing needs a
 /// storage permission.
 fun Context.documentFile(name: String): File = File(File(filesDir, "bewerbungen"), name)
+
+/// Where the preview's copy of the Mappe goes. The cache and not [documentFile]: it is re-rendered
+/// every time the chosen parts change and it is not the file the user asked to keep.
+fun Context.previewFile(): File = File(cacheDir, "vorschau.pdf")

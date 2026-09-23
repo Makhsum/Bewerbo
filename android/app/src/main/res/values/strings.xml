@@ -152,8 +152,6 @@
     <string name="application_subtitle">What a German reader and an applicant tracking system see.</string>
     <string name="application_none_title">No letter yet</string>
     <string name="application_none_body">Run the Abgleich first. The letter is written against the requirements it finds.</string>
-    <string name="application_page_one">Page 1 · Anschreiben · DIN 5008</string>
-    <string name="application_attachments">Anlagen: %1$s</string>
     <string name="application_din_show">Show the DIN grid</string>
     <string name="application_din_hide">Hide the DIN grid</string>
     <string name="application_regenerate">Write it again</string>
@@ -165,6 +163,13 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d pages · %2$d KB</string>
     <string name="application_save_pdf">Save as one PDF</string>
+    <string name="application_preview_page">Page %1$d of %2$d</string>
+    <string name="application_preview_pending">The pages are being rendered.</string>
+    <string name="application_send_email">Send by e-mail</string>
+    <!-- The covering note of the e-mail. It goes to a German employer whatever language the
+         interface is in, so it is never translated — the same reason the Anschreiben is German.
+         The salutation and the closing around it come from the backend. -->
+    <string name="application_email_body" translatable="false">anbei sende ich Ihnen meine vollständigen Bewerbungsunterlagen als PDF.</string>
     <string name="application_why_german_title">Why it reads as German</string>
     <string name="application_why_german_body">A named salutation, the Referenznummer in the Betreffzeile, no »Hiermit bewerbe ich mich« and no »Teamplayer« — and the letter answers the words of the posting instead of listing virtues.</string>
     <string name="application_source_model">This letter was written by the language model and checked against the same rules.</string>

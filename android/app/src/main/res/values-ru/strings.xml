@@ -118,7 +118,6 @@
     <string name="application_subtitle">То, что видит немецкий читатель и система отбора кандидатов.</string>
     <string name="application_none_title">Письма ещё нет</string>
     <string name="application_none_body">Сначала выполните Abgleich. Письмо пишется под найденные требования.</string>
-    <string name="application_page_one">Страница 1 · Anschreiben · DIN 5008</string>
     <string name="application_din_show">Показать сетку DIN</string>
     <string name="application_din_hide">Скрыть сетку DIN</string>
     <string name="application_regenerate">Написать заново</string>
@@ -128,6 +127,9 @@
     <string name="application_export">Экспорт</string>
     <string name="application_file_detail">Страниц: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Сохранить одним PDF</string>
+    <string name="application_preview_page">Страница %1$d из %2$d</string>
+    <string name="application_preview_pending">Страницы формируются.</string>
+    <string name="application_send_email">Отправить по электронной почте</string>
     <string name="application_why_german_title">Почему это звучит по-немецки</string>
     <string name="application_why_german_body">Именное обращение, Referenznummer в Betreffzeile, никакого »Hiermit bewerbe ich mich« и никакого »Teamplayer« — и письмо отвечает на слова вакансии, а не перечисляет добродетели.</string>
     <string name="application_source_model">Это письмо написала языковая модель, и оно проверено теми же правилами.</string>

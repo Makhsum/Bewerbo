@@ -124,7 +124,6 @@
     <string name="application_subtitle">Was eine deutsche Leserin und ein Bewerbermanagementsystem sehen.</string>
     <string name="application_none_title">Noch kein Anschreiben</string>
     <string name="application_none_body">Führen Sie zuerst den Abgleich durch. Das Anschreiben wird gegen die Anforderungen geschrieben, die er findet.</string>
-    <string name="application_page_one">Seite 1 · Anschreiben · DIN 5008</string>
     <string name="application_din_show">DIN-Raster einblenden</string>
     <string name="application_din_hide">DIN-Raster ausblenden</string>
     <string name="application_regenerate">Neu schreiben</string>
@@ -134,6 +133,9 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d Seiten · %2$d KB</string>
     <string name="application_save_pdf">Als ein PDF speichern</string>
+    <string name="application_preview_page">Seite %1$d von %2$d</string>
+    <string name="application_preview_pending">Die Seiten werden erzeugt.</string>
+    <string name="application_send_email">Per E-Mail senden</string>
     <string name="application_why_german_title">Warum es deutsch klingt</string>
     <string name="application_why_german_body">Eine namentliche Anrede, die Referenznummer in der Betreffzeile, kein »Hiermit bewerbe ich mich« und kein »Teamplayer« — und das Anschreiben antwortet auf die Worte der Anzeige, statt Tugenden aufzuzählen.</string>
     <string name="application_source_model">Dieses Anschreiben hat das Sprachmodell geschrieben, geprüft nach denselben Regeln.</string>

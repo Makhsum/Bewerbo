@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Exactly what Context.documentFile() writes: filesDir/bewerbungen. Nothing else is shared —
+         the preview's copy in the cache is the app's own business. -->
+    <files-path name="bewerbungen" path="bewerbungen/" />
+</paths>

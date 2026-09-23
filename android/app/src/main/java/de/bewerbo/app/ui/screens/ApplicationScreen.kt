@@ -1,42 +1,50 @@
 package de.bewerbo.app.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.EmailDraft
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.DinOverlay
@@ -57,11 +65,11 @@ private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
 
 /**
- * Bewerbung — the rendered letter, the DIN inspector over it, the Prüfung, and the export.
+ * Bewerbung — the Mappe page by page, the DIN inspector over it, the Prüfung, and the export.
  *
- * The preview is set in a serif at document proportions rather than in the app's UI font. That is
- * not decoration: what the user is checking is whether this reads as a German business letter, and
- * it cannot read as one in Segoe UI at list spacing.
+ * The preview is the exported PDF rasterised, not a redrawing of it. What the user is checking here
+ * is whether this reads as a German business letter, and that question can only be answered against
+ * the file that will actually be sent — every page of it, in the type the renderer set.
  */
 @Composable
 fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
@@ -75,6 +83,31 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
         listOf("anschreiben", "lebenslauf", "anlagenverzeichnis")
     }
     var selectedParts by remember(availableParts) { mutableStateOf(availableParts.toSet()) }
+
+    // Which page the preview is showing. Kept here rather than in the item, because a LazyColumn
+    // item that scrolls out of view leaves composition and would come back on page 1.
+    var previewPage by remember { mutableStateOf(0) }
+    val previewPages = state.previewPages
+    val currentPage = previewPage.coerceIn(0, (previewPages.size - 1).coerceAtLeast(0))
+
+    // The preview shows the file the current selection produces, so it is rendered again whenever
+    // that selection changes — and when the screen opens on a different application.
+    LaunchedEffect(application?.id, selectedParts) {
+        if (application != null && selectedParts.isNotEmpty()) {
+            viewModel.refreshPreview(selectedParts.joinToString(","))
+        }
+    }
+
+    // The mail app is started from here and not from the view model: an Intent needs a context that
+    // can start an activity, and the view model only holds the Application.
+    val context = LocalContext.current
+    val chooserTitle = stringResource(R.string.application_send_email)
+    LaunchedEffect(state.pendingEmail) {
+        state.pendingEmail?.let { draft ->
+            context.startActivity(emailChooser(context, draft, chooserTitle))
+            viewModel.emailHandled()
+        }
+    }
 
     LazyColumn(
         Modifier
@@ -105,37 +138,77 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
             return@LazyColumn
         }
 
-        // The letter as a PAGE, not as a text card.
+        // The whole Mappe as PAGES, not just its first one.
         //
-        // This has to be A4-proportioned with the sender line, the Anschriftenfeld and the date
-        // sitting where the norm puts them, because the inspector draws its boxes at fractions of
-        // the page. Over a card that only holds body text, "Anschriftenfeld 45 mm" would be drawn
-        // across the middle of a paragraph and would be telling the user something untrue.
+        // These are the real exported file rasterised, so the page shown is A4-proportioned with
+        // the Anschriftenfeld and the date exactly where the renderer put them — which is what lets
+        // the inspector overlay, drawn at fractions of the sheet, mean anything.
         item {
             Box(Modifier.testTag("application_preview_pager")) {
                 BewerboCard {
-                    Text(
-                        stringResource(R.string.application_page_one),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.muted,
-                    )
-                    Box(
-                        Modifier
-                            .padding(top = Space.s)
-                            .fillMaxWidth()
-                            .aspectRatio(210f / 297f)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .testTag("application_page_1"),
-                    ) {
-                        LetterPage(state, application)
-
-                        if (state.showDinGrid) {
-                            // Same measurements as Rendering/DocumentTheme.cs, over the same page.
-                            DinOverlay(
-                                Modifier
-                                    .fillMaxSize()
-                                    .testTag("application_din_overlay"),
+                    if (previewPages.isEmpty()) {
+                        // Not an error: the file is being rendered. It says so rather than showing
+                        // an empty sheet, which would read as an application with nothing in it.
+                        Text(
+                            stringResource(R.string.application_preview_pending),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.muted,
+                            modifier = Modifier.testTag("application_preview_pending"),
+                        )
+                    } else {
+                        Text(
+                            stringResource(
+                                R.string.application_preview_page,
+                                currentPage + 1, previewPages.size,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.muted,
+                            modifier = Modifier.testTag("application_preview_caption"),
+                        )
+                        Box(
+                            Modifier
+                                .padding(top = Space.s)
+                                .fillMaxWidth()
+                                .aspectRatio(210f / 297f)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .testTag("application_page_${currentPage + 1}"),
+                        ) {
+                            Image(
+                                bitmap = previewPages[currentPage].asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit,
                             )
+
+                            // Only over page 1 of the Anschreiben: DIN 5008 states where the
+                            // Anschriftenfeld and the Faltmarken of a LETTER sit, and drawing those
+                            // boxes over a page of the Lebenslauf would assert something untrue.
+                            if (state.showDinGrid && currentPage == 0 && "anschreiben" in selectedParts) {
+                                // Same measurements as Rendering/DocumentTheme.cs, same page.
+                                DinOverlay(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .testTag("application_din_overlay"),
+                                )
+                            }
+                        }
+
+                        // The thumbnail strip — how a page other than the current one is reached.
+                        Row(
+                            Modifier
+                                .padding(top = Space.s)
+                                .horizontalScroll(rememberScrollState())
+                                .testTag("application_page_thumbs"),
+                            horizontalArrangement = Arrangement.spacedBy(Space.s),
+                        ) {
+                            previewPages.forEachIndexed { index, page ->
+                                PageThumbnail(
+                                    page = page,
+                                    number = index + 1,
+                                    selected = index == currentPage,
+                                    onClick = { previewPage = index },
+                                )
+                            }
                         }
                     }
                 }
@@ -414,6 +487,25 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
+        // Saving was the only thing that could be done with the finished file, and the folder it
+        // saves into is the app's own — so the Mappe had no way out of the phone at all. Most German
+        // applications arrive by e-mail; this hands the same file to whichever mail app is there.
+        item {
+            OutlinedButton(
+                onClick = { viewModel.sendPdfByEmail(selectedParts.joinToString(",")) },
+                enabled = state.busy == null && selectedParts.isNotEmpty(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("application_btn_send_email"),
+            ) {
+                Icon(BewerboIcons.Mail, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(
+                    stringResource(R.string.application_send_email),
+                    modifier = Modifier.padding(start = Space.s),
+                )
+            }
+        }
+
         item {
             Callout(
                 icon = BewerboIcons.Faltmarke,
@@ -442,128 +534,77 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
 }
 
 /**
- * One A4 page of the Anschreiben, with every block at the fraction of the sheet the norm gives it.
+ * One page of the Mappe, small, as the way to reach it.
  *
- * The numbers here are the same ones the PDF renderer uses (Rendering/DocumentTheme.cs): the
- * Anschriftenfeld opens at 45 mm of 297, the type area runs from 24.1 mm to 190 mm of 210. Keeping
- * them in step is what lets the inspector overlay mean anything.
+ * The current page carries a border in the primary colour rather than a checkmark or a label: this
+ * strip sits directly under the page it selects, so the only thing it has to say is which of them
+ * is the one above.
  */
 @Composable
-private fun LetterPage(state: AppState, application: de.bewerbo.app.data.ApplicationView) {
-    val person = state.profile?.person
-    val posting = state.posting
+private fun PageThumbnail(
+    page: android.graphics.Bitmap,
+    number: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = LocalSemanticColors.current
-
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val pageHeight = maxHeight
-        val pageWidth = maxWidth
-        fun mmY(mm: Float) = pageHeight * (mm / 297f)
-        fun mmX(mm: Float) = pageWidth * (mm / 210f)
-
-        // The type area, inset from the left and right edges exactly as DIN 5008 states them.
-        Column(
-            Modifier
-                .padding(start = mmX(24.1f), end = mmX(20f))
-                .fillMaxSize(),
-        ) {
-            // 0 – 45 mm: the Briefkopf band, sender's one line at its foot.
-            Box(Modifier.height(mmY(45f)), contentAlignment = Alignment.BottomStart) {
-                MicroText(
-                    listOfNotNull(
-                        person?.let { "${it.firstName} ${it.lastName}".trim().ifBlank { null } },
-                        person?.street?.ifBlank { null },
-                        person?.let { "${it.postalCode} ${it.city}".trim().ifBlank { null } },
-                    ).joinToString("  ·  "),
-                    colors.muted,
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+            bitmap = page.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .width(56.dp)
+                .aspectRatio(210f / 297f)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(
+                    width = if (selected) 2.dp else 1.dp,
+                    // The same hairline BewerboCard draws, so an unselected page reads as paper
+                    // rather than as a second control.
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    },
                 )
-            }
-
-            // 45 – 90 mm: the Anschriftenfeld.
-            Column(Modifier.height(mmY(45f))) {
-                Box(Modifier.height(mmY(5f)))
-                listOfNotNull(
-                    posting?.field("company")?.value?.ifBlank { null },
-                    posting?.field("contact")?.value?.ifBlank { null },
-                    posting?.field("contactRole")?.value?.ifBlank { null },
-                    posting?.field("companyAddress")?.value?.ifBlank { null },
-                ).flatMap { it.split(",").map(String::trim) }
-                    .forEach { DocumentText(it) }
-            }
-
-            // The Informationsblock: place and date, right-aligned.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                DocumentText(
-                    "${person?.city.orEmpty()}, ${todayInGerman()}".trimStart(',', ' '),
-                    align = TextAlign.End,
-                )
-            }
-
-            Box(Modifier.height(mmY(8f)))
-            DocumentText(application.letter.subject, bold = true)
-            Box(Modifier.height(mmY(8f)))
-            DocumentText("${application.letter.salutation},")
-
-            application.letter.paragraphs.forEach { paragraph ->
-                Box(Modifier.height(mmY(4f)))
-                DocumentText(paragraph, justify = true)
-            }
-
-            Box(Modifier.height(mmY(6f)))
-            DocumentText(application.letter.closing)
-            Box(Modifier.height(mmY(10f)))
-            DocumentText("${person?.firstName.orEmpty()} ${person?.lastName.orEmpty()}".trim())
-
-            if (application.letter.attachments.isNotEmpty()) {
-                Box(Modifier.height(mmY(6f)))
-                DocumentText(
-                    stringResource(
-                        R.string.application_attachments,
-                        application.letter.attachments.joinToString(", "),
-                    ),
-                )
-            }
-        }
+                .clickable(onClick = onClick)
+                .testTag("application_page_thumb_$number"),
+        )
+        Text(
+            number.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) MaterialTheme.colorScheme.primary else colors.muted,
+            modifier = Modifier.padding(top = Space.xs),
+        )
     }
 }
 
-@Composable
-private fun MicroText(text: String, color: androidx.compose.ui.graphics.Color) {
-    Text(
-        text = text,
-        fontFamily = FontFamily.Serif,
-        fontSize = 7.sp,
-        lineHeight = 9.sp,
-        color = color,
-    )
+/**
+ * The Mappe as an e-mail: the PDF attached, the Betreffzeile as the subject, the covering note as
+ * the body.
+ *
+ * ACTION_SEND and not a mailto: URI — mailto carries no attachment, and the attachment is the whole
+ * point. The file lives in the app's private storage, so it goes out as a content:// URI from the
+ * FileProvider declared in the manifest; FLAG_GRANT_READ_URI_PERMISSION is what lets the mail app
+ * read it. The chooser is deliberate: which app sends a German application is the user's business.
+ *
+ * FLAG_ACTIVITY_NEW_TASK is NOT optional here, however much it looks like it: every screen of this
+ * app runs under the configuration context that [de.bewerbo.app.ui.UiLanguageProvider] provides as
+ * LocalContext, so LocalContext.current is a ContextImpl and never the Activity — and starting an
+ * activity from one without this flag throws AndroidRuntimeException and takes the app down.
+ */
+private fun emailChooser(context: Context, draft: EmailDraft, title: String): Intent {
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", draft.file)
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "application/pdf"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, draft.subject)
+        putExtra(Intent.EXTRA_TEXT, draft.body)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    return Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
-private fun todayInGerman(): String {
-    val today = java.time.LocalDate.now()
-    val month = java.time.format.DateTimeFormatter
-        .ofPattern("d. MMMM yyyy", java.util.Locale.GERMAN)
-    return today.format(month)
-}
-
-/// The document's own type: a serif at the proportions of the page, not the app's UI font.
-@Composable
-private fun DocumentText(
-    text: String,
-    bold: Boolean = false,
-    justify: Boolean = false,
-    align: TextAlign? = null,
-) {
-    Text(
-        text = text,
-        fontFamily = FontFamily.Serif,
-        // Small enough that a whole A4 page of a real letter fits the preview at its true
-        // proportions. The PDF is set at 10.5 pt; this is the same page, scaled.
-        fontSize = 7.sp,
-        lineHeight = 10.sp,
-        fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-        textAlign = align ?: if (justify) TextAlign.Justify else TextAlign.Start,
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
 
 private fun partLabel(part: String) = when (part) {
     "anschreiben" -> R.string.part_anschreiben

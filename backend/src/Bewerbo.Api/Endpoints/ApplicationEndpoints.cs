@@ -109,12 +109,17 @@ public static class ApplicationEndpoints
             if (loaded is null) return Results.NotFound();
             var (_, profile, posting, letter) = loaded.Value;
 
+            // The parts are the user's choice now, so an empty one is reachable — and the renderer
+            // throws on it. Said here, where it is an answer, rather than as a 500.
+            var chosen = ParseParts(parts);
+            if (chosen == ApplicationParts.None) return Results.BadRequest("Keine Mappenteile gewählt.");
+
             var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
             var cv = await writer.WriteCvAsync(profile, timeline, ct);
 
             var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv,
                 profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
-                ParseParts(parts), inspector ?? false);
+                chosen, inspector ?? false);
 
             return Results.File(pdf, "application/pdf", MergedApplicationDocument.FileName(profile, posting));
         });

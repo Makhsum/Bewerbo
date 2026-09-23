@@ -3,6 +3,7 @@ package de.bewerbo.app.data
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import de.bewerbo.app.R
 import de.bewerbo.app.ui.uiLanguageOrDefault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,12 +28,26 @@ data class AppState(
     val review: Review? = null,
     val ats: AtsResult? = null,
     val degrees: List<DegreeEquivalence> = emptyList(),
+    /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
+    /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
+    val previewPages: List<android.graphics.Bitmap> = emptyList(),
+    /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
+    val pendingEmail: EmailDraft? = null,
     /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
     val uiLanguage: String = "en",
     val showDinGrid: Boolean = false,
     val lastSavedPdf: String? = null,
     val busy: String? = null,
 )
+
+/**
+ * What the app hands to a mail app: the file to attach, the Betreffzeile as the subject and the
+ * covering note that goes in the body.
+ *
+ * Subject and body stay GERMAN in every interface language, for the same reason the Anschreiben
+ * itself does — the person who opens this mail is a German employer, not the applicant.
+ */
+data class EmailDraft(val file: File, val subject: String, val body: String)
 
 /**
  * The whole client state in one place.
@@ -195,7 +210,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         val posting = api.parsePosting(ParsePostingRequest(id, text))
         // A new posting invalidates the match and the letter that were written against the old one.
-        _state.update { it.copy(posting = posting, match = null, application = null, review = null, ats = null) }
+        _state.update { it.copy(posting = posting, match = null, application = null, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("postingId", posting.id).remove("applicationId").apply()
     }
 
@@ -207,7 +222,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearPosting() {
         prefs().edit().remove("postingId").remove("applicationId").apply()
         _state.update {
-            it.copy(posting = null, match = null, application = null, review = null, ats = null)
+            it.copy(posting = null, match = null, application = null, review = null, ats = null, previewPages = emptyList())
         }
     }
 
@@ -280,7 +295,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         val posting = _state.value.posting ?: return@launch
         val application = api.createApplication(CreateApplicationRequest(id, posting.id, tone))
-        _state.update { it.copy(application = application, review = null, ats = null) }
+        _state.update { it.copy(application = application, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("applicationId", application.id).apply()
         runChecks(application.id)
         refreshDerived()
@@ -289,7 +304,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun regenerateLetter(tone: String) = launch("letter") {
         val application = _state.value.application ?: return@launch
         val updated = api.regenerate(application.id, tone)
-        _state.update { it.copy(application = updated, review = null, ats = null) }
+        _state.update { it.copy(application = updated, review = null, ats = null, previewPages = emptyList()) }
         runChecks(updated.id)
     }
 
@@ -305,7 +320,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun openApplication(applicationId: String) = launch("application") {
         // Cleared before the call, not after it: until the new one has arrived, leaving the last
         // application on screen would put one employer's Anschreiben under another's name.
-        _state.update { it.copy(application = null, match = null, review = null, ats = null) }
+        _state.update { it.copy(application = null, match = null, review = null, ats = null, previewPages = emptyList()) }
 
         val application = api.application(applicationId)
         val posting = api.posting(application.postingId)
@@ -327,6 +342,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun toggleDinGrid() = _state.update { it.copy(showDinGrid = !it.showDinGrid) }
 
+    /**
+     * Renders the file the chosen parts would produce, page by page, for the preview.
+     *
+     * Only page 1 of the Anschreiben was ever shown, drawn a second time in Compose — so the
+     * Lebenslauf and the Anlagenverzeichnis, which is most of what the employer opens, could not be
+     * looked at before sending. This asks the export endpoint for the REAL file and rasterises it,
+     * which is also what makes the part chips mean something: take the Lebenslauf out and its pages
+     * leave the preview.
+     *
+     * The copy goes to the cache rather than beside the saved Mappe — a preview is not something
+     * the user asked to keep.
+     */
+    fun refreshPreview(parts: String) = launch("preview") {
+        val application = _state.value.application ?: return@launch
+        val file = api.applicationPdf(
+            application.id, parts, getApplication<Application>().previewFile(),
+        )
+        _state.update { it.copy(previewPages = renderPdfPages(file)) }
+    }
+
     fun savePdf(parts: String? = null) = launch("pdf") {
         val application = _state.value.application ?: return@launch
         val name = application.fileName.ifBlank { "Bewerbung.pdf" }
@@ -340,6 +375,47 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // of a file that no longer exists.
         runChecks(application.id)
     }
+
+    /**
+     * Saves the Mappe and hands it to a mail app with the letter's own Betreffzeile and a covering
+     * note.
+     *
+     * A German application arrives by e-mail far more often than through a portal, and until now
+     * the file only ever landed in the app's private folder — where the user had no way to reach
+     * it. It is written exactly where [savePdf] writes it, so sending also leaves the saved copy
+     * and the export panel's figures stay true.
+     */
+    fun sendPdfByEmail(parts: String? = null) = launch("email") {
+        val application = _state.value.application ?: return@launch
+        val context = getApplication<Application>()
+        val name = application.fileName.ifBlank { "Bewerbung.pdf" }
+        val file = api.applicationPdf(application.id, parts, context.documentFile(name))
+
+        // Composed from what the backend already wrote rather than from new prose: the salutation
+        // and the closing have been through the Floskel rules, and a body invented here would not
+        // have been.
+        val person = _state.value.profile?.person
+        val signature = "${person?.firstName.orEmpty()} ${person?.lastName.orEmpty()}".trim()
+        val body = listOf(
+            application.letter.salutation.let { if (it.isBlank()) "" else "$it," },
+            context.getString(R.string.application_email_body),
+            listOf(application.letter.closing, signature).filter { it.isNotBlank() }.joinToString("\n"),
+        ).filter { it.isNotBlank() }.joinToString("\n\n")
+
+        _state.update {
+            it.copy(
+                lastSavedPdf = describe(file),
+                // The file name is the fallback subject because it already reads
+                // "Bewerbung_Vorname_Nachname_Stelle" — a blank subject line would not.
+                pendingEmail = EmailDraft(file, application.letter.subject.ifBlank { name }, body),
+            )
+        }
+        runChecks(application.id)
+    }
+
+    /// Cleared once the screen has handed the draft to a mail app, so coming back to the Bewerbung
+    /// screen does not open the chooser a second time.
+    fun emailHandled() = _state.update { it.copy(pendingEmail = null) }
 
     fun setStatus(status: String) = launch("status") {
         val application = _state.value.application ?: return@launch

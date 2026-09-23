@@ -122,7 +122,6 @@
     <string name="application_subtitle">Те, що бачить німецький читач і система відбору кандидатів.</string>
     <string name="application_none_title">Листа ще немає</string>
     <string name="application_none_body">Спочатку виконайте Abgleich. Лист пишеться під знайдені вимоги.</string>
-    <string name="application_page_one">Сторінка 1 · Anschreiben · DIN 5008</string>
     <string name="application_din_show">Показати сітку DIN</string>
     <string name="application_din_hide">Сховати сітку DIN</string>
     <string name="application_regenerate">Написати ще раз</string>
@@ -132,6 +131,9 @@
     <string name="application_export">Експорт</string>
     <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Зберегти одним PDF</string>
+    <string name="application_preview_page">Сторінка %1$d з %2$d</string>
+    <string name="application_preview_pending">Сторінки формуються.</string>
+    <string name="application_send_email">Надіслати електронною поштою</string>
     <string name="application_why_german_title">Чому це звучить по-німецьки</string>
     <string name="application_why_german_body">Іменне звертання, Referenznummer у Betreffzeile, жодного »Hiermit bewerbe ich mich« і жодного »Teamplayer« — і лист відповідає на слова вакансії, а не перелічує чесноти.</string>
     <string name="application_source_model">Цей лист написала мовна модель і перевірено тими самими правилами.</string>
