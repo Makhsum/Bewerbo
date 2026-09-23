@@ -1,16 +1,15 @@
 package de.bewerbo.app.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -64,6 +63,7 @@ private val INPUT_LANGUAGES = listOf(
  * Profil — everything the user enters, in their own language, with the coaching a German reader
  * would want applied to it.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
     val profile = state.profile
@@ -138,19 +138,30 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
-        // The section rail.
+        // The section rail. It WRAPS, it does not scroll sideways: five sections never fit one
+        // phone-width row, and the two that fell off the right edge — Sprachen and Anlagen — had
+        // nothing at all announcing them. A rail whose only clue that it continues is a button cut
+        // in half is a rail the user does not know continues, and the language level a German
+        // posting asks for is behind exactly one of those two. Wrapping also survives a long
+        // locale and a raised font scale, where a fixed five-across row would not.
         item {
-            Row(
+            FlowRow(
                 Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+                    .testTag("profile_section_rail"),
                 horizontalArrangement = Arrangement.spacedBy(Space.s),
+                verticalArrangement = Arrangement.spacedBy(Space.s),
             ) {
                 SECTIONS.forEach { name ->
                     val selected = section == name
                     OutlinedButton(
                         onClick = { section = name },
                         modifier = Modifier.testTag("profile_section_rail_$name"),
+                        // The default 24 dp of horizontal padding on five buttons is a whole row
+                        // of empty space; at 16 dp the five land on two lines on a phone.
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = Space.m, vertical = Space.s,
+                        ),
                         colors = if (selected) {
                             androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
