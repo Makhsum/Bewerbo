@@ -137,4 +137,7 @@
     <string name="profile_anabin_withdraw">Відкликати</string>
     <string name="application_status">Статус цієї заявки</string>
     <string name="application_export_choose">Що увійде у файл</string>
+    <string name="timeline_legend_education">Ausbildung</string>
+    <string name="timeline_legend_work">Beruf</string>
+    <string name="timeline_legend_gap">Lücke</string>
 </resources>

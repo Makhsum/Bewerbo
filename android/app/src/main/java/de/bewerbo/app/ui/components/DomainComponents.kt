@@ -23,11 +23,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import de.bewerbo.app.R
 import de.bewerbo.app.data.Gap
 import de.bewerbo.app.data.Requirement
 import de.bewerbo.app.data.TimelinePeriod
@@ -123,11 +125,15 @@ fun Timeline(
         }
 
         Row(Modifier.padding(top = Space.s)) {
-            LegendDot(education, "Ausbildung")
+            // These three were Kotlin string literals, which put them outside strings.xml
+            // altogether: not translatable, and invisible to EmojiFreeStringsTest, which only
+            // scans values*/strings.xml. They stay German — they are the words the Zeitstrahl
+            // labels in the document — but they are now declared where every other string is.
+            LegendDot(education, stringResource(R.string.timeline_legend_education))
             Box(Modifier.size(Space.m))
-            LegendDot(work, "Beruf")
+            LegendDot(work, stringResource(R.string.timeline_legend_work))
             Box(Modifier.size(Space.m))
-            LegendDot(gapColor, "Lücke")
+            LegendDot(gapColor, stringResource(R.string.timeline_legend_gap))
         }
     }
 }

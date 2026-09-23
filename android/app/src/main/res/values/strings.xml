@@ -176,4 +176,7 @@
     <string name="profile_anabin_withdraw">Withdraw</string>
     <string name="application_status">Status of this application</string>
     <string name="application_export_choose">What goes into the file</string>
+    <string name="timeline_legend_education">Ausbildung</string>
+    <string name="timeline_legend_work">Beruf</string>
+    <string name="timeline_legend_gap">Lücke</string>
 </resources>
