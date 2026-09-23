@@ -16,9 +16,12 @@ android {
         versionCode = 1
         versionName = "0.1"
 
-        // 10.0.2.2 is the host machine as seen from the emulator. A device on the same network
-        // takes the host's LAN address instead; both are overridden here rather than in code.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5099\"")
+        // 10.0.2.2 is the host machine as seen from the emulator, and that address means nothing
+        // on a real phone: there the backend is reached over Tailscale or over the LAN. So the URL
+        // is a build input rather than a constant — an APK for a device is built with e.g.
+        //   ./gradlew assembleDebug -PbewerboApiUrl=http://100.91.107.10:5099
+        val apiBaseUrl = (findProperty("bewerboApiUrl") as String?) ?: "http://10.0.2.2:5099"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {

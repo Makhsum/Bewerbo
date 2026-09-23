@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only. This file overrides the one in src/main, which names the three addresses a
+  backend on the emulator host answers on. A debug APK installed on a phone talks to the backend
+  over a Tailscale address (100.x) or a LAN address, and those are not known when the file is
+  written — so the debug build permits plain HTTP anywhere. The release build keeps the strict
+  config from src/main: HTTPS only, because the payload here is somebody's CV.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
