@@ -200,6 +200,7 @@
     <string name="profile_zab_toggle">Assessment applied for at the ZAB</string>
     <string name="profile_anabin_lookup">Look up in anabin</string>
     <string name="profile_equivalent_to">Equivalent in Germany to: %1$s</string>
+    <string name="profile_anabin_institution">Institution listed in anabin as: %1$s</string>
     <string name="profile_generate_cv">Write the Lebenslauf</string>
     <string name="profile_add_experience">Add a position</string>
 

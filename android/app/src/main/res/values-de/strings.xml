@@ -181,6 +181,7 @@
     <string name="profile_zab_toggle">Bewertung bei der ZAB beantragt</string>
     <string name="profile_anabin_lookup">In anabin nachschlagen</string>
     <string name="profile_equivalent_to">Entspricht in Deutschland: %1$s</string>
+    <string name="profile_anabin_institution">Einrichtung in anabin gelistet als: %1$s</string>
     <string name="profile_generate_cv">Lebenslauf schreiben</string>
     <string name="profile_add_experience">Position hinzufügen</string>
 

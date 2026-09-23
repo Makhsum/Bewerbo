@@ -1292,7 +1292,32 @@ public class DomainRuleTests
         var cv = writer.WriteCvAsync(profile, timeline).Result;
 
         var bullets = cv.Sections.SelectMany(s => s.Items).SelectMany(i => i.Bullets).ToList();
-        Assert.Contains(bullets, b => b.Contains("Bachelorabschluss") && b.Contains("H+"));
+        Assert.Contains(bullets, b => b.Contains("gleichwertig mit: Bachelorabschluss"));
+        Assert.Contains(bullets, b => b.Contains("H+"));
+    }
+
+    [Fact]
+    public void The_anabin_rating_is_named_as_the_institutions_listing_and_not_the_degrees()
+    {
+        var profile = SampleProfile();
+        profile.Education.Add(new EducationEntry
+        {
+            Degree = "Diplom", Institution = "KHEU", Country = "UA",
+            From = new DateOnly(2014, 9, 1), To = new DateOnly(2019, 6, 30),
+            AnabinAssessment = "H+", GermanEquivalent = "Bachelorabschluss",
+            EquivalenceConfirmed = true,
+        });
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        // anabin lists institutions and qualifications separately, and H+ is the status of the
+        // Hochschule. Written as "gleichwertig mit: Bachelorabschluss (anabin: H+)" it read as a
+        // mark awarded to the degree — a claim the entry does not make and the user never confirmed.
+        var bullets = cv.Sections.SelectMany(s => s.Items).SelectMany(i => i.Bullets).ToList();
+        Assert.Contains(bullets, b => b.StartsWith("Hochschule in anabin:") && b.Contains("H+"));
+        Assert.DoesNotContain(bullets, b => b.Contains("gleichwertig") && b.Contains("H+"));
     }
 
     [Fact]

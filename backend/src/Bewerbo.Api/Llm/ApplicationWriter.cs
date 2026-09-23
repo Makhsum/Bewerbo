@@ -97,7 +97,8 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
         foreach (var e in profile.Education.OrderByDescending(e => e.From))
         {
             var equiv = e.EquivalenceConfirmed && !string.IsNullOrWhiteSpace(e.GermanEquivalent)
-                ? $" | anabin: {e.AnabinAssessment}, gleichwertig mit: {e.GermanEquivalent}"
+                ? $" | Hochschule in anabin: {e.AnabinAssessment}, " +
+                  $"Abschluss gleichwertig mit: {e.GermanEquivalent}"
                 : " | keine bestätigte Gleichwertigkeit — NICHT behaupten";
             var zab = e.ZabAssessmentPending
                 ? " | ZAB-Zeugnisbewertung beantragt, Ergebnis steht aus — als offen nennen, " +
@@ -173,10 +174,16 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             // degree stands under its own name — a wrong equivalence is worse than none.
             if (e.EquivalenceConfirmed && !string.IsNullOrWhiteSpace(e.GermanEquivalent))
             {
-                bullets.Add($"In Deutschland gleichwertig mit: {e.GermanEquivalent}" +
-                            (string.IsNullOrWhiteSpace(e.AnabinAssessment)
-                                ? ""
-                                : $" (anabin: {e.AnabinAssessment})"));
+                bullets.Add($"In Deutschland gleichwertig mit: {e.GermanEquivalent}");
+
+                // anabin classifies the INSTITUTION and the qualification separately, and the
+                // rating is the institution's listing. Hung on the end of the equivalence line it
+                // read as a mark awarded to the degree — a different claim from the one the user
+                // confirmed, and the one a recruiter would act on.
+                if (!string.IsNullOrWhiteSpace(e.AnabinAssessment))
+                {
+                    bullets.Add($"Hochschule in anabin: {e.AnabinAssessment}");
+                }
             }
             // An assessment that is under way is the other half of the standing. Without it a
             // degree the user is waiting on reaches the page unframed, and calling it settled would

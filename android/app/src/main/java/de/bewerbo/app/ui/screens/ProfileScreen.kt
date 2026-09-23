@@ -743,6 +743,15 @@ private fun EducationCard(
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = Space.s),
             )
+            // The other half of what anabin says. The rating classifies the INSTITUTION, and beside
+            // an equivalence with nothing naming its subject it reads as a grade for the degree.
+            if (!entry.anabinAssessment.isNullOrBlank()) {
+                Text(
+                    stringResource(R.string.profile_anabin_institution, entry.anabinAssessment),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = Space.xs),
+                )
+            }
             // Confirmed is not permanent. An equivalence the user later doubts has to be
             // retractable, or the only safe thing they could do with this feature is avoid it.
             OutlinedButton(

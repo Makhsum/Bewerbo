@@ -180,6 +180,7 @@
     <string name="profile_zab_toggle">Оцінку запитано в ZAB</string>
     <string name="profile_anabin_lookup">Знайти в anabin</string>
     <string name="profile_equivalent_to">Еквівалент у Німеччині: %1$s</string>
+    <string name="profile_anabin_institution">Заклад зазначено в anabin як: %1$s</string>
     <string name="profile_generate_cv">Написати Lebenslauf</string>
     <string name="profile_add_experience">Додати посаду</string>
 
