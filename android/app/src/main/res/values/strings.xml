@@ -158,7 +158,6 @@
 
     <!-- Locker -->
     <string name="locker_subtitle">Zeugnisse, Zertifikate and the anabin extract the Anlagenverzeichnis refers to.</string>
-    <string name="locker_pages">%1$d pages</string>
     <string name="locker_empty_title">The Mappe is empty</string>
     <string name="locker_empty_body">Add the documents your application refers to. Bewerbo keeps the record here; the scan itself stays on your device.</string>
     <string name="locker_add">Add a document</string>
@@ -167,6 +166,9 @@
     <string name="locker_field_pages">Pages</string>
     <string name="locker_storage_title">What is stored here</string>
     <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The file itself is not uploaded.</string>
+    <string name="locker_demand_title">This posting asks for · %1$d</string>
+    <string name="locker_demand_outstanding">Outstanding</string>
+    <string name="locker_demand_on_file">In the Mappe</string>
     <string name="profile_add_education">Add a qualification</string>
     <string name="education_degree">Degree or qualification</string>
     <string name="education_institution">Institution</string>

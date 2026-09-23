@@ -25,14 +25,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.DemandedDocument
 import de.bewerbo.app.data.StoredDocument
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
+import de.bewerbo.app.ui.components.IconRow
 import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
@@ -50,11 +53,18 @@ private val KINDS = listOf("Arbeitszeugnis", "Zertifikat", "Sprachnachweis", "An
  * What is stored here is the RECORD of a document: its title, its kind, how many pages. The scan
  * itself stays on the device. That is a narrower promise than server-side storage of somebody's
  * Zeugnisse, and it is one that can be kept without a data-protection argument.
+ *
+ * Above the list stands what the posting asks to see, so the Mappe answers the question the user
+ * actually arrives with — not "what have I got" but "what is still missing for this application".
  */
 @Composable
 fun LockerScreen(state: AppState, viewModel: AppViewModel) {
     val colors = LocalSemanticColors.current
     val documents = state.profile?.documents.orEmpty()
+    // Which documents are demanded is a property of the posting, so it is only known once one has
+    // been read. With no Abgleich behind it the Mappe stays a plain list of what is on file rather
+    // than inventing demands it cannot know about.
+    val demands = state.match?.documents.orEmpty()
     var adding by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -75,6 +85,15 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
+        if (demands.isNotEmpty()) {
+            item { SectionLabel(stringResource(R.string.locker_demand_title, demands.size)) }
+            item {
+                BewerboCard(Modifier.testTag("locker_demand_group")) {
+                    demands.forEachIndexed { index, demand -> DemandRow(demand, index) }
+                }
+            }
+        }
+
         itemsIndexed(documents) { index, document ->
             BewerboCard(Modifier.testTag("locker_item_$index")) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -91,7 +110,14 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
                         Text(
                             listOfNotNull(
                                 document.note.ifBlank { null },
-                                stringResource(R.string.locker_pages, document.pageCount),
+                                // A count next to a number needs its plural rule: a one-page
+                                // Zeugnis read "1 pages", which the Anlagenverzeichnis itself has
+                                // always got right ("1 Seite").
+                                pluralStringResource(
+                                    R.plurals.locker_page_count,
+                                    document.pageCount,
+                                    document.pageCount,
+                                ),
                             ).joinToString("  ·  "),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.muted,
@@ -148,6 +174,43 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
             )
         }
     }
+}
+
+/**
+ * One document the posting asks to see, with whether the Mappe can produce it.
+ *
+ * The pill fires only on an outstanding row. A satisfied demand has nothing for the user to do,
+ * and a marker on every row is what taught users to stop reading the markers on the
+ * Stellenanzeige. The state is still said in words on both kinds of row, so it does not rest on
+ * the icon tint alone. The detail line is the posting's own sentence: the row has to be checkable
+ * against the advert, not just asserted.
+ */
+@Composable
+private fun DemandRow(demand: DemandedDocument, index: Int) {
+    val onFile = stringResource(R.string.locker_demand_on_file)
+
+    IconRow(
+        icon = kindIcon(demand.kind),
+        title = demand.title,
+        detail = if (demand.onFile) {
+            listOfNotNull(onFile, demand.quote.ifBlank { null }).joinToString("  ·  ")
+        } else {
+            demand.quote.ifBlank { null }
+        },
+        tone = if (demand.onFile) PillTone.Success else PillTone.Attention,
+        trailing = if (demand.onFile) {
+            null
+        } else {
+            {
+                StatusPill(
+                    stringResource(R.string.locker_demand_outstanding),
+                    PillTone.Attention,
+                    Modifier.testTag("locker_demand_outstanding_$index"),
+                )
+            }
+        },
+        modifier = Modifier.testTag("locker_demand_$index"),
+    )
 }
 
 @Composable

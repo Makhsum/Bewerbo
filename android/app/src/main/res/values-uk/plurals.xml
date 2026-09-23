@@ -18,4 +18,10 @@
         <item quantity="many">%1$d зауважень</item>
         <item quantity="other">%1$d зауваження</item>
     </plurals>
+    <plurals name="locker_page_count">
+        <item quantity="one">%1$d сторінка</item>
+        <item quantity="few">%1$d сторінки</item>
+        <item quantity="many">%1$d сторінок</item>
+        <item quantity="other">%1$d сторінки</item>
+    </plurals>
 </resources>

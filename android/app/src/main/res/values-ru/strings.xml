@@ -118,7 +118,6 @@
     <string name="application_source_rules">Это письмо написано по правилам — языковая модель для этой установки не настроена.</string>
 
     <string name="locker_subtitle">Zeugnisse, Zertifikate и выписка из anabin, на которые ссылается Anlagenverzeichnis.</string>
-    <string name="locker_pages">Страниц: %1$d</string>
     <string name="locker_empty_title">Mappe пуста</string>
     <string name="locker_empty_body">Добавьте документы, на которые ссылается ваша заявка. Bewerbo хранит здесь только запись; сам скан остаётся на вашем устройстве.</string>
     <string name="locker_add">Добавить документ</string>
@@ -127,6 +126,9 @@
     <string name="locker_field_pages">Страниц</string>
     <string name="locker_storage_title">Что здесь хранится</string>
     <string name="locker_storage_body">Bewerbo хранит запись о документе — название, вид и число страниц — чтобы Anlagenverzeichnis мог его назвать. Сам файл не загружается.</string>
+    <string name="locker_demand_title">Эта вакансия просит · %1$d</string>
+    <string name="locker_demand_outstanding">Не хватает</string>
+    <string name="locker_demand_on_file">В Mappe</string>
     <string name="profile_add_education">Добавить образование</string>
     <string name="education_degree">Квалификация или степень</string>
     <string name="education_institution">Учебное заведение</string>

@@ -100,19 +100,34 @@ public static class RequirementMatcher
         return new MatchedRequirement(requirement, RequirementState.NichtBelegt, "", "");
     }
 
-    private static MatchedRequirement? LanguageRequirement(Profile profile, string requirement)
+    /// <summary>
+    /// The language and level a requirement asks for, or null where it asks for neither.
+    ///
+    /// The words between the language and the level are whatever the posting chose to write:
+    /// "Deutschkenntnisse auf Niveau B2" alone puts 22 characters there, so a 20-character window
+    /// silently read the most ordinary German phrasing as "no language requirement" and told the
+    /// applicant their B2 was not in the profile at all.
+    ///
+    /// Shared with <see cref="DocumentDemandService"/>, which needs the same reading to know that
+    /// the posting demands a Sprachnachweis. One copy of this pattern, not two.
+    /// </summary>
+    internal static (string Language, string Level)? WantedLanguage(string requirement)
     {
-        // The words between the language and the level are whatever the posting chose to write:
-        // "Deutschkenntnisse auf Niveau B2" alone puts 22 characters there, so a 20-character
-        // window silently read the most ordinary German phrasing as "no language requirement" and
-        // told the applicant their B2 was not in the profile at all.
         var m = Regex.Match(requirement,
             @"(?<lang>Deutsch|Englisch|Französisch|Russisch)\D{0,40}?(?<level>[ABC][12])",
             RegexOptions.IgnoreCase);
-        if (!m.Success) return null;
 
-        var wanted = m.Groups["lang"].Value;
-        var level = m.Groups["level"].Value.ToUpperInvariant();
+        return m.Success
+            ? (m.Groups["lang"].Value, m.Groups["level"].Value.ToUpperInvariant())
+            : null;
+    }
+
+    private static MatchedRequirement? LanguageRequirement(Profile profile, string requirement)
+    {
+        var asked = WantedLanguage(requirement);
+        if (asked is null) return null;
+
+        var (wanted, level) = asked.Value;
         var skill = profile.Languages.FirstOrDefault(l =>
             l.Language.Contains(wanted, StringComparison.OrdinalIgnoreCase));
 

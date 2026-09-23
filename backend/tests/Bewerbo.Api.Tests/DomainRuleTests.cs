@@ -365,6 +365,107 @@ public class DomainRuleTests
         Assert.DoesNotContain(match.Claimable, r => r.Text.Contains("IHK"));
     }
 
+    // -- what the posting demands of the Mappe ----------------------------------------------------
+
+    [Theory]
+    [InlineData("Bitte senden Sie uns Ihre Zeugnisse.")]
+    [InlineData("Wir freuen uns auf Ihre vollständigen Bewerbungsunterlagen.")]
+    [InlineData("Arbeitszeugnisse der letzten drei Jahre legen Sie bitte bei.")]
+    public void A_posting_that_asks_for_Zeugnisse_demands_an_Arbeitszeugnis_and_it_is_outstanding(string text)
+    {
+        // The demand is read off the whole advert: none of these three sentences survives into the
+        // requirements list, and all three are how a German advert asks for papers.
+        var demands = DocumentDemandService.Demands(SampleProfile(), text, []);
+
+        var zeugnis = Assert.Single(demands, d => d.Kind == DocumentKind.Arbeitszeugnis);
+        Assert.False(zeugnis.OnFile);
+
+        // The quote has to be the advert's own words, verbatim — it is shown to the user as the
+        // reason this row is there, and a paraphrase would be unverifiable.
+        Assert.NotEmpty(zeugnis.Quote);
+        Assert.Contains(zeugnis.Quote, text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_same_demand_reads_as_on_file_once_the_Mappe_holds_that_kind()
+    {
+        var profile = SampleProfile();
+        profile.Documents.Add(new StoredDocument
+        {
+            Title = "Arbeitszeugnis Agrosvit GmbH", Kind = DocumentKind.Arbeitszeugnis, PageCount = 2,
+        });
+
+        var demands = DocumentDemandService.Demands(profile, "Bitte senden Sie uns Ihre Zeugnisse.", []);
+
+        Assert.True(Assert.Single(demands, d => d.Kind == DocumentKind.Arbeitszeugnis).OnFile);
+    }
+
+    [Fact]
+    public void Anerkennung_as_a_benefit_is_not_a_demand_for_an_anabin_extract()
+    {
+        // "Wertschätzung und Anerkennung" is stock wording in the benefits half of a German advert.
+        // Reading it as a demand put an outstanding anabin extract on every applicant's Mappe.
+        var demands = DocumentDemandService.Demands(SampleProfile(),
+            "Wir bieten ein familiäres Team, Wertschätzung und Anerkennung Ihrer Leistung.", []);
+
+        Assert.DoesNotContain(demands, d => d.Kind == DocumentKind.AnabinAuszug);
+    }
+
+    [Fact]
+    public void An_anerkennung_that_names_the_Abschluss_is_a_demand()
+    {
+        var demands = DocumentDemandService.Demands(SampleProfile(),
+            "Voraussetzung ist die Anerkennung Ihres auslaendischen Abschlusses.", []);
+
+        Assert.Contains(demands, d => d.Kind == DocumentKind.AnabinAuszug);
+    }
+
+    [Fact]
+    public void A_quote_taken_off_a_bullet_does_not_keep_the_bullet_marker()
+    {
+        var demands = DocumentDemandService.Demands(SampleProfile(),
+            "Anforderungen:\n- Anerkennung Ihres auslaendischen Abschlusses\n", []);
+
+        Assert.StartsWith("Anerkennung",
+            Assert.Single(demands, d => d.Kind == DocumentKind.AnabinAuszug).Quote);
+    }
+
+    [Fact]
+    public void A_demanded_Sprachnachweis_is_on_file_only_when_the_language_says_so()
+    {
+        // The rule that matters: a document of kind Sprachnachweis lying in the Mappe does NOT make
+        // the Nachweis count. CertificateOnFile is what the Abgleich, the readiness score and the
+        // letter writer read, so anything else would say "on file" here while the requirement it
+        // belongs to stayed offen.
+        var profile = SampleProfile();
+        profile.Documents.Add(new StoredDocument
+        {
+            Title = "Goethe-Zertifikat B2", Kind = DocumentKind.Sprachnachweis, PageCount = 1,
+        });
+
+        var demands = DocumentDemandService.Demands(profile, "",
+            [new ExtractedRequirement { Text = "Deutsch mindestens B2" }]);
+
+        var nachweis = Assert.Single(demands, d => d.Kind == DocumentKind.Sprachnachweis);
+        Assert.False(nachweis.OnFile);
+        Assert.Equal("Sprachnachweis Deutsch B2", nachweis.Title);
+
+        profile.Languages[0].CertificateOnFile = true;
+        Assert.True(Assert.Single(DocumentDemandService.Demands(profile, "",
+            [new ExtractedRequirement { Text = "Deutsch mindestens B2" }])).OnFile);
+    }
+
+    [Fact]
+    public void A_posting_that_asks_for_no_document_demands_nothing()
+    {
+        // An empty section is the honest answer. Listing all four kinds "just in case" would tell
+        // the user this advert wants papers it never mentioned.
+        var demands = DocumentDemandService.Demands(SampleProfile(),
+            "Wir suchen eine Buchhalterin fuer unser Team in Stuttgart.", []);
+
+        Assert.Empty(demands);
+    }
+
     [Fact]
     public void The_generated_letter_claims_nothing_that_is_not_belegt()
     {

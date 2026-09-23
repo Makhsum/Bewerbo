@@ -120,7 +120,6 @@
     <string name="application_source_rules">Цей лист написано за правилами — мовну модель для цієї інсталяції не налаштовано.</string>
 
     <string name="locker_subtitle">Zeugnisse, Zertifikate та витяг з anabin, на які посилається Anlagenverzeichnis.</string>
-    <string name="locker_pages">Сторінок: %1$d</string>
     <string name="locker_empty_title">Mappe порожня</string>
     <string name="locker_empty_body">Додайте документи, на які посилається ваша заявка. Bewerbo зберігає тут лише запис; сам скан залишається на вашому пристрої.</string>
     <string name="locker_add">Додати документ</string>
@@ -129,6 +128,9 @@
     <string name="locker_field_pages">Сторінок</string>
     <string name="locker_storage_title">Що тут зберігається</string>
     <string name="locker_storage_body">Bewerbo зберігає запис про документ — назву, вид і кількість сторінок — щоб Anlagenverzeichnis міг його назвати. Сам файл не завантажується.</string>
+    <string name="locker_demand_title">Ця вакансія просить · %1$d</string>
+    <string name="locker_demand_outstanding">Не вистачає</string>
+    <string name="locker_demand_on_file">У Mappe</string>
     <string name="profile_add_education">Додати освіту</string>
     <string name="education_degree">Кваліфікація або ступінь</string>
     <string name="education_institution">Навчальний заклад</string>

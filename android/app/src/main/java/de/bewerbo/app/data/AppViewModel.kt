@@ -304,6 +304,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         api.addDocument(id, document)
         _state.update { it.copy(profile = api.profile(id)) }
+        rematch()
         refreshDerived()
     }
 
@@ -311,7 +312,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         api.deleteDocument(documentId)
         _state.update { it.copy(profile = api.profile(id)) }
+        rematch()
         refreshDerived()
+    }
+
+    /**
+     * Re-reads the Abgleich after the Mappe changed, for the same reason
+     * [fileCertificate] does it: what the posting demands is answered from the profile, so filing
+     * or removing a document changes it. Without this the row that says a document is outstanding
+     * would still say so directly above the document the user had just filed.
+     *
+     * A no-op until a posting has been read — there is nothing to match against before that.
+     */
+    private suspend fun rematch() {
+        val posting = _state.value.posting ?: return
+        _state.update { it.copy(match = api.match(posting.id)) }
     }
 
     fun dismissError() = _state.update { it.copy(error = null) }

@@ -18,4 +18,10 @@
         <item quantity="many">%1$d замечаний</item>
         <item quantity="other">%1$d замечания</item>
     </plurals>
+    <plurals name="locker_page_count">
+        <item quantity="one">%1$d страница</item>
+        <item quantity="few">%1$d страницы</item>
+        <item quantity="many">%1$d страниц</item>
+        <item quantity="other">%1$d страницы</item>
+    </plurals>
 </resources>

@@ -93,11 +93,17 @@ public static class PostingEndpoints
             var requirements = JsonSerializer.Deserialize<List<ExtractedRequirement>>(posting.RequirementsJson) ?? [];
             var match = RequirementMatcher.Match(profile, requirements);
 
+            // What papers the advert wants to see, which is a separate reading from the Abgleich:
+            // it comes off the whole advert text, not only off the requirements it listed.
+            var demands = DocumentDemandService.Demands(profile, posting.SourceText, requirements);
+
             return Results.Ok(new MatchDto(
                 posting.Id, posting.Company, posting.Reference,
                 match.Covered, match.Total, match.Percent,
                 match.Requirements.Select(r => new RequirementDto(
-                    r.Text, StateName(r.State), r.Evidence, r.Action, r.Language)).ToList()));
+                    r.Text, StateName(r.State), r.Evidence, r.Action, r.Language)).ToList(),
+                demands.Select(d => new DemandedDocumentDto(
+                    d.Kind.ToString(), d.Title, d.Quote, d.OnFile)).ToList()));
         });
     }
 

@@ -157,6 +157,17 @@ data class Requirement(
 )
 
 @Serializable
+data class DemandedDocument(
+    /// Arbeitszeugnis | Zertifikat | Sprachnachweis | AnabinAuszug
+    val kind: String,
+    val title: String,
+    /// The posting's own sentence that asks for it.
+    val quote: String = "",
+    /// False means outstanding: the posting wants it and the Mappe has nothing for it.
+    val onFile: Boolean = false,
+)
+
+@Serializable
 data class MatchView(
     val postingId: String,
     val company: String = "",
@@ -165,6 +176,8 @@ data class MatchView(
     val total: Int = 0,
     val percent: Int = 0,
     val requirements: List<Requirement> = emptyList(),
+    /// The documents this posting demands, for the Mappe to mark.
+    val documents: List<DemandedDocument> = emptyList(),
 )
 
 @Serializable

@@ -57,10 +57,14 @@ public record CorrectFieldRequest(string Key, string Value);
 
 public record RequirementDto(string Text, string State, string Evidence, string Action, string Language = "");
 
+/// <summary>One document the posting asks to see. onFile false means outstanding.</summary>
+public record DemandedDocumentDto(string Kind, string Title, string Quote, bool OnFile);
+
 public record MatchDto(
     Guid PostingId, string Company, string Reference,
     int Covered, int Total, int Percent,
-    IReadOnlyList<RequirementDto> Requirements);
+    IReadOnlyList<RequirementDto> Requirements,
+    IReadOnlyList<DemandedDocumentDto> Documents);
 
 public record CreateApplicationRequest(Guid ProfileId, Guid PostingId, string? Tone);
 
