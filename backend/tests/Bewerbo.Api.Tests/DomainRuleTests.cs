@@ -932,6 +932,103 @@ public class DomainRuleTests
     }
 
     [Fact]
+    public void The_gap_from_the_last_entry_up_to_today_is_named_at_the_top_of_the_section()
+    {
+        // It runs into no entry at all, so neither loop places it — and it is the loudest question
+        // on the page, a Lebenslauf that simply stops. It used to reach the document nowhere.
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Buchhalterin", Employer = "Agro Invest",
+                    From = new DateOnly(2019, 4, 1), To = new DateOnly(2023, 5, 31),
+                },
+            ],
+            Gaps =
+            [
+                new GapExplanation
+                {
+                    From = new DateOnly(2023, 5, 31), To = new DateOnly(2026, 9, 23),
+                    Reason = "визнання диплома", GermanWording = "Anerkennungsverfahren",
+                },
+            ],
+        };
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 23));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        var work = Assert.Single(cv.Sections, s => s.Title == "Berufserfahrung");
+        Assert.True(work.Items[0].IsGap);
+        Assert.Equal("Anerkennungsverfahren", work.Items[0].Title);
+    }
+
+    [Fact]
+    public void Every_explained_gap_with_a_German_name_reaches_the_document_exactly_once()
+    {
+        // The invariant behind the two tests above: a gap the Profil screen counts as answered and
+        // shows a German sentence for has to appear on the page, wherever in the chronology it
+        // sits. All three positions at once — into a study period, into a job, and into nothing.
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Buchhalterin", Employer = "Agro Invest",
+                    From = new DateOnly(2016, 1, 1), To = new DateOnly(2018, 6, 30),
+                },
+                new ExperienceEntry
+                {
+                    Position = "Sachbearbeiterin", Employer = "Nordhaus GmbH",
+                    From = new DateOnly(2022, 1, 1), To = new DateOnly(2023, 5, 31),
+                },
+            ],
+            Education =
+            [
+                new EducationEntry
+                {
+                    Degree = "Magister Betriebswirtschaft", Institution = "KHEU",
+                    From = new DateOnly(2019, 9, 1), To = new DateOnly(2021, 6, 30),
+                },
+            ],
+            Gaps =
+            [
+                new GapExplanation
+                {
+                    From = new DateOnly(2018, 6, 30), To = new DateOnly(2019, 9, 1),
+                    Reason = "переїзд", GermanWording = "Umzug nach Deutschland",
+                },
+                new GapExplanation
+                {
+                    From = new DateOnly(2021, 6, 30), To = new DateOnly(2022, 1, 1),
+                    Reason = "мовні курси B2", GermanWording = "Sprachkurs Deutsch B2",
+                },
+                new GapExplanation
+                {
+                    From = new DateOnly(2023, 5, 31), To = new DateOnly(2026, 9, 23),
+                    Reason = "визнання диплома", GermanWording = "Anerkennungsverfahren",
+                },
+            ],
+        };
+
+        var today = new DateOnly(2026, 9, 23);
+        var timeline = TimelineService.Build(profile, today);
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        var written = cv.Sections.SelectMany(s => s.Items).Where(i => i.IsGap)
+            .Select(i => i.Title).OrderBy(t => t).ToArray();
+
+        Assert.Equal(3, timeline.Gaps.Count(g => g.Explained));
+        Assert.Equal(
+            new[] { "Anerkennungsverfahren", "Sprachkurs Deutsch B2", "Umzug nach Deutschland" },
+            written);
+    }
+
+    [Fact]
     public void A_gap_with_no_German_wording_stays_out_of_the_Lebenslauf()
     {
         // The reason is the user's and is kept; what has no German name simply cannot be written.

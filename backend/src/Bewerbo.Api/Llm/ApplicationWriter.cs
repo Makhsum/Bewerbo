@@ -161,8 +161,6 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             // it runs into.
             work.AddRange(NamedGaps(timeline.Gaps.Where(g => g.To == e.From)));
         }
-        if (work.Count > 0) sections.Add(new CvSection { Title = "Berufserfahrung", Items = work });
-
         var education = new List<CvItem>();
         foreach (var e in profile.Education.OrderByDescending(e => e.From))
         {
@@ -190,6 +188,34 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             // the Profil screen, counted as explained, and then missing from the document.
             education.AddRange(NamedGaps(timeline.Gaps.Where(g => g.To == e.From)));
         }
+        // The gap that runs from the last entry up to today runs into no entry at all, so neither
+        // loop above could place it — and it is the one a German reader asks about first, a
+        // Lebenslauf that simply stops. Both lists run newest first, so it belongs at the top of
+        // whichever section holds the entry it follows.
+        //
+        // Selected as "ends at no entry's start" rather than "ends today", so that a gap can never
+        // again be found, named on screen and then silently dropped on its way to the page.
+        var entryStarts = profile.Experience.Select(x => x.From)
+            .Concat(profile.Education.Select(x => x.From))
+            .ToHashSet();
+        var openEnded = NamedGaps(timeline.Gaps.Where(g => !entryStarts.Contains(g.To))).ToList();
+        if (openEnded.Count > 0)
+        {
+            // Whichever lane ended last is the lane the gap follows. Max over a nullable date is
+            // null for an empty lane, which is how a profile with only one of the two lands right.
+            var lastJob = profile.Experience.Max(x => x.To);
+            var lastStudy = profile.Education.Max(x => x.To);
+            if (lastJob is not null && (lastStudy is null || lastJob >= lastStudy))
+            {
+                work.InsertRange(0, openEnded);
+            }
+            else
+            {
+                education.InsertRange(0, openEnded);
+            }
+        }
+
+        if (work.Count > 0) sections.Add(new CvSection { Title = "Berufserfahrung", Items = work });
         if (education.Count > 0) sections.Add(new CvSection { Title = "Ausbildung", Items = education });
 
         if (profile.Languages.Count > 0)
