@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -358,7 +360,7 @@ fun Modifier.exposeTestTags(): Modifier =
 /**
  * An AlertDialog that keeps the app's own rules inside its own window.
  *
- * TWO things of ours do not cross that boundary, and each dialog used to have to remember them.
+ * THREE things of ours do not cross that boundary, and each dialog used to have to remember them.
  * The testTagsAsResourceId flag is the one the app already knew about. The interface language is
  * the other, and it was missed: the dialog's window provides LocalContext and LocalConfiguration
  * afresh from the PHONE's locale, so every stringResource inside came back in the phone's language
@@ -366,7 +368,15 @@ fun Modifier.exposeTestTags(): Modifier =
  * dialog was German. The language is re-applied around each slot, because the slots are what the
  * dialog composes in that window.
  *
- * Both are applied here once so that the next dialog gets them without knowing any of this.
+ * The keyboard is the third. The NavHost's imePadding() belongs to the content behind the dialog
+ * and stops at its own window, so the dialog was laid out for the whole screen and the keyboard
+ * came up over its bottom: in "Correct the fields" the Save and Cancel buttons sat under the
+ * keys, invisible to the user and unreachable for a run — a tap on posting_edit_confirm landed on
+ * the keyboard and opened its settings instead. decorFitsSystemWindows = false is what makes the
+ * dialog's window report the IME inset at all; imePadding() then lifts the dialog and its text
+ * slot, which already scrolls, gives way.
+ *
+ * All three are applied here once so that the next dialog gets them without knowing any of this.
  */
 @Composable
 fun BewerboDialog(
@@ -381,7 +391,8 @@ fun BewerboDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        modifier = Modifier.exposeTestTags().testTag(testTag),
+        modifier = Modifier.exposeTestTags().testTag(testTag).imePadding(),
+        properties = DialogProperties(decorFitsSystemWindows = false),
         title = { UiLanguageProvider(language) { title() } },
         text = { UiLanguageProvider(language) { text() } },
         confirmButton = { UiLanguageProvider(language) { confirmButton() } },
