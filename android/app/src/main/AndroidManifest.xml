@@ -3,6 +3,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Which apps can send an e-mail. From API 30 a package this app has not declared an interest
+         in is invisible to queryIntentActivities, so without this the "Per E-Mail senden" chooser
+         would find no mail app and fall back to the general share sheet. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

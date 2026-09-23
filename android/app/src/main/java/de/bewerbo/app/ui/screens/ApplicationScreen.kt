@@ -2,6 +2,7 @@ package de.bewerbo.app.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -584,9 +585,15 @@ private fun PageThumbnail(
  * the body.
  *
  * ACTION_SEND and not a mailto: URI — mailto carries no attachment, and the attachment is the whole
- * point. The file lives in the app's private storage, so it goes out as a content:// URI from the
+ * point. But a bare ACTION_SEND chooser is not an e-mail chooser: under a button that says "send by
+ * e-mail" it offered Quick Share, Print, Drive, Bluetooth and Messages, with the mail app somewhere
+ * further down. So the mail apps are resolved first, by the one question only they answer — SENDTO
+ * on a mailto: URI — and the chooser is built from those alone. The chooser itself stays: which
+ * mail app sends a German application is the user's business.
+ *
+ * The file lives in the app's private storage, so it goes out as a content:// URI from the
  * FileProvider declared in the manifest; FLAG_GRANT_READ_URI_PERMISSION is what lets the mail app
- * read it. The chooser is deliberate: which app sends a German application is the user's business.
+ * read it.
  *
  * FLAG_ACTIVITY_NEW_TASK is NOT optional here, however much it looks like it: every screen of this
  * app runs under the configuration context that [de.bewerbo.app.ui.UiLanguageProvider] provides as
@@ -602,7 +609,23 @@ private fun emailChooser(context: Context, draft: EmailDraft, title: String): In
         putExtra(Intent.EXTRA_TEXT, draft.body)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    return Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    // The same intent once per mail app. One activity per package, because a mail app that
+    // registers two of them would otherwise appear twice in a chooser of five.
+    val mailApps = context.packageManager
+        .queryIntentActivities(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")), 0)
+        .distinctBy { it.activityInfo.packageName }
+        .map { Intent(send).setPackage(it.activityInfo.packageName) }
+
+    // A device with no mail app at all still gets the general sheet: an empty chooser would be a
+    // worse answer than a wide one.
+    val chooser = if (mailApps.isEmpty()) {
+        Intent.createChooser(send, title)
+    } else {
+        Intent.createChooser(mailApps.first(), title)
+            .putExtra(Intent.EXTRA_INITIAL_INTENTS, mailApps.drop(1).toTypedArray())
+    }
+    return chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 
