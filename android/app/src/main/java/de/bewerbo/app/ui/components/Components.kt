@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -270,11 +272,11 @@ fun SegmentedControl(
     ) {
         Row(Modifier.padding(3.dp)) {
             options.forEachIndexed { index, option ->
-                val selected = index == selectedIndex
+                val isSelected = index == selectedIndex
                 Surface(
-                    color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
                     shape = MaterialTheme.shapes.extraSmall,
-                    shadowElevation = if (selected) 1.dp else 0.dp,
+                    shadowElevation = if (isSelected) 1.dp else 0.dp,
                     modifier = Modifier
                         .weight(1f)
                         .then(
@@ -282,13 +284,22 @@ fun SegmentedControl(
                                 Modifier.testTag("${tagPrefix}_${option.lowercase()}")
                             } else Modifier,
                         )
-                        .clickable { onSelect(index) },
+                        // Which option is chosen was said only in colour, weight and elevation, so
+                        // a screen reader read the options as equal labels and could not tell the
+                        // user which template, tone, employer type or document kind was selected.
+                        // selectable() carries the state and the role, which is the one channel
+                        // that does not depend on seeing the control.
+                        .selectable(
+                            selected = isSelected,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(index) },
+                        ),
                 ) {
                     Text(
                         label(option),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) {
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) {
                             MaterialTheme.colorScheme.onSurface
                         } else {
                             LocalSemanticColors.current.muted
