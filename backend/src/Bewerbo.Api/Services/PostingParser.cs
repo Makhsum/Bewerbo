@@ -311,7 +311,12 @@ public static partial class PostingParser
     // read as nothing at all. That failure is a quiet one: the CONTACT row says "im Inserat nicht
     // genannt" and carries the ADD marker, which reads as the advert's fault rather than ours.
     // Kontakt already had its colon, which is why only this label was affected.
-    [GeneratedRegex(@"(?:an|Ansprechpartner(?:in)?(?:\s+ist|\s*:)|wenden Sie sich an|Kontakt:?)\s+(?<name>(?:Frau|Herr)\s+(?:Dr\.\s+|Prof\.\s+)*[A-ZÄÖÜ][\wäöüß-]+(?:\s+[A-ZÄÖÜ][\wäöüß-]+){0,2})",
+    //
+    // The name itself is held to ONE line. \s crosses a line break, so the two trailing words the
+    // pattern allows for a double surname reached into whatever the advert wrote next: a posting
+    // whose contact line is followed by "Anforderungen:" produced the contact "Frau Dr. Katrin
+    // Sommer Anforderungen", and that name is what the Anschreiben opens with.
+    [GeneratedRegex(@"(?:an|Ansprechpartner(?:in)?(?:\s+ist|\s*:)|wenden Sie sich an|Kontakt:?)\s+(?<name>(?:Frau|Herr)[ \t]+(?:Dr\.[ \t]+|Prof\.[ \t]+)*[A-ZÄÖÜ][\wäöüß-]+(?:[ \t]+[A-ZÄÖÜ][\wäöüß-]+){0,2})",
         RegexOptions.IgnoreCase)]
     private static partial Regex ContactRx();
 

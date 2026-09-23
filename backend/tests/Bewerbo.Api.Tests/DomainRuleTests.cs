@@ -134,6 +134,18 @@ public class DomainRuleTests
         Assert.Equal(expected, field!.Value);
     }
 
+    [Fact]
+    public void The_contact_name_stops_at_the_end_of_its_line()
+    {
+        // The pattern allows two trailing words for a double surname, and \s crosses a line break,
+        // so the next line of the advert was read as part of the name: "Frau Dr. Katrin Sommer
+        // Anforderungen". That string is what the Anschreiben opens with.
+        var extract = PostingParser.Parse(
+            "Ihre Ansprechpartnerin: Frau Dr. Katrin Sommer\nAnforderungen:\n- Deutsch auf Niveau C1");
+
+        Assert.Equal("Frau Dr. Katrin Sommer", extract.Fields.Single(f => f.Key == "contact").Value);
+    }
+
     [Theory]
     [InlineData("Eintritt: 01.03.2026", "01.03.2026")]
     [InlineData("Eintrittstermin: 01.03.2026", "01.03.2026")]
