@@ -22,10 +22,14 @@ import java.io.File
  */
 class GermanTermsTest {
 
-    /// The default locale's strings live in values/, every other one in values-<tag>/.
+    /// The default locale's resources live in values/, every other one in values-<tag>/.
     // The test runs with the module directory as the working directory.
-    private fun stringsFileFor(tag: String): File =
-        File(if (tag == "en") "src/main/res/values" else "src/main/res/values-$tag", "strings.xml")
+    private fun resourceDirFor(tag: String): File =
+        File(if (tag == "en") "src/main/res/values" else "src/main/res/values-$tag")
+
+    private fun stringsFileFor(tag: String): File = File(resourceDirFor(tag), "strings.xml")
+
+    private fun pluralsFileFor(tag: String): File = File(resourceDirFor(tag), "plurals.xml")
 
     /// Latin words that are not German and not a term: the product's own name, file formats, the
     /// country codes in an example, and the date placeholders of a hint.
@@ -61,6 +65,27 @@ class GermanTermsTest {
             .associate { it.groupValues[1] to it.groupValues[3] }
     }
 
+    /// The <item> texts of one plurals.xml, keyed "name/quantity".
+    ///
+    /// A count is user-facing prose like any other string — "1 Lücke" on a Russian screen is the
+    /// same defect as "LÜCKE" is — and this file was outside the scan until now, so the rule held
+    /// everywhere except the one place a number is written out.
+    private fun pluralItems(file: File): Map<String, String> {
+        if (!file.isFile) return emptyMap()
+        return Regex("""<plurals name="([^"]+)">(.*?)</plurals>""", RegexOption.DOT_MATCHES_ALL)
+            .findAll(file.readText())
+            .flatMap { plural ->
+                Regex("""<item quantity="([^"]+)">(.*?)</item>""", RegexOption.DOT_MATCHES_ALL)
+                    .findAll(plural.groupValues[2])
+                    .map { "${plural.groupValues[1]}/${it.groupValues[1]}" to it.groupValues[2] }
+            }
+            .toMap()
+    }
+
+    /// Everything one locale puts in front of the user: both resource files, one map.
+    private fun userFacingText(tag: String): Map<String, String> =
+        translatableStrings(stringsFileFor(tag)) + pluralItems(pluralsFileFor(tag))
+
     private fun scannableText(value: String): String = value
         .replace(Regex("""»[^«]*«"""), " ")
         .replace(Regex("""%\d+\$[a-z]"""), " ")
@@ -72,11 +97,17 @@ class GermanTermsTest {
     @Test
     fun `every string is translated in every language the picker offers`() {
         val keys = translatableStrings(stringsFileFor("en")).keys
+        val pluralNames = pluralItems(pluralsFileFor("en")).keys.map { it.substringBefore("/") }.toSet()
         val missing = mutableListOf<String>()
 
         localeTags().filterNot { it == "en" }.forEach { tag ->
             val translated = translatableStrings(stringsFileFor(tag)).keys
             (keys - translated).forEach { missing += "values-$tag/strings.xml: $it" }
+
+            // A plural falls back as a whole, so what has to exist is the name, not every
+            // quantity: Russian needs four where English has two.
+            val counts = pluralItems(pluralsFileFor(tag)).keys.map { it.substringBefore("/") }.toSet()
+            (pluralNames - counts).forEach { missing += "values-$tag/plurals.xml: $it" }
         }
 
         // A key that falls back used to fall back to a GERMAN default, so the gap did not look
@@ -95,10 +126,10 @@ class GermanTermsTest {
         val offenders = mutableListOf<String>()
 
         listOf("ru", "uk").forEach { tag ->
-            translatableStrings(stringsFileFor(tag)).forEach { (key, value) ->
+            userFacingText(tag).forEach { (key, value) ->
                 latinWordsIn(value)
                     .filterNot { it in allowed }
-                    .forEach { offenders += "values-$tag/strings.xml: $key carries \"$it\"" }
+                    .forEach { offenders += "values-$tag: $key carries \"$it\"" }
             }
         }
 
@@ -115,11 +146,11 @@ class GermanTermsTest {
         val offenders = mutableListOf<String>()
 
         localeTags().filterNot { it == "de" }.forEach { tag ->
-            translatableStrings(stringsFileFor(tag)).forEach { (key, value) ->
+            userFacingText(tag).forEach { (key, value) ->
                 val text = scannableText(value)
                 TRANSLATED_AWAY.forEach { word ->
                     if (Regex("""\b$word\b""").containsMatchIn(text)) {
-                        offenders += "values-$tag/strings.xml: $key carries \"$word\""
+                        offenders += "values-$tag: $key carries \"$word\""
                     }
                 }
             }
@@ -167,6 +198,11 @@ class GermanTermsTest {
             "No strings read out of values/strings.xml",
             translatableStrings(stringsFileFor("en")).size > 100,
         )
+        // The plurals were outside the scan once. A reader that finds nothing in them would pass
+        // every file just as silently as one pointed at the wrong directory.
+        localeTags().forEach {
+            assertTrue("No plurals read out of values-$it", pluralItems(pluralsFileFor(it)).size >= 8)
+        }
     }
 
     @Test

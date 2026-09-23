@@ -54,14 +54,20 @@ android {
     }
 }
 
-// EmojiFreeStringsTest reads strings.xml off disk rather than through R, so Gradle has no idea
-// those files are an input to the test task. Without this it reports the test UP-TO-DATE and skips
-// it whenever nothing else changed — which is exactly the commit that adds an emoji and nothing
-// else. Declaring the inputs is what makes the rule an actual gate rather than a decoration.
+// EmojiFreeStringsTest and GermanTermsTest read the resource files off disk rather than through R,
+// so Gradle has no idea those files are an input to the test task. Without this it reports the test
+// UP-TO-DATE and skips it whenever nothing else changed — which is exactly the commit that adds an
+// emoji and nothing else. Declaring the inputs is what makes the rule an actual gate rather than a
+// decoration.
+//
+// plurals.xml belongs here for the same reason strings.xml does: GermanTermsTest scans it now, and
+// a scan Gradle can skip is not a gate. It was left out when the plurals arrived, so a German word
+// could have gone into a count without the build noticing.
 tasks.withType<Test>().configureEach {
     inputs.files(
         fileTree("src/main/res") {
             include("values*/strings.xml")
+            include("values*/plurals.xml")
         },
     ).withPropertyName("userFacingStrings").withPathSensitivity(PathSensitivity.RELATIVE)
 }
