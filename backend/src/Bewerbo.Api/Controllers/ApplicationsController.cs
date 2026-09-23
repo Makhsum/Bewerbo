@@ -32,6 +32,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
             ProfileId = profile.Id,
             PostingId = posting.Id,
             Tone = tone,
+            Source = writer.LastSource,
             LetterJson = JsonSerializer.Serialize(letter),
             MatchJson = JsonSerializer.Serialize(match.Requirements.Select(r =>
                 new RequirementDto(r.Text, StateName(r.State), r.Evidence, r.Action, r.Language,
@@ -41,7 +42,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         await db.SaveChangesAsync();
 
         return Created($"/api/applications/{application.Id}",
-            ToDto(application, profile, posting, letter, writer.LastSource));
+            ToDto(application, profile, posting, letter));
     }
 
     [HttpGet("{id:guid}")]
@@ -50,7 +51,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var loaded = await LoadAsync(id);
         if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (application, profile, posting, letter) = loaded.Value;
-        return Ok(ToDto(application, profile, posting, letter, "gespeichert"));
+        return Ok(ToDto(application, profile, posting, letter));
     }
 
     // Re-writing the letter is its own action, because the user changing the tone should not
@@ -67,9 +68,12 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var match = MatchFor(profile, posting);
         var letter = await writer.WriteLetterAsync(profile, posting, match, application.Tone, ct);
         application.LetterJson = JsonSerializer.Serialize(letter);
+        // The new letter may have come from the other writer — a model that answered this time
+        // after being rejected by the Floskel check last time, or a key that has since been set.
+        application.Source = writer.LastSource;
         await db.SaveChangesAsync();
 
-        return Ok(ToDto(application, profile, posting, letter, writer.LastSource));
+        return Ok(ToDto(application, profile, posting, letter));
     }
 
     // The Prüfung: every check rule-based and countable.
@@ -189,13 +193,17 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         return (application, profile, posting, letter);
     }
 
+    // The writer comes off the application itself rather than being passed in: a caller that has
+    // not just written a letter has nothing truthful to pass, and the one that had to invent
+    // something passed "gespeichert" — which the screen reads as "not the model", so every
+    // reopened application told the reader the rules had written it.
     private static ApplicationDto ToDto(Application application, Domain.Profile profile, Posting posting,
-        LetterContent letter, string source)
+        LetterContent letter)
     {
         var requirements = JsonSerializer.Deserialize<List<RequirementDto>>(application.MatchJson) ?? [];
         return new ApplicationDto(
             application.Id, application.ProfileId, application.PostingId,
-            application.Tone.ToString(), application.Status.ToString(), source,
+            application.Tone.ToString(), application.Status.ToString(), application.Source,
             new LetterDto(letter.Salutation, letter.Subject, letter.Paragraphs, letter.Closing, letter.Attachments),
             MergedApplicationDocument.FileName(profile, posting),
             requirements);

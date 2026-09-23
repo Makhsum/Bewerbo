@@ -175,6 +175,15 @@ public class Application
     /// <summary>JSON: the requirement-by-requirement Abgleich this letter was written against.</summary>
     public string MatchJson { get; set; } = "{}";
 
+    /// <summary>
+    /// "model" or "regeln" — which writer produced <see cref="LetterJson"/>. Stored beside the
+    /// letter because it is a fact about THIS letter and nothing else can be asked for it later:
+    /// the writer only knows who wrote the last one, and whether a key is configured today says
+    /// nothing about the letter written last week. The screen states this to the reader before
+    /// they read the letter, so a guess would be a guess told as a fact.
+    /// </summary>
+    public string Source { get; set; } = "regeln";
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? SentAt { get; set; }
 }
