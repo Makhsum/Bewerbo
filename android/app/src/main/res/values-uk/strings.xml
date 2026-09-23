@@ -32,6 +32,8 @@
     <string name="profile_subtitle">Вводьте все своєю мовою. Bewerbo напише німецькою.</string>
     <string name="profile_input_language">Мова введення: %1$s</string>
     <string name="profile_complete">Заповнено на %1$d %%</string>
+    <string name="profile_timeline_empty_title">Zeitstrahl ще порожній</string>
+    <string name="profile_timeline_empty_body">Додайте першу Berufserfahrung або Ausbildung. Тоді Bewerbo побудує за ними Zeitstrahl і назве кожен Lücke, про який запитає німецький рекрутер.</string>
     <string name="profile_gap_headline">Прогалина %1$s – %2$s (%3$d міс.)</string>
     <string name="profile_gap_explainer">Назвіть причину — Umzug, Sprachkurs або Anerkennungsverfahren — і вона перестане бути тривожним сигналом.</string>
     <string name="profile_gap_reason_label">Причина прогалини</string>

@@ -37,6 +37,7 @@ import de.bewerbo.app.data.Education
 import de.bewerbo.app.data.Experience
 import de.bewerbo.app.data.LanguageSkill
 import de.bewerbo.app.ui.components.BewerboCard
+import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.components.PillTone
@@ -169,9 +170,20 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
         }
 
         // The Zeitstrahl. It is shown on every section because it is the thing the whole profile
-        // adds up to, and a gap found while editing languages is still a gap.
+        // adds up to, and a gap found while editing languages is still a gap. An empty profile has
+        // nothing to draw, though: the card came up as the largest block on the screen, headed
+        // "Zeitstrahl 2026 – 2026" — the backend falls back to today's year for both ends when
+        // there are no periods — with three legend dots and not one bar. Until the first period
+        // exists the same slot asks for it instead.
         item {
-            BewerboCard(Modifier.testTag("profile_timeline")) {
+            if (state.timeline.periods.isEmpty()) {
+                Callout(
+                    icon = BewerboIcons.Timeline,
+                    title = stringResource(R.string.profile_timeline_empty_title),
+                    body = stringResource(R.string.profile_timeline_empty_body),
+                    modifier = Modifier.testTag("profile_timeline_empty"),
+                )
+            } else BewerboCard(Modifier.testTag("profile_timeline")) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(

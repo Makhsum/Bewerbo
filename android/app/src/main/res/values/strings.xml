@@ -48,6 +48,8 @@
     <string name="profile_section_languages">Sprachen</string>
     <string name="profile_section_attachments">Anlagen</string>
     <string name="profile_timeline">Zeitstrahl %1$d – %2$d</string>
+    <string name="profile_timeline_empty_title">The Zeitstrahl is still empty</string>
+    <string name="profile_timeline_empty_body">Add your first Berufserfahrung or Ausbildung. Bewerbo then draws the Zeitstrahl from it and names every Lücke a German recruiter would ask about.</string>
     <string name="profile_gap_headline">Gap %1$s – %2$s (%3$d months)</string>
     <string name="profile_gap_explainer">Name it — Umzug, Sprachkurs or Anerkennungsverfahren — and it stops being a warning sign.</string>
     <string name="profile_gap_reason_label">Reason for the gap</string>
