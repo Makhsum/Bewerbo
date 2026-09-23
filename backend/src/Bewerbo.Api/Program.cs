@@ -81,6 +81,24 @@ using (var scope = app.Services.CreateScope())
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+// A request that names no Content-Type at all is read as JSON. The Minimal API this replaced had
+// one body reader and simply used it, so a POST with an empty body and no header came back 400
+// "a body is required"; a controller refuses it with 415 before the action is reached. Only the
+// ABSENT header is filled in — a request that says text/plain still gets the 415 it always got.
+app.Use(async (context, next) =>
+{
+    var request = context.Request;
+    if (string.IsNullOrEmpty(request.ContentType)
+        && (HttpMethods.IsPost(request.Method)
+            || HttpMethods.IsPut(request.Method)
+            || HttpMethods.IsPatch(request.Method)))
+    {
+        request.ContentType = "application/json";
+    }
+
+    await next(context);
+});
+
 app.MapControllers();
 
 app.Run();
