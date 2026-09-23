@@ -44,8 +44,14 @@ public static class TimelineService
 
         var gaps = FindGaps(periods, today, profile.Gaps);
 
+        // The two years are the axis the client draws the lanes on, so they have to cover the gaps
+        // as well. The gap that runs from the last entry up to today ends AFTER every period does:
+        // counting periods only headed the card "2013 – 2017" while the gap card underneath said
+        // the hole reaches 2026-09, and the hatched block itself fell outside the chart.
         var firstYear = periods.Count == 0 ? today.Year : periods.Min(p => p.From.Year);
-        var lastYear = periods.Count == 0 ? today.Year : periods.Max(p => p.To.Year);
+        var lastYear = periods.Count == 0
+            ? today.Year
+            : gaps.Select(g => g.To.Year).Append(periods.Max(p => p.To.Year)).Max();
         return new TimelineView(firstYear, lastYear, periods, gaps);
     }
 

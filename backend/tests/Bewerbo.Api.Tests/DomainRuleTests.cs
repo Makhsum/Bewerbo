@@ -946,6 +946,30 @@ public class DomainRuleTests
     }
 
     [Fact]
+    public void The_last_year_reaches_the_end_of_the_gap_that_runs_up_to_today()
+    {
+        // FirstYear and LastYear are the axis the Zeitstrahl is drawn on. Taking LastYear from the
+        // periods alone headed the card "2019 - 2023" while the gap card underneath said the hole
+        // reaches 2026-09, and the hatched block itself fell outside the chart.
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Pflegefachkraft", Employer = "Klinikum",
+                    From = new DateOnly(2019, 3, 1), To = new DateOnly(2023, 8, 1),
+                },
+            ],
+        };
+
+        var view = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+
+        Assert.Equal(2019, view.FirstYear);
+        Assert.Equal(2026, view.LastYear);
+    }
+
+    [Fact]
     public void An_ongoing_job_leaves_no_gap_at_the_end()
     {
         var profile = new Domain.Profile

@@ -71,7 +71,11 @@ fun Timeline(
     val gapColor = colors.attention
     val axis = MaterialTheme.colorScheme.outline
 
-    val span = (lastYear - firstYear).coerceAtLeast(1).toFloat()
+    // The axis runs to the END of lastYear, not to its January. Dividing by the difference of the
+    // two years put every bar that stops later than January of the last one past 1.0 — a position
+    // held until 09/2026 in a 2019 – 2026 chart landed at 1.10 and was drawn off the right edge of
+    // the card, clipped.
+    val span = (lastYear - firstYear + 1).coerceAtLeast(1).toFloat()
 
     fun yearOf(date: String): Float {
         // "2023-09-01" — the fraction of the year matters, a bar that snaps to January is a lie.
