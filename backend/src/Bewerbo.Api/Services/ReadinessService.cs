@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Bewerbo.Api.Domain;
-using Bewerbo.Api.Endpoints;
+using Bewerbo.Api.Contracts;
 
 namespace Bewerbo.Api.Services;
 

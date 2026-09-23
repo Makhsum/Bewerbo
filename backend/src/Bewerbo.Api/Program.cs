@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Bewerbo.Api.Data;
-using Bewerbo.Api.Endpoints;
 using Bewerbo.Api.Llm;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,10 +28,35 @@ builder.Services.AddDbContext<BewerboDbContext>(options =>
     }
 });
 
+builder.Services.AddControllers();
+
+builder.Services.Configure<MvcOptions>(options =>
+{
+    // A record member that the JSON left out arrives as null, and the routes read it as "the user
+    // did not fill this in" — ProfileController turns an absent "industry" into "". MVC would
+    // otherwise reject the same body before a route sees it, because it takes a non-nullable
+    // reference type for a required field. The check that decides which fields are truly required
+    // stays in the controllers, where it can say which entry was at fault.
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+});
+
+// Two JSON configurations, one behaviour. Controllers serialise through Mvc.JsonOptions; what the
+// framework writes around them — a ProblemDetails from the status-code or exception middleware —
+// goes through Http.Json.JsonOptions. Setting only one of them makes null members appear in half
+// the answers.
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+{
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+
+// The one error shape. Everything the API answers with outside 2xx is a ProblemDetails: the
+// framework's own 400 for a body it could not read, the 404 and 400 the controllers write through
+// BewerboController, the 405 for a wrong verb, and an exception nobody caught.
+builder.Services.AddProblemDetails();
 
 builder.Services.AddSingleton(new LlmOptions
 {
@@ -53,18 +78,10 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-app.MapProfileEndpoints();
-app.MapPostingEndpoints();
-app.MapApplicationEndpoints();
-app.MapLockerEndpoints();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
-app.MapGet("/api/health", (ILanguageModel model) => Results.Ok(new
-{
-    status = "ok",
-    // Which writer will run, said out loud: a letter written by the rule-based writer and one
-    // written by the model are both real output, but nobody should have to guess which they got.
-    writer = model.IsConfigured ? "model" : "regeln",
-}));
+app.MapControllers();
 
 app.Run();
 

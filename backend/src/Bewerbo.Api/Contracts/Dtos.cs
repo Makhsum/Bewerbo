@@ -1,6 +1,7 @@
 using Bewerbo.Api.Domain;
+using Bewerbo.Api.Services;
 
-namespace Bewerbo.Api.Endpoints;
+namespace Bewerbo.Api.Contracts;
 
 // The wire shapes. Kept apart from Domain/ so that adding a column does not silently change the
 // client contract, and so a DateOnly crosses the wire as "2023-09-01" rather than as an object.
@@ -118,6 +119,17 @@ public static class DtoMapping
 
     public static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum =>
         Enum.TryParse<T>(value, ignoreCase: true, out var parsed) ? parsed : fallback;
+
+    /// <summary>
+    /// The wire spelling of a requirement's state. Lower case with an underscore, not the enum's
+    /// own name, because it is read by the client as a key rather than shown.
+    /// </summary>
+    public static string StateName(RequirementState state) => state switch
+    {
+        RequirementState.Belegt => "belegt",
+        RequirementState.Offen => "offen",
+        _ => "nicht_belegt",
+    };
 
     public static ExperienceDto ToDto(this ExperienceEntry e) => new(
         e.Id, e.Position, e.Employer, e.Location, Iso(e.From), e.To is null ? null : Iso(e.To.Value),
