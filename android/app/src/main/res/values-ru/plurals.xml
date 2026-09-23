@@ -12,4 +12,10 @@
         <item quantity="many">%1$d пробелов</item>
         <item quantity="other">%1$d пробела</item>
     </plurals>
+    <plurals name="application_review_hint_count">
+        <item quantity="one">%1$d замечание</item>
+        <item quantity="few">%1$d замечания</item>
+        <item quantity="many">%1$d замечаний</item>
+        <item quantity="other">%1$d замечания</item>
+    </plurals>
 </resources>

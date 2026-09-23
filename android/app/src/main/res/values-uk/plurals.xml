@@ -12,4 +12,10 @@
         <item quantity="many">%1$d прогалин</item>
         <item quantity="other">%1$d прогалини</item>
     </plurals>
+    <plurals name="application_review_hint_count">
+        <item quantity="one">%1$d зауваження</item>
+        <item quantity="few">%1$d зауваження</item>
+        <item quantity="many">%1$d зауважень</item>
+        <item quantity="other">%1$d зауваження</item>
+    </plurals>
 </resources>

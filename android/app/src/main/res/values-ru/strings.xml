@@ -98,7 +98,6 @@
     <string name="application_din_hide">Скрыть сетку DIN</string>
     <string name="application_regenerate">Написать заново</string>
     <string name="application_review_clean">Без замечаний</string>
-    <string name="application_review_hints">Замечаний: %1$d</string>
     <string name="application_ats_passed">Пройдено</string>
     <string name="application_ats_failed">Не пройдено</string>
     <string name="application_export">Экспорт</string>

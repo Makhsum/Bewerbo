@@ -13,4 +13,8 @@
         <item quantity="one">%1$d gap</item>
         <item quantity="other">%1$d gaps</item>
     </plurals>
+    <plurals name="application_review_hint_count">
+        <item quantity="one">%1$d hint</item>
+        <item quantity="other">%1$d hints</item>
+    </plurals>
 </resources>

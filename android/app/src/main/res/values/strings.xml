@@ -133,7 +133,6 @@
     <string name="application_regenerate">Write it again</string>
     <string name="application_review">Textprüfung</string>
     <string name="application_review_clean">No hints</string>
-    <string name="application_review_hints">%1$d hints</string>
     <string name="application_ats">Maschinenlesbarkeit</string>
     <string name="application_ats_passed">Passed</string>
     <string name="application_ats_failed">Failed</string>
