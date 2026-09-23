@@ -36,10 +36,15 @@ import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.DinOverlay
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
+import de.bewerbo.app.ui.components.SegmentedControl
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
+
+/// The four states an application passes through, in that order. They keep the backend's spelling
+/// because that is the value the status endpoint takes.
+private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 
 /**
  * Bewerbung — the rendered letter, the DIN inspector over it, the Prüfung, and the export.
@@ -144,6 +149,25 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                         BewerboIcons.Refresh,
                         contentDescription = stringResource(R.string.application_regenerate),
                         modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+
+        // What happened to this application. The Übersicht already colours these four states —
+        // Einladung green, Absage red — and until this control existed none of them could be
+        // reached: setStatus had no caller anywhere, so every application stayed "Entwurf" and
+        // the list of active applications could not tell the user anything they did not know.
+        item {
+            BewerboCard(Modifier.testTag("application_status_card")) {
+                SectionLabel(stringResource(R.string.application_status))
+                Box(Modifier.padding(top = Space.s)) {
+                    SegmentedControl(
+                        options = STATUSES,
+                        selectedIndex = STATUSES.indexOf(application.status).coerceAtLeast(0),
+                        onSelect = { viewModel.setStatus(STATUSES[it]) },
+                        modifier = Modifier.testTag("application_status_selector"),
+                        tagPrefix = "application_status",
                     )
                 }
             }
