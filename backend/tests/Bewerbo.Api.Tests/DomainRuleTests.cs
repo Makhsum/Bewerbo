@@ -132,6 +132,16 @@ public class DomainRuleTests
         Assert.Equal(expected, extract.Fields.Single(f => f.Key == "company").Value);
     }
 
+    [Theory]
+    [InlineData("Klinikum München sucht eine Pflegefachkraft (m/w/d).", "Pflegefachkraft (m/w/d)")]
+    [InlineData("Wir suchen zum 01.01.2027 eine Leitende Buchhalterin (m/w/d).", "Leitende Buchhalterin (m/w/d)")]
+    public void The_job_title_does_not_swallow_the_sentence_in_front_of_it(string line, string expected)
+    {
+        var extract = PostingParser.Parse(line);
+
+        Assert.Equal(expected, extract.Fields.Single(f => f.Key == "title").Value);
+    }
+
     [Fact]
     public void The_company_does_not_swallow_the_article_or_the_line_above_it()
     {

@@ -274,7 +274,11 @@ public static partial class PostingParser
         RegexOptions.IgnoreCase)]
     private static partial Regex ReferenceRx();
 
-    [GeneratedRegex(@"[A-ZÄÖÜ][\wäöüß/ -]{2,60}\((?:m/w/d|w/m/d|m/w/x|d/m/w)\)")]
+    // The Stellenbezeichnung is the capitalised noun phrase immediately before the (m/w/d) marker,
+    // not everything since the last full stop. A character class containing a space ran back over
+    // the whole sentence, so "Klinikum Muenchen sucht eine Pflegefachkraft (m/w/d)" became the job
+    // title — and that string then went into the Betreffzeile and the export file name.
+    [GeneratedRegex(@"[A-ZÄÖÜ][\wäöüß-]*(?:[ /-][A-ZÄÖÜ][\wäöüß-]*){0,3}\s*\((?:m/w/d|w/m/d|m/w/x|d/m/w)\)")]
     private static partial Regex JobTitleRx();
 
     [GeneratedRegex(@"(?:zum nächstmöglichen Zeitpunkt|ab sofort|zum \d{1,2}\.\d{1,2}\.\d{4}|ab dem \d{1,2}\.\d{1,2}\.\d{4})",
