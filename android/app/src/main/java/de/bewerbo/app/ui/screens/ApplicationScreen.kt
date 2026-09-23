@@ -1,6 +1,7 @@
 package de.bewerbo.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -57,6 +62,14 @@ private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
     val colors = LocalSemanticColors.current
     val application = state.application
+
+    // The Anlagenverzeichnis exists as a page only when there is something for it to list.
+    val availableParts = if (state.profile?.documents.isNullOrEmpty()) {
+        listOf("anschreiben", "lebenslauf")
+    } else {
+        listOf("anschreiben", "lebenslauf", "anlagenverzeichnis")
+    }
+    var selectedParts by remember(availableParts) { mutableStateOf(availableParts.toSet()) }
 
     LazyColumn(
         Modifier
@@ -309,25 +322,33 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                     }
                 }
 
-                // What the file ACTUALLY contains. The Anlagenverzeichnis is only rendered when
-                // the Mappe holds a document (MergedApplicationDocument.Render), so listing it
-                // unconditionally in Success green told the user about a page that was not in the
-                // PDF they had just saved.
+                // What goes into the file, and it is a CHOICE. These read as chips and were not
+                // selectable at all, while the export endpoint has taken a "parts" list all along
+                // and was only ever called with null. The Anlagenverzeichnis is only offered when
+                // the Mappe holds a document, because the renderer only produces that page then —
+                // showing it otherwise promised a page the saved PDF did not contain.
+                Text(
+                    stringResource(R.string.application_export_choose),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.muted,
+                    modifier = Modifier.padding(top = Space.s),
+                )
                 Row(
                     Modifier.padding(top = Space.s),
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
-                    val hasDocuments = !state.profile?.documents.isNullOrEmpty()
-                    val parts = if (hasDocuments) {
-                        listOf("anschreiben", "lebenslauf", "anlagenverzeichnis")
-                    } else {
-                        listOf("anschreiben", "lebenslauf")
-                    }
-                    parts.forEach { part ->
+                    availableParts.forEach { part ->
+                        val chosen = part in selectedParts
                         StatusPill(
                             stringResource(partLabel(part)),
-                            PillTone.Success,
-                            Modifier.testTag("application_export_part_$part"),
+                            if (chosen) PillTone.Success else PillTone.Neutral,
+                            Modifier
+                                .testTag("application_export_part_$part")
+                                .clickable {
+                                    selectedParts = if (chosen) {
+                                        selectedParts - part
+                                    } else selectedParts + part
+                                },
                         )
                     }
                 }
@@ -336,8 +357,10 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
 
         item {
             Button(
-                onClick = { viewModel.savePdf() },
-                enabled = state.busy == null,
+                // Nothing selected is not an export; the server would silently fall back to all
+                // three, which is the opposite of what the user just asked for.
+                onClick = { viewModel.savePdf(selectedParts.joinToString(",")) },
+                enabled = state.busy == null && selectedParts.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("application_btn_save_pdf"),
