@@ -74,6 +74,8 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     suspend fun parsePosting(request: ParsePostingRequest): PostingView =
         client.post("$baseUrl/api/postings/parse") { json(request) }.body()
 
+    suspend fun posting(id: String): PostingView = client.get("$baseUrl/api/postings/$id").body()
+
     suspend fun correctField(postingId: String, request: CorrectFieldRequest): PostingView =
         client.patch("$baseUrl/api/postings/$postingId/fields") { json(request) }.body()
 
@@ -87,6 +89,9 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
 
     suspend fun createApplication(request: CreateApplicationRequest): ApplicationView =
         client.post("$baseUrl/api/applications") { json(request) }.body()
+
+    suspend fun application(id: String): ApplicationView =
+        client.get("$baseUrl/api/applications/$id").body()
 
     suspend fun regenerate(id: String, tone: String): ApplicationView =
         client.post("$baseUrl/api/applications/$id/regenerate?tone=$tone").body()

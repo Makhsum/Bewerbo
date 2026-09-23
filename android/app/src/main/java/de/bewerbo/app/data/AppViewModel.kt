@@ -56,20 +56,46 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val health = runCatching { api.health() }.getOrNull()
         _state.update { it.copy(writer = health?.writer ?: "regeln") }
 
-        val prefs = getApplication<Application>()
-            .getSharedPreferences("bewerbo", android.content.Context.MODE_PRIVATE)
-        val stored = prefs.getString("profileId", null)
+        val stored = prefs().getString("profileId", null)
 
         val profile = if (stored != null) {
             runCatching { api.profile(stored) }.getOrNull() ?: api.createProfile(Person())
         } else {
             api.createProfile(Person())
         }
-        prefs.edit().putString("profileId", profile.id).apply()
+        prefs().edit().putString("profileId", profile.id).apply()
 
         _state.update { it.copy(profile = profile, loading = false) }
         refreshDerived()
+        restoreWorkInProgress()
     }
+
+    /**
+     * Brings back the posting and the letter the user was last working on.
+     *
+     * Only the profile used to survive a restart, so a user interrupted between pasting a posting
+     * and sending the Mappe came back to an empty Stellenanzeige screen and "Noch kein Anschreiben"
+     * — while both records sat on the server the whole time. Losing that silently is worse than
+     * losing it loudly: there is nothing on screen to suggest the work still exists.
+     */
+    private suspend fun restoreWorkInProgress() {
+        val posting = prefs().getString("postingId", null)
+            ?.let { runCatching { api.posting(it) }.getOrNull() }
+        val application = prefs().getString("applicationId", null)
+            ?.let { runCatching { api.application(it) }.getOrNull() }
+
+        // A letter written against a posting that is no longer the current one would describe a
+        // job the user is not looking at. Keep the pair or neither.
+        val pair = if (application != null && application.postingId == posting?.id) {
+            application
+        } else null
+
+        _state.update { it.copy(posting = posting, application = pair) }
+        if (pair != null) runChecks(pair.id)
+    }
+
+    private fun prefs() = getApplication<Application>()
+        .getSharedPreferences("bewerbo", android.content.Context.MODE_PRIVATE)
 
     private fun refreshDerived() = launch(null) {
         val id = profileId() ?: return@launch
@@ -130,6 +156,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val posting = api.parsePosting(ParsePostingRequest(id, text))
         // A new posting invalidates the match and the letter that were written against the old one.
         _state.update { it.copy(posting = posting, match = null, application = null, review = null, ats = null) }
+        prefs().edit().putString("postingId", posting.id).remove("applicationId").apply()
     }
 
     /**
@@ -137,8 +164,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * parse an empty string just earns a 400 and leaves the old posting on screen, which is what
      * "Paste a different posting" used to do.
      */
-    fun clearPosting() = _state.update {
-        it.copy(posting = null, match = null, application = null, review = null, ats = null)
+    fun clearPosting() {
+        prefs().edit().remove("postingId").remove("applicationId").apply()
+        _state.update {
+            it.copy(posting = null, match = null, application = null, review = null, ats = null)
+        }
     }
 
     fun correctField(key: String, value: String) = launch("field") {
@@ -163,6 +193,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val posting = _state.value.posting ?: return@launch
         val application = api.createApplication(CreateApplicationRequest(id, posting.id, tone))
         _state.update { it.copy(application = application, review = null, ats = null) }
+        prefs().edit().putString("applicationId", application.id).apply()
         runChecks(application.id)
     }
 
