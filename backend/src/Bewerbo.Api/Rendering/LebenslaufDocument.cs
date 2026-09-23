@@ -144,8 +144,15 @@ public class LebenslaufDocument(CvContent content, Profile profile, CvTemplate t
     private void Footer(ColumnDescriptor column)
     {
         // Place and date under a Lebenslauf is still expected by a traditional German reader.
+        // A profile that has not named a city yet gets the date alone rather than a leading comma.
+        var placeAndDate = string.Join(", ", new[]
+        {
+            profile.City,
+            DateTime.Today.ToString("d. MMMM yyyy", German),
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
         column.Item().PaddingTop(10, Unit.Millimetre)
-            .Text($"{profile.City}, {DateTime.Today.ToString("d. MMMM yyyy", German)}")
+            .Text(placeAndDate)
             .FontSize(DocumentTheme.SmallSize + 0.5f)
             .FontColor(DocumentTheme.Muted);
     }

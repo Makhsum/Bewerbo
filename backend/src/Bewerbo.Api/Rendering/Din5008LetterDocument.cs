@@ -84,7 +84,7 @@ public class Din5008LetterDocument(
                 .PaddingRight(Din.MarginRight, Unit.Millimetre)
                 .PaddingTop(Din.Line * 2, Unit.Millimetre)
                 .AlignRight()
-                .Text($"{SenderCity()}, {date.ToDateTime(TimeOnly.MinValue).ToString("d. MMMM yyyy", German)}");
+                .Text(PlaceAndDate(date));
 
             column.Item()
                 .PaddingLeft(Din.MarginLeft, Unit.Millimetre)
@@ -138,6 +138,16 @@ public class Din5008LetterDocument(
         }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
     private string SenderCity() => string.IsNullOrWhiteSpace(profile.City) ? "" : profile.City;
+
+    // The separator belongs to the two parts, not to the line: SenderCity() already answers "" for
+    // a profile that has not named a city yet, but the comma was written regardless and the letter
+    // opened with ", 23. September 2026". Dropped the way SenderLine drops a missing street.
+    private string PlaceAndDate(DateOnly date) =>
+        string.Join(", ", new[]
+        {
+            SenderCity(),
+            date.ToDateTime(TimeOnly.MinValue).ToString("d. MMMM yyyy", German),
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
     /// <summary>
     /// Company, then the person, then the role, then the street address. A German recipient block
