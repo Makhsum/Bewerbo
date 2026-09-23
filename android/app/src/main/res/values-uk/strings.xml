@@ -266,6 +266,7 @@
     <string name="application_send_email">Надіслати електронною поштою</string>
     <string name="application_why_german_title">Чому це звучить по-німецьки</string>
     <string name="application_why_german_body">Іменне звертання, Referenznummer у рядку теми, жодного »Hiermit bewerbe ich mich« і жодного »Teamplayer« — і лист відповідає на слова вакансії, а не перелічує чесноти.</string>
+    <string name="application_source_title">Як написано цей лист</string>
     <string name="application_source_model">Цей лист написала мовна модель і перевірено тими самими правилами.</string>
     <string name="application_source_rules">Цей лист написано за правилами — мовну модель для цієї інсталяції не налаштовано.</string>
 

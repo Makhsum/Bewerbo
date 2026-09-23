@@ -39,7 +39,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import de.bewerbo.app.Destination
@@ -154,6 +153,25 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                 )
             }
             return@LazyColumn
+        }
+
+        // Which writer produced this letter — ABOVE the pages, because it qualifies them.
+        //
+        // It stood at the foot of the screen in small grey type, where it was read after the letter
+        // and after the judgement the letter had already produced. A reader who learns only then
+        // that no model was involved has been told nothing they can still act on. So it is a
+        // Callout like the other statements this screen makes about the Mappe, and it sits where
+        // the thing it qualifies begins.
+        item {
+            Callout(
+                icon = BewerboIcons.Rewrite,
+                title = stringResource(R.string.application_source_title),
+                body = stringResource(
+                    if (application.source == "model") R.string.application_source_model
+                    else R.string.application_source_rules,
+                ),
+                modifier = Modifier.testTag("application_source"),
+            )
         }
 
         // The whole Mappe as PAGES, not just its first one.
@@ -618,22 +636,6 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                 title = stringResource(R.string.application_why_german_title),
                 body = stringResource(R.string.application_why_german_body),
                 modifier = Modifier.testTag("application_why_german"),
-            )
-        }
-
-        // Which writer produced this letter. Stated, not hidden.
-        item {
-            Text(
-                stringResource(
-                    if (application.source == "model") R.string.application_source_model
-                    else R.string.application_source_rules,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.muted,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("application_source"),
-                textAlign = TextAlign.Center,
             )
         }
     }

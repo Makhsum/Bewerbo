@@ -267,6 +267,7 @@
     <string name="application_send_email">Per E-Mail senden</string>
     <string name="application_why_german_title">Warum es deutsch klingt</string>
     <string name="application_why_german_body">Eine namentliche Anrede, die Referenznummer in der Betreffzeile, kein »Hiermit bewerbe ich mich« und kein »Teamplayer« — und das Anschreiben antwortet auf die Worte der Anzeige, statt Tugenden aufzuzählen.</string>
+    <string name="application_source_title">Wie dieses Anschreiben entstanden ist</string>
     <string name="application_source_model">Dieses Anschreiben hat das Sprachmodell geschrieben, geprüft nach denselben Regeln.</string>
     <string name="application_source_rules">Dieses Anschreiben hat der regelbasierte Schreiber verfasst — für diese Installation ist kein Sprachmodell eingerichtet.</string>
 

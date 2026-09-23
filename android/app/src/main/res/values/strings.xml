@@ -295,6 +295,7 @@
     <string name="application_email_body" translatable="false">anbei sende ich Ihnen meine vollständigen Bewerbungsunterlagen als PDF.</string>
     <string name="application_why_german_title">Why it reads as German</string>
     <string name="application_why_german_body">A named salutation, the Referenznummer in the subject line, no »Hiermit bewerbe ich mich« and no »Teamplayer« — and the letter answers the words of the posting instead of listing virtues.</string>
+    <string name="application_source_title">How this letter was written</string>
     <string name="application_source_model">This letter was written by the language model and checked against the same rules.</string>
     <string name="application_source_rules">This letter was written by the rule-based writer — no language model is configured for this installation.</string>
 
