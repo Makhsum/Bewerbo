@@ -878,6 +878,33 @@ public class DomainRuleTests
             Assert.Equal($"{key}_keine", finding.DetailKind);
             Assert.Equal("profil", finding.Target);
         }
+
+        // With nothing entered at all, both halves of the name are named.
+        Assert.Equal(["vorname", "nachname"], result.Findings.Single(f => f.Key == "name").DetailArgs);
+    }
+
+    [Fact]
+    public void A_half_entered_name_names_the_half_that_is_missing()
+    {
+        // The export is already called Bewerbung_Olena_… here, so "Kein Name im Profil" is not
+        // merely unhelpful, it is false — and it still leaves the user looking for what to fill in.
+        var profile = new Domain.Profile { FirstName = "Olena", LastName = "" };
+        var posting = new Posting { JobTitle = "Bilanzbuchhalter (m/w/d)", Company = "Schwarzwald Technik GmbH" };
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+        var match = RequirementMatcher.Match(profile, []);
+        var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
+
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+            new DateOnly(2026, 9, 22));
+
+        var finding = AtsTextCheck.Run(pdf, profile).Findings.Single(f => f.Key == "name");
+
+        Assert.Equal("ungeprueft", finding.Verdict);
+        Assert.Equal("name_keine", finding.DetailKind);
+        Assert.Equal(["nachname"], finding.DetailArgs);
+        Assert.Equal("profil", finding.Target);
     }
 
     [Theory]

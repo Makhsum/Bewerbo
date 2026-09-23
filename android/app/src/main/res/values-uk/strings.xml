@@ -103,7 +103,9 @@
     <string name="ats_missing">Бракує: %1$s</string>
     <string name="ats_lesbar_failed">Файл не вдалося відкрити як текст: %1$s</string>
     <string name="ats_name_missing">Ім\'я в тексті не знайдено</string>
-    <string name="ats_name_none">У профілі немає імені</string>
+    <string name="ats_name_none">У профілі бракує: %1$s</string>
+    <string name="ats_name_field_first">імені</string>
+    <string name="ats_name_field_last">прізвища</string>
     <string name="ats_arbeitgeber_none">У профілі немає роботодавців</string>
     <string name="ats_zeitraeume_none">У профілі немає дат</string>
     <string name="ats_zeitraeume_missing">Принаймні одна дата не видобувається</string>

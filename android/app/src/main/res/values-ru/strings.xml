@@ -101,7 +101,9 @@
     <string name="ats_missing">Не хватает: %1$s</string>
     <string name="ats_lesbar_failed">Файл не удалось открыть как текст: %1$s</string>
     <string name="ats_name_missing">Имя в тексте не найдено</string>
-    <string name="ats_name_none">В профиле нет имени</string>
+    <string name="ats_name_none">В профиле не хватает: %1$s</string>
+    <string name="ats_name_field_first">имени</string>
+    <string name="ats_name_field_last">фамилии</string>
     <string name="ats_arbeitgeber_none">В профиле нет работодателей</string>
     <string name="ats_zeitraeume_none">В профиле нет дат</string>
     <string name="ats_zeitraeume_missing">Хотя бы одна дата не извлекается</string>

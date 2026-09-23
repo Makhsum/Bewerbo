@@ -456,13 +456,27 @@ fun atsFindingDetail(finding: AtsFinding): String = when (finding.detailKind) {
     "fehlt" -> stringResource(R.string.ats_missing, finding.arg(0))
     "lesbar_fehler" -> stringResource(R.string.ats_lesbar_failed, finding.arg(0))
     "name_fehlt" -> stringResource(R.string.ats_name_missing)
-    "name_keine" -> stringResource(R.string.ats_name_none)
+    "name_keine" -> stringResource(R.string.ats_name_none, nameFields(finding.detailArgs))
     "arbeitgeber_keine" -> stringResource(R.string.ats_arbeitgeber_none)
     "zeitraeume_keine" -> stringResource(R.string.ats_zeitraeume_none)
     "zeitraeume_fehlt" -> stringResource(R.string.ats_zeitraeume_missing)
     "text_ok" -> stringResource(R.string.ats_text_ok, finding.arg(0))
     "text_fehlt" -> stringResource(R.string.ats_text_missing)
     else -> finding.detail
+}
+
+/// The halves of the name that are still empty, named in the user's language. A plain loop for the
+/// same reason [personItems] uses one.
+@Composable
+private fun nameFields(keys: List<String>): String {
+    val named = mutableListOf<String>()
+    keys.forEach { key ->
+        named += when (key) {
+            "vorname" -> stringResource(R.string.ats_name_field_first)
+            else -> stringResource(R.string.ats_name_field_last)
+        }
+    }
+    return named.joinToString(", ")
 }
 
 /// The faults of the form check, named in the user's language and joined the way the German

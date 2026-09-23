@@ -121,7 +121,9 @@
     <string name="ats_missing">Missing: %1$s</string>
     <string name="ats_lesbar_failed">The file could not be opened as text: %1$s</string>
     <string name="ats_name_missing">The name cannot be found in the text</string>
-    <string name="ats_name_none">No name in the profile</string>
+    <string name="ats_name_none">Missing in the profile: %1$s</string>
+    <string name="ats_name_field_first">first name</string>
+    <string name="ats_name_field_last">surname</string>
     <string name="ats_arbeitgeber_none">No employer in the profile</string>
     <string name="ats_zeitraeume_none">No dates in the profile</string>
     <string name="ats_zeitraeume_missing">At least one date does not extract</string>

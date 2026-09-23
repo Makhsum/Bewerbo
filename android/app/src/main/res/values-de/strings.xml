@@ -104,7 +104,9 @@
     <string name="ats_missing">Fehlt: %1$s</string>
     <string name="ats_lesbar_failed">Die Datei ließ sich nicht als Text öffnen: %1$s</string>
     <string name="ats_name_missing">Der Name ist im Text nicht auffindbar</string>
-    <string name="ats_name_none">Kein Name im Profil</string>
+    <string name="ats_name_none">Im Profil fehlt: %1$s</string>
+    <string name="ats_name_field_first">Vorname</string>
+    <string name="ats_name_field_last">Nachname</string>
     <string name="ats_arbeitgeber_none">Kein Arbeitgeber im Profil</string>
     <string name="ats_zeitraeume_none">Keine Zeiträume im Profil</string>
     <string name="ats_zeitraeume_missing">Mindestens ein Zeitraum extrahiert nicht</string>

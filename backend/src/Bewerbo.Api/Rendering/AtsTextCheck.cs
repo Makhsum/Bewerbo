@@ -79,21 +79,29 @@ public static class AtsTextCheck
 
         var findings = new List<AtsFinding>();
 
-        // The profile has a name when BOTH halves are there, the same condition
-        // ReadinessService uses for the "person" step — the Briefkopf is made of both.
-        var nameInProfile = !string.IsNullOrWhiteSpace(profile.FirstName)
-                            && !string.IsNullOrWhiteSpace(profile.LastName);
-        var nameFound = nameInProfile && Contains($"{profile.FirstName}{profile.LastName}");
+        // The profile has a name when BOTH halves are there, the same condition ReadinessService
+        // uses for the "person" step — the Briefkopf is made of both. WHICH half is missing is
+        // what the user has to be told: with a Vorname entered, "Kein Name im Profil" is false, and
+        // it names nothing to go and fill in. Said the way that step says it, as keys the screen
+        // writes out, because the server does not know the interface language.
+        var nameMissing = new[]
+        {
+            (Missing: string.IsNullOrWhiteSpace(profile.FirstName), Key: "vorname", Label: "Vorname"),
+            (Missing: string.IsNullOrWhiteSpace(profile.LastName), Key: "nachname", Label: "Nachname"),
+        }.Where(n => n.Missing).ToList();
+        var nameFound = nameMissing.Count == 0 && Contains($"{profile.FirstName}{profile.LastName}");
         findings.Add(new AtsFinding("name", "Name als Text wiedergefunden",
-            !nameInProfile ? "ungeprueft" : nameFound ? "ok" : "fehler",
-            !nameInProfile
-                ? "Kein Name im Profil"
+            nameMissing.Count > 0 ? "ungeprueft" : nameFound ? "ok" : "fehler",
+            nameMissing.Count > 0
+                ? $"Im Profil fehlt: {string.Join(", ", nameMissing.Select(n => n.Label))}"
                 : nameFound
                     ? $"{profile.FirstName} {profile.LastName}"
                     : "Der Name ist im Text nicht auffindbar",
-            !nameInProfile ? "name_keine" : nameFound ? "gefunden" : "name_fehlt",
-            nameFound ? [$"{profile.FirstName} {profile.LastName}"] : [],
-            !nameInProfile ? ProfileTarget : ""));
+            nameMissing.Count > 0 ? "name_keine" : nameFound ? "gefunden" : "name_fehlt",
+            nameMissing.Count > 0
+                ? nameMissing.Select(n => n.Key).ToList()
+                : nameFound ? [$"{profile.FirstName} {profile.LastName}"] : [],
+            nameMissing.Count > 0 ? ProfileTarget : ""));
 
         var employers = profile.Experience.Select(e => e.Employer).Where(e => !string.IsNullOrWhiteSpace(e)).ToList();
         var employersFound = employers.Count > 0 && employers.All(Contains);
