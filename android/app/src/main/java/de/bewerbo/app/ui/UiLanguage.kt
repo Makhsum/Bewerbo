@@ -29,6 +29,13 @@ val UI_LANGUAGES = listOf(
 fun defaultUiLanguage(): String =
     UI_LANGUAGES.firstOrNull { it.first == Locale.getDefault().language }?.first ?: "en"
 
+/// The language to draw in for a [stored] tag that could be anything: the one it names while we
+/// still offer it, and the first guess otherwise. A tag we no longer have resources for would show
+/// as a blank language on the Profil button over an interface that had quietly fallen back to
+/// English, and allowBackup means a preferences file can arrive from a build that had it.
+fun uiLanguageOrDefault(stored: String?): String =
+    UI_LANGUAGES.firstOrNull { it.first == stored }?.first ?: defaultUiLanguage()
+
 /// The tag the interface is currently drawn in.
 ///
 /// A dialog and a dropdown menu are composed in windows of their own, and those windows provide

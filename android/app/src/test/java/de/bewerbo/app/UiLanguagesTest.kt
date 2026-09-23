@@ -2,6 +2,7 @@ package de.bewerbo.app
 
 import de.bewerbo.app.ui.UI_LANGUAGES
 import de.bewerbo.app.ui.defaultUiLanguage
+import de.bewerbo.app.ui.uiLanguageOrDefault
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -52,6 +53,27 @@ class UiLanguagesTest {
         // pass silently — which is the usual way a rule like this stops being enforced.
         assertTrue("No strings.xml found to check", stringsFileFor("en").isFile)
         assertTrue("A language that is not offered must not be found", !stringsFileFor("xx").isFile)
+    }
+
+    @Test
+    fun `a stored language we no longer offer falls back instead of blanking the picker`() {
+        val phone = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.GERMANY)
+
+            // What is on the list is taken as it stands.
+            assertEquals("uk", uiLanguageOrDefault("uk"))
+
+            // What is not on it — a preferences file restored from a build that offered more, an
+            // input-language tag written here by mistake, a first run with nothing stored — falls
+            // back. Left as it was, the Profil button reads "App-Sprache: " with nothing after it
+            // over an interface that has quietly gone back to English.
+            assertEquals("de", uiLanguageOrDefault("tr"))
+            assertEquals("de", uiLanguageOrDefault(""))
+            assertEquals("de", uiLanguageOrDefault(null))
+        } finally {
+            Locale.setDefault(phone)
+        }
     }
 
     @Test

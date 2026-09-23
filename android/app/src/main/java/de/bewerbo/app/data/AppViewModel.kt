@@ -3,7 +3,7 @@ package de.bewerbo.app.data
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import de.bewerbo.app.ui.defaultUiLanguage
+import de.bewerbo.app.ui.uiLanguageOrDefault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -124,10 +124,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * usually right; it is written down once so that overruling it sticks.
      */
     private fun storedUiLanguage(): String {
-        prefs().getString("uiLanguage", null)?.let { return it }
-        val guess = defaultUiLanguage()
-        prefs().edit().putString("uiLanguage", guess).apply()
-        return guess
+        // Run through uiLanguageOrDefault rather than trusted as it stands: allowBackup is on, so
+        // this file can arrive from a build that offered a language this one does not have.
+        val stored = prefs().getString("uiLanguage", null)
+        val tag = uiLanguageOrDefault(stored)
+        if (tag != stored) prefs().edit().putString("uiLanguage", tag).apply()
+        return tag
     }
 
     fun setUiLanguage(tag: String) {
