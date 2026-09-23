@@ -84,7 +84,13 @@ public record StatusRequest(string Status);
 
 public record NextStepDto(string Key, string Title, string Detail, string Severity, string Target);
 
-public record ActiveApplicationDto(Guid Id, string JobTitle, string Company, string Reference, string Status, string? SentAt);
+/// <summary>
+/// One application in the Übersicht's list. <paramref name="OpenSteps"/> is what THIS application
+/// still needs, as opposed to <see cref="OverviewDto.NextSteps"/>, which is what the profile needs.
+/// </summary>
+public record ActiveApplicationDto(
+    Guid Id, string JobTitle, string Company, string Reference, string Status, string? SentAt,
+    IReadOnlyList<NextStepDto> OpenSteps);
 
 public record OverviewDto(
     string DisplayName, string City, int ApplicationCount,

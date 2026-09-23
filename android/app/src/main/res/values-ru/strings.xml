@@ -20,6 +20,8 @@
     <string name="overview_evidence">Подтверждений приложено</string>
     <string name="overview_next_steps">Следующие шаги</string>
     <string name="overview_active">Активные заявки</string>
+    <string name="overview_applications_empty_title">Ни одной заявки не начато</string>
+    <string name="overview_applications_empty_body">Вставьте вакансию на экране «Вакансия». Каждая начатая заявка появится здесь с работодателем, Referenznummer и текущим состоянием, и отсюда же вы вернётесь к незавершённой.</string>
     <string name="overview_your_locker">Ваша Mappe</string>
     <string name="overview_eu_title">Ваши данные остаются в ЕС</string>
     <string name="overview_eu_body">Данные профиля хранятся в зашифрованном виде на серверах в ЕС и удаляются после экспорта, как только вы об этом попросите.</string>

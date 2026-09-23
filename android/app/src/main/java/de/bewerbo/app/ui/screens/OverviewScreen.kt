@@ -35,15 +35,26 @@ import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
 /**
- * Übersicht — how ready the Bewerbungsmappe is, and what would make it readier.
+ * Übersicht — how ready the Bewerbungsmappe is, what would make it readier, and every application
+ * the user has started with what each of them still needs.
  *
  * The score is only useful because every point of it is attributable: the three meters below it
  * are what it is made of, and each "Nächster Schritt" deep-links to the screen that closes it.
+ * An application's own steps work the same way, and so does the application itself — this is the
+ * one screen from which a user with several employers gets back into an unfinished one.
  */
 @Composable
 fun OverviewScreen(state: AppState, viewModel: AppViewModel, navigate: (String) -> Unit) {
     val overview = state.overview
     val colors = LocalSemanticColors.current
+
+    // Opening an application means bringing its whole context back BEFORE the screen it leads to
+    // is drawn — the Bewerbung reads the letter, the Abgleich reads the match, both of which
+    // belong to this application and not to whichever one was open before.
+    val open: (String, String) -> Unit = { applicationId, route ->
+        viewModel.openApplication(applicationId)
+        navigate(route)
+    }
 
     LazyColumn(
         Modifier
@@ -155,33 +166,79 @@ fun OverviewScreen(state: AppState, viewModel: AppViewModel, navigate: (String) 
             }
         }
 
-        if (overview.applications.isNotEmpty()) {
-            item { SectionLabel(stringResource(R.string.overview_active)) }
-            itemsIndexed(overview.applications) { index, application ->
-                BewerboCard(Modifier.testTag("overview_application_$index")) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                        Column(Modifier.weight(1f)) {
-                            Text(application.jobTitle, style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                listOfNotNull(
-                                    application.company.ifBlank { null },
-                                    application.reference.ifBlank { null },
-                                    application.sentAt,
-                                ).joinToString("  ·  "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.muted,
-                            )
-                        }
-                        StatusPill(
-                            application.status,
-                            when (application.status) {
-                                "Einladung" -> PillTone.Success
-                                "Absage" -> PillTone.Danger
-                                "Versendet" -> PillTone.Accent
-                                else -> PillTone.Neutral
-                            },
+        // The list of applications is always announced, even at none: a user who has started one
+        // employer and not the next has to be able to see that this is where they would be.
+        item { SectionLabel(stringResource(R.string.overview_active)) }
+
+        if (overview.applications.isEmpty()) {
+            item {
+                Callout(
+                    icon = BewerboIcons.Document,
+                    title = stringResource(R.string.overview_applications_empty_title),
+                    body = stringResource(R.string.overview_applications_empty_body),
+                    modifier = Modifier.testTag("overview_applications_empty"),
+                )
+            }
+        }
+
+        itemsIndexed(overview.applications) { index, application ->
+            BewerboCard(
+                Modifier.testTag("overview_application_$index"),
+                onClick = { open(application.id, "bewerbung") },
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Column(Modifier.weight(1f)) {
+                        Text(application.jobTitle, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            listOfNotNull(
+                                application.company.ifBlank { null },
+                                application.reference.ifBlank { null },
+                                application.sentAt,
+                            ).joinToString("  ·  "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.muted,
                         )
                     }
+                    StatusPill(
+                        application.status,
+                        when (application.status) {
+                            "Einladung" -> PillTone.Success
+                            "Absage" -> PillTone.Danger
+                            "Versendet" -> PillTone.Accent
+                            else -> PillTone.Neutral
+                        },
+                    )
+                    // The same chevron the next steps carry, for the same reason: it is what says
+                    // in this app that a row leads somewhere.
+                    Icon(
+                        BewerboIcons.ChevronRight, contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier
+                            .padding(start = Space.s)
+                            .size(20.dp),
+                    )
+                }
+
+                // What this one still needs, drawn as the Nächste Schritte above are — each step
+                // opens the application first, because the screen it leads to reads the posting,
+                // the Abgleich or the letter that belongs to it.
+                application.openSteps.forEachIndexed { stepIndex, step ->
+                    IconRow(
+                        icon = if (step.severity == "attention") {
+                            BewerboIcons.Attention
+                        } else BewerboIcons.Document,
+                        title = step.title,
+                        detail = step.detail,
+                        tone = if (step.severity == "attention") PillTone.Attention else PillTone.Accent,
+                        trailing = {
+                            Icon(
+                                BewerboIcons.ChevronRight, contentDescription = null,
+                                tint = colors.muted, modifier = Modifier.size(20.dp),
+                            )
+                        },
+                        modifier = Modifier.testTag("overview_application_${index}_step_$stepIndex"),
+                        onClick = { open(application.id, step.target) },
+                    )
                 }
             }
         }

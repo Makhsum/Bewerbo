@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Endpoints;
 
@@ -47,7 +48,8 @@ public static class ReadinessService
                     posting?.Company ?? "",
                     posting?.Reference ?? "",
                     a.Status.ToString(),
-                    a.SentAt?.ToString("dd.MM.yyyy"));
+                    a.SentAt?.ToString("dd.MM.yyyy"),
+                    OpenSteps(a));
             })
             .ToList();
 
@@ -170,5 +172,45 @@ public static class ReadinessService
         }
 
         return steps;
+    }
+
+    /// <summary>
+    /// What ONE application still needs, so the list says where each employer stands rather than
+    /// only that it exists. Same shape as <see cref="NextSteps"/>, and for the same reason: a step
+    /// that does not name the screen it is done on is a complaint, not a step.
+    ///
+    /// Capped at three. The list is read at a glance, and a row carrying eight lines is not.
+    /// </summary>
+    private static List<NextStepDto> OpenSteps(Application application)
+    {
+        var steps = new List<NextStepDto>();
+
+        // The draft comes first: it is what makes the application unfinished, and it is the one
+        // step that is still outstanding even when everything else is proven.
+        if (application.Status == ApplicationStatus.Entwurf)
+        {
+            steps.Add(new NextStepDto($"versand_{application.Id}", "Noch nicht versendet",
+                "Mappe exportieren und den Status auf Versendet setzen", "info", "bewerbung"));
+        }
+
+        // MatchJson defaults to "{}", which would throw here as a list and take the whole
+        // Übersicht down with it. One row without its steps is the smaller loss.
+        var requirements = application.MatchJson.TrimStart().StartsWith('[')
+            ? JsonSerializer.Deserialize<List<RequirementDto>>(application.MatchJson) ?? []
+            : [];
+
+        foreach (var requirement in requirements.Where(r => r.State == "offen"))
+        {
+            steps.Add(new NextStepDto(
+                $"beleg_{application.Id}_{requirements.IndexOf(requirement)}",
+                $"Nachweis fehlt: {requirement.Text}",
+                // The Abgleich already wrote down what is missing and where it is recorded. The
+                // Mappe is where a Nachweis is added, which is where the Abgleich sends it too.
+                requirement.Evidence,
+                "attention",
+                "mappe"));
+        }
+
+        return steps.Take(3).ToList();
     }
 }

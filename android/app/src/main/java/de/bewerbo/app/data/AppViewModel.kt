@@ -215,6 +215,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         runChecks(updated.id)
     }
 
+    /**
+     * Opens an application the user started earlier, with everything that stood around it.
+     *
+     * The Übersicht lists every application, and "open" has to mean the whole context — the
+     * Stellenanzeige it was written against, the Abgleich, the letter and its checks — or the tab
+     * the user lands on shows the previous application's letter under this employer's name. It is
+     * remembered exactly where [restoreWorkInProgress] looks for it, so the next restart comes
+     * back to this application rather than to whatever was open before.
+     */
+    fun openApplication(applicationId: String) = launch("application") {
+        // Cleared before the call, not after it: until the new one has arrived, leaving the last
+        // application on screen would put one employer's Anschreiben under another's name.
+        _state.update { it.copy(application = null, match = null, review = null, ats = null) }
+
+        val application = api.application(applicationId)
+        val posting = api.posting(application.postingId)
+        val match = api.match(posting.id)
+        _state.update { it.copy(posting = posting, match = match, application = application) }
+
+        prefs().edit()
+            .putString("postingId", posting.id)
+            .putString("applicationId", application.id)
+            .apply()
+        runChecks(application.id)
+    }
+
     private suspend fun runChecks(applicationId: String) {
         val review = api.review(applicationId)
         val ats = api.atsCheck(applicationId)

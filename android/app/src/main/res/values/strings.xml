@@ -31,6 +31,8 @@
     <string name="overview_evidence">Evidence on file</string>
     <string name="overview_next_steps">Next steps</string>
     <string name="overview_active">Active applications</string>
+    <string name="overview_applications_empty_title">No application started yet</string>
+    <string name="overview_applications_empty_body">Paste a posting on the Posting screen. Every application you start is listed here with its employer, its Referenznummer and where it stands, and you get back into an unfinished one from here.</string>
     <string name="overview_your_locker">Your Mappe</string>
     <string name="overview_eu_title">Your data stays in the EU</string>
     <string name="overview_eu_body">Profile data is held encrypted on EU servers and deleted after export whenever you ask for it.</string>

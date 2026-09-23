@@ -239,6 +239,9 @@ data class ActiveApplication(
     val reference: String = "",
     val status: String = "Entwurf",
     val sentAt: String? = null,
+    /// What THIS application still needs — as opposed to [Overview.nextSteps], which is what the
+    /// profile needs. Same shape, so the Übersicht draws both rows the same way.
+    val openSteps: List<NextStep> = emptyList(),
 )
 
 @Serializable
