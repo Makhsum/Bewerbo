@@ -267,6 +267,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // -- application -----------------------------------------------------------------------
 
+    /**
+     * Writes the Anschreiben, which is the moment an application starts existing.
+     *
+     * The Übersicht is refreshed at the end, as it is after every other write in here: this call
+     * CREATES the application record, so without it the one screen that lists the applications kept
+     * the list it had read before there were any. A user who had just written a letter came back to
+     * "Noch keine Bewerbung begonnen" over a button offering to continue it, and the row that leads
+     * back into an unfinished application only appeared after a restart.
+     */
     fun generateLetter(tone: String) = launch("letter") {
         val id = profileId() ?: return@launch
         val posting = _state.value.posting ?: return@launch
@@ -274,6 +283,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(application = application, review = null, ats = null) }
         prefs().edit().putString("applicationId", application.id).apply()
         runChecks(application.id)
+        refreshDerived()
     }
 
     fun regenerateLetter(tone: String) = launch("letter") {
