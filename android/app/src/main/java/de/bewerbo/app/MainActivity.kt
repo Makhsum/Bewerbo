@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -88,6 +89,13 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
             // tags are invisible to Appium without it, and every screen below relies on that —
             // which is why it is at the root rather than sprinkled per screen.
             .semantics { testTagsAsResourceId = true }
+            // The manifest asks for adjustResize, but enableEdgeToEdge() lays the window out
+            // behind the system bars and nothing consumes the IME inset, so the viewport stayed
+            // full height with the keyboard over the bottom of it. Every list below then believed
+            // all of its content was visible and refused to scroll, which left the focused field
+            // hidden and the Save button unreachable. Consuming the inset here does it once, for
+            // every screen, rather than per form.
+            .imePadding()
             .fillMaxSize(),
     ) {
         Scaffold(
