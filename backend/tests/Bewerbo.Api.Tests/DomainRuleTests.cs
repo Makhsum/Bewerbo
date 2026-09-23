@@ -1339,6 +1339,28 @@ public class DomainRuleTests
         Assert.DoesNotContain(bullets, b => b.Contains("gleichwertig"));
     }
 
+    [Fact]
+    public void A_degree_whose_assessment_is_running_is_not_told_to_go_and_look_it_up()
+    {
+        var profile = SampleProfile();
+        profile.Education.Add(new EducationEntry
+        {
+            Degree = "Diplom", Institution = "KHEU", Country = "UA",
+            From = new DateOnly(2014, 9, 1), To = new DateOnly(2019, 6, 30),
+            ZabAssessmentPending = true,
+        });
+
+        var steps = ReadinessService.Build(
+            profile, TimelineService.Build(profile, new DateOnly(2026, 9, 23)), []).NextSteps;
+
+        // Still outstanding — an assessment nobody is waiting for would read as settled. But the
+        // step the user cannot act on is a different step from the one they can: they have applied
+        // and are waiting, and "anabin-Eintrag prüfen und zitieren" says the app did not notice.
+        var step = Assert.Single(steps, s => s.Kind.StartsWith("anerkennung"));
+        Assert.Equal("anerkennung_offen", step.Kind);
+        Assert.Contains("ZAB", step.Detail);
+    }
+
     // -- the output the card asks for --------------------------------------------------------------------
 
     [Fact]

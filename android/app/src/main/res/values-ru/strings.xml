@@ -59,6 +59,8 @@
     <string name="step_gap_detail">Без причины немецкий читатель воспримет пробел как тревожный сигнал</string>
     <string name="step_anerkennung_title">Подтвердите признание диплома</string>
     <string name="step_anerkennung_detail">Проверьте запись в anabin для %1$s и сошлитесь на неё</string>
+    <string name="step_anerkennung_offen_title">Ждём ответа ZAB</string>
+    <string name="step_anerkennung_offen_detail">ZAB ещё не прислала оценку для %1$s</string>
     <string name="step_sprachnachweis_title">Нет Nachweis для уровня %1$s</string>
     <string name="step_sprachnachweis_detail">%1$s %2$s указан в профиле, но не подтверждён</string>
     <string name="step_beruf_title">Добавьте должность</string>

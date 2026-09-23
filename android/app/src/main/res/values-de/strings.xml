@@ -62,6 +62,8 @@
     <string name="step_gap_detail">Ohne Grund liest ein deutscher Leser die Lücke als Warnsignal</string>
     <string name="step_anerkennung_title">Anerkennung bestätigen</string>
     <string name="step_anerkennung_detail">anabin-Eintrag für %1$s prüfen und zitieren</string>
+    <string name="step_anerkennung_offen_title">Zeugnisbewertung abwarten</string>
+    <string name="step_anerkennung_offen_detail">Die ZAB hat die Bewertung für %1$s noch nicht zurückgeschickt</string>
     <string name="step_sprachnachweis_title">Sprachnachweis %1$s fehlt</string>
     <string name="step_sprachnachweis_detail">%1$s %2$s steht im Profil, ist aber nicht belegt</string>
     <string name="step_beruf_title">Position eintragen</string>

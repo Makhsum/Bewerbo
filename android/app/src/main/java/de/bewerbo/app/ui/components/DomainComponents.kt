@@ -458,6 +458,7 @@ fun nextStepTitle(step: NextStep): String = when (step.kind) {
     "person" -> stringResource(R.string.step_person_title)
     "gap" -> stringResource(R.string.step_gap_title, step.arg(0), step.arg(1))
     "anerkennung" -> stringResource(R.string.step_anerkennung_title)
+    "anerkennung_offen" -> stringResource(R.string.step_anerkennung_offen_title)
     "sprachnachweis" -> stringResource(R.string.step_sprachnachweis_title, step.arg(1))
     "beruf" -> stringResource(R.string.step_beruf_title)
     "versand" -> stringResource(R.string.step_versand_title)
@@ -470,6 +471,7 @@ fun nextStepDetail(step: NextStep): String = when (step.kind) {
     "person" -> stringResource(R.string.step_person_detail, personItems(step.args))
     "gap" -> stringResource(R.string.step_gap_detail)
     "anerkennung" -> stringResource(R.string.step_anerkennung_detail, step.arg(0))
+    "anerkennung_offen" -> stringResource(R.string.step_anerkennung_offen_detail, step.arg(0))
     "sprachnachweis" ->
         stringResource(R.string.step_sprachnachweis_detail, step.arg(0), step.arg(1))
     "beruf" -> stringResource(R.string.step_beruf_detail)

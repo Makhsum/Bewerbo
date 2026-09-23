@@ -76,6 +76,8 @@
     <string name="step_gap_detail">Without a reason a German reader takes a gap as a warning sign</string>
     <string name="step_anerkennung_title">Confirm the recognition</string>
     <string name="step_anerkennung_detail">Check the anabin entry for %1$s and quote it</string>
+    <string name="step_anerkennung_offen_title">Waiting for the ZAB</string>
+    <string name="step_anerkennung_offen_detail">The ZAB has not sent back the assessment for %1$s yet</string>
     <string name="step_sprachnachweis_title">No Nachweis for %1$s yet</string>
     <string name="step_sprachnachweis_detail">%1$s %2$s is in the profile but not proven</string>
     <string name="step_beruf_title">Add a position</string>

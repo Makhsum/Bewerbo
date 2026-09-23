@@ -199,13 +199,19 @@ public static class ReadinessService
                      !e.EquivalenceConfirmed && !string.IsNullOrWhiteSpace(e.Country)
                      && !e.Country.Equals("DE", StringComparison.OrdinalIgnoreCase)))
         {
+            // Both are outstanding, and they are not the same step. A user who has applied for the
+            // Zeugnisbewertung and is waiting on it cannot go and look the answer up, and being
+            // told to reads as though the app had not noticed they already acted.
+            var waiting = degree.ZabAssessmentPending;
             steps.Add(new NextStepDto(
                 $"anerkennung_{degree.Id}",
-                "Anerkennung bestätigen",
-                $"anabin-Eintrag für {degree.Institution} prüfen und zitieren",
+                waiting ? "Zeugnisbewertung abwarten" : "Anerkennung bestätigen",
+                waiting
+                    ? $"Die ZAB hat die Bewertung für {degree.Institution} noch nicht zurückgeschickt"
+                    : $"anabin-Eintrag für {degree.Institution} prüfen und zitieren",
                 "info",
                 "profil",
-                "anerkennung",
+                waiting ? "anerkennung_offen" : "anerkennung",
                 [degree.Institution]));
         }
 

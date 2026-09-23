@@ -61,6 +61,8 @@
     <string name="step_gap_detail">Без причини німецький читач сприйме прогалину як тривожний сигнал</string>
     <string name="step_anerkennung_title">Підтвердіть визнання диплома</string>
     <string name="step_anerkennung_detail">Перевірте запис у anabin для %1$s і пошліться на нього</string>
+    <string name="step_anerkennung_offen_title">Чекаємо на відповідь ZAB</string>
+    <string name="step_anerkennung_offen_detail">ZAB ще не надіслала оцінку для %1$s</string>
     <string name="step_sprachnachweis_title">Немає Nachweis для рівня %1$s</string>
     <string name="step_sprachnachweis_detail">%1$s %2$s указано в профілі, але не підтверджено</string>
     <string name="step_beruf_title">Додайте посаду</string>
