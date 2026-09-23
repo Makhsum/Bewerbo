@@ -236,14 +236,18 @@ data class Review(
     val checks: List<ReviewCheck> = emptyList(),
 )
 
+/// One machine-readability check. [verdict] is "ok", "fehler" or "ungeprueft"; the third one says
+/// the check reads a profile field that is empty, and [target] is then the screen it is filled in
+/// on — the same route a [NextStep] carries.
 @Serializable
 data class AtsFinding(
     val key: String,
     val label: String,
-    val found: Boolean,
+    val verdict: String = "",
     val detail: String = "",
     val detailKind: String = "",
     val detailArgs: List<String> = emptyList(),
+    val target: String = "",
 )
 
 @Serializable

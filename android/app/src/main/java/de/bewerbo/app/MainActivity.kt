@@ -227,7 +227,12 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                     }
                     composable(FlowStep.Application.route) {
                         ApplicationFlow(FlowStep.Application, state, navController) {
-                            ApplicationScreen(state, viewModel)
+                            // A Maschinenlesbarkeit check with nothing to read leads to the place
+                            // the field is filled in on, and it has to get there the way the bar
+                            // does — a plain navigate() would stack the place on top of the step.
+                            ApplicationScreen(state, viewModel) { route ->
+                                navController.openFromOverview(route)
+                            }
                         }
                     }
                 }
@@ -243,6 +248,9 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
  * navigate() pushed the destination on top of the Übersicht's own entry instead, and the bar then
  * had nothing to go back to: tapping "Übersicht" returned the user to the screen they had just
  * come from, and the list they came from could not be reached again at all.
+ *
+ * The Bewerbung's Maschinenlesbarkeit rows lead out the same way, for the same reason: they leave
+ * the flow for a place, and a place reached from anywhere has to be reached as the bar reaches it.
  */
 private fun NavHostController.openFromOverview(route: String) {
     navigate(route) {

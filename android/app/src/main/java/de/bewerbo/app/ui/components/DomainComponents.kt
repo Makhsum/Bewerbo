@@ -456,6 +456,7 @@ fun atsFindingDetail(finding: AtsFinding): String = when (finding.detailKind) {
     "fehlt" -> stringResource(R.string.ats_missing, finding.arg(0))
     "lesbar_fehler" -> stringResource(R.string.ats_lesbar_failed, finding.arg(0))
     "name_fehlt" -> stringResource(R.string.ats_name_missing)
+    "name_keine" -> stringResource(R.string.ats_name_none)
     "arbeitgeber_keine" -> stringResource(R.string.ats_arbeitgeber_none)
     "zeitraeume_keine" -> stringResource(R.string.ats_zeitraeume_none)
     "zeitraeume_fehlt" -> stringResource(R.string.ats_zeitraeume_missing)

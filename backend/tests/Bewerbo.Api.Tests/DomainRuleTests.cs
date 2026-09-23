@@ -845,7 +845,39 @@ public class DomainRuleTests
         var result = AtsTextCheck.Run(pdf, profile);
         Assert.True(result.Passed,
             "The rendered PDF did not read back: " +
-            string.Join("; ", result.Findings.Where(f => !f.Found).Select(f => f.Detail)));
+            string.Join("; ", result.Findings.Where(f => f.Verdict != "ok").Select(f => f.Detail)));
+        Assert.All(result.Findings, f => Assert.Equal("ok", f.Verdict));
+    }
+
+    [Fact]
+    public void An_empty_profile_is_not_reported_as_a_fault_of_the_document()
+    {
+        // Nothing is wrong with the file here — there is simply nothing to look for in it. A
+        // "fehler" on these three is the app blaming its own output for the missing input.
+        var profile = new Domain.Profile { FirstName = "", LastName = "" };
+        var posting = new Posting { JobTitle = "Bilanzbuchhalter (m/w/d)", Company = "Schwarzwald Technik GmbH" };
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+        var match = RequirementMatcher.Match(profile, []);
+        var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
+
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+            new DateOnly(2026, 9, 22));
+
+        var result = AtsTextCheck.Run(pdf, profile);
+
+        Assert.DoesNotContain(result.Findings, f => f.Verdict == "fehler");
+        Assert.True(result.Passed);
+
+        // Each of the three says WHICH field is empty, and leads to the screen it is filled in on.
+        foreach (var key in new[] { "name", "arbeitgeber", "zeitraeume" })
+        {
+            var finding = result.Findings.Single(f => f.Key == key);
+            Assert.Equal("ungeprueft", finding.Verdict);
+            Assert.Equal($"{key}_keine", finding.DetailKind);
+            Assert.Equal("profil", finding.Target);
+        }
     }
 
     [Theory]

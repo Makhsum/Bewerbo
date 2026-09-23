@@ -105,13 +105,20 @@ public record ReviewCheckDto(
 
 public record ReviewDto(bool Passed, int HintCount, IReadOnlyList<ReviewCheckDto> Checks);
 
+/// <summary>
+/// One machine-readability check. <paramref name="Verdict"/> is "ok", "fehler" or "ungeprueft" —
+/// the third one says the check reads a profile field that is empty, which is not a fault of the
+/// produced document. <paramref name="Target"/> is then the screen that field is filled in on,
+/// carried the way <see cref="NextStepDto.Target"/> carries it.
+/// </summary>
 public record AtsFindingDto(
     string Key,
     string Label,
-    bool Found,
+    string Verdict,
     string Detail,
     string DetailKind = "",
-    IReadOnlyList<string>? DetailArgs = null);
+    IReadOnlyList<string>? DetailArgs = null,
+    string Target = "");
 
 public record AtsDto(bool Passed, int PageCount, int SizeBytes, string FileName, IReadOnlyList<AtsFindingDto> Findings);
 

@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import de.bewerbo.app.Destination
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
@@ -72,15 +73,24 @@ private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 /// are backend values, not words for the user — `templateLabel` says how they are written.
 private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
 
+/// The place a finding leads to, read off the bottom bar's own list so the route and the word for
+/// it cannot drift apart. Null for a route that is not a place — the row is then offered as a way
+/// nowhere, which is what a finding with no target means.
+private fun placeOf(route: String): Destination? =
+    Destination.entries.firstOrNull { it.route == route }
+
 /**
  * Bewerbung — the Mappe page by page, the DIN inspector over it, the Prüfung, and the export.
  *
  * The preview is the exported PDF rasterised, not a redrawing of it. What the user is checking here
  * is whether this reads as a German business letter, and that question can only be answered against
  * the file that will actually be sent — every page of it, in the type the renderer set.
+ *
+ * [navigate] leads out of the flow to a place: a Maschinenlesbarkeit check that could not be run
+ * because a profile field is empty says so and takes the user to where that field is filled in.
  */
 @Composable
-fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
+fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (String) -> Unit) {
     val colors = LocalSemanticColors.current
     val application = state.application
 
@@ -374,16 +384,30 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
         }
 
         // Maschinenlesbarkeit — the produced PDF read back as text.
+        //
+        // Three of the five checks read a profile field and look for it in the file. With that
+        // field empty there is nothing to look for, so the backend answers "ungeprueft" instead of
+        // "fehler": red belongs to a fault of the document, and three red marks over an empty
+        // profile taught the user that red means nothing. Such a row names the field and leads to
+        // the place it is filled in on, the way a next step on the Übersicht does.
         state.ats?.let { ats ->
+            val unchecked = ats.findings.any { it.verdict == "ungeprueft" }
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     SectionLabel(stringResource(R.string.application_ats))
                     StatusPill(
                         stringResource(
-                            if (ats.passed) R.string.application_ats_passed
-                            else R.string.application_ats_failed,
+                            when {
+                                !ats.passed -> R.string.application_ats_failed
+                                unchecked -> R.string.application_ats_unchecked
+                                else -> R.string.application_ats_passed
+                            },
                         ),
-                        if (ats.passed) PillTone.Success else PillTone.Danger,
+                        when {
+                            !ats.passed -> PillTone.Danger
+                            unchecked -> PillTone.Attention
+                            else -> PillTone.Success
+                        },
                         Modifier.testTag("application_ats_summary"),
                     )
                 }
@@ -391,23 +415,58 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
             item {
                 BewerboCard(Modifier.testTag("application_ats_card")) {
                     ats.findings.forEachIndexed { index, finding ->
-                        Row(Modifier.padding(vertical = Space.xs)) {
+                        val place = if (finding.verdict == "ungeprueft") placeOf(finding.target) else null
+                        val row = Modifier
+                            .fillMaxWidth()
+                            .testTag("application_ats_finding_$index")
+                        Row(
+                            (if (place != null) row.clickable { navigate(place.route) } else row)
+                                .padding(vertical = Space.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Icon(
-                                if (finding.found) BewerboIcons.Covered else BewerboIcons.NotClaimed,
+                                when (finding.verdict) {
+                                    "ok" -> BewerboIcons.Covered
+                                    "ungeprueft" -> BewerboIcons.Attention
+                                    else -> BewerboIcons.NotClaimed
+                                },
                                 contentDescription = null,
-                                tint = if (finding.found) colors.success else colors.danger,
+                                tint = when (finding.verdict) {
+                                    "ok" -> colors.success
+                                    "ungeprueft" -> colors.attention
+                                    else -> colors.danger
+                                },
                                 modifier = Modifier.size(18.dp),
                             )
-                            Column(Modifier.padding(start = Space.s)) {
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .padding(start = Space.s),
+                            ) {
                                 Text(atsFindingLabel(finding), style = MaterialTheme.typography.bodyMedium)
                                 Text(
                                     atsFindingDetail(finding),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.muted,
                                 )
+                                if (place != null) {
+                                    Text(
+                                        stringResource(
+                                            R.string.ats_fill_in, stringResource(place.label),
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.testTag("application_ats_fill_in_$index"),
+                                    )
+                                }
+                            }
+                            if (place != null) {
+                                Icon(
+                                    BewerboIcons.ChevronRight, contentDescription = null,
+                                    tint = colors.muted, modifier = Modifier.size(20.dp),
+                                )
                             }
                         }
-                        @Suppress("UNUSED_EXPRESSION") index
                     }
                 }
             }

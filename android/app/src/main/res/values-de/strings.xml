@@ -104,11 +104,13 @@
     <string name="ats_missing">Fehlt: %1$s</string>
     <string name="ats_lesbar_failed">Die Datei ließ sich nicht als Text öffnen: %1$s</string>
     <string name="ats_name_missing">Der Name ist im Text nicht auffindbar</string>
+    <string name="ats_name_none">Kein Name im Profil</string>
     <string name="ats_arbeitgeber_none">Kein Arbeitgeber im Profil</string>
     <string name="ats_zeitraeume_none">Keine Zeiträume im Profil</string>
     <string name="ats_zeitraeume_missing">Mindestens ein Zeitraum extrahiert nicht</string>
     <string name="ats_text_ok">%1$s Zeichen extrahiert</string>
     <string name="ats_text_missing">Fast kein Text extrahierbar — die Seite liegt vermutlich als Bild vor</string>
+    <string name="ats_fill_in">Unter »%1$s« ergänzen</string>
 
     <string name="overview_mappe">Bewerbungsmappe</string>
     <string name="overview_profile_complete">Profil vollständig</string>
@@ -248,6 +250,7 @@
     <string name="application_ats">Maschinenlesbarkeit</string>
     <string name="application_ats_passed">Bestanden</string>
     <string name="application_ats_failed">Nicht bestanden</string>
+    <string name="application_ats_unchecked">Nicht vollständig geprüft</string>
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d Seiten · %2$d KB</string>
     <string name="application_save_pdf">Als ein PDF speichern</string>

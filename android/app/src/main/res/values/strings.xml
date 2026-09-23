@@ -121,11 +121,13 @@
     <string name="ats_missing">Missing: %1$s</string>
     <string name="ats_lesbar_failed">The file could not be opened as text: %1$s</string>
     <string name="ats_name_missing">The name cannot be found in the text</string>
+    <string name="ats_name_none">No name in the profile</string>
     <string name="ats_arbeitgeber_none">No employer in the profile</string>
     <string name="ats_zeitraeume_none">No dates in the profile</string>
     <string name="ats_zeitraeume_missing">At least one date does not extract</string>
     <string name="ats_text_ok">%1$s characters extracted</string>
     <string name="ats_text_missing">Almost no text extractable — the page is probably an image</string>
+    <string name="ats_fill_in">Add it under »%1$s«</string>
 
     <!-- Overview -->
     <string name="overview_mappe">Bewerbungsmappe</string>
@@ -272,6 +274,7 @@
     <string name="application_ats">Machine readability</string>
     <string name="application_ats_passed">Passed</string>
     <string name="application_ats_failed">Failed</string>
+    <string name="application_ats_unchecked">Not fully checked</string>
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d pages · %2$d KB</string>
     <string name="application_save_pdf">Save as one PDF</string>

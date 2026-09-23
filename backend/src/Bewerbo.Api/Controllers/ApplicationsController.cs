@@ -103,7 +103,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var result = AtsTextCheck.Run(pdf, profile);
         return Ok(new AtsDto(result.Passed, result.PageCount, result.SizeBytes,
             MergedApplicationDocument.FileName(profile, posting),
-            result.Findings.Select(f => new AtsFindingDto(f.Key, f.Label, f.Found, f.Detail, f.DetailKind, f.DetailArgs)).ToList()));
+            result.Findings.Select(f => new AtsFindingDto(f.Key, f.Label, f.Verdict, f.Detail, f.DetailKind, f.DetailArgs, f.Target)).ToList()));
     }
 
     // The export: ONE file, named as the card requires.
