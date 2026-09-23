@@ -89,6 +89,8 @@
 
     <string name="match_none_title">Вакансію ще не прочитано</string>
     <string name="match_none_body">Спочатку вставте вакансію на екрані «Вакансія». Abgleich порівняє її вимоги з вашим профілем.</string>
+    <string name="match_none_read_title">З цієї вакансії не зчитано жодної вимоги</string>
+    <string name="match_none_read_body">Bewerbo не знайшов у тексті списку вимог. Про ваш профіль це нічого не каже. Виправте текст вакансії на екрані «Вакансія» або напишіть Anschreiben без Abgleich.</string>
     <string name="match_covered">Підтверджено %1$d з %2$d вимог</string>
     <string name="match_proven">Підтверджено профілем · %1$d</string>
     <string name="match_open">Ще відкрито · %1$d</string>

@@ -116,6 +116,8 @@
     <string name="match_title">Abgleich</string>
     <string name="match_none_title">No posting read yet</string>
     <string name="match_none_body">Paste a posting on the Posting screen first. The Abgleich compares its requirements against your profile.</string>
+    <string name="match_none_read_title">No requirements read from this posting</string>
+    <string name="match_none_read_body">Bewerbo found no list of requirements in the text. That says nothing about your profile. Correct the posting text on the Posting screen, or write the Anschreiben without an Abgleich.</string>
     <string name="match_covered">%1$d of %2$d requirements proven</string>
     <string name="match_proven">Proven by your profile · %1$d</string>
     <string name="match_open">Still open · %1$d</string>

@@ -95,15 +95,29 @@ fun MatchScreen(
             return@LazyColumn
         }
 
+        // Nothing read is not the same as nothing proven, and the meter cannot tell them apart:
+        // "0 of 0 requirements proven, 0 %" over an empty track is what a profile that covers none
+        // of them looks like, so an advert whose requirements could not be read accused the user of
+        // a gap that was never theirs. The empty state of a section is a Callout here as everywhere.
         item {
-            BewerboCard {
-                Meter(
-                    label = stringResource(R.string.match_covered, match.covered, match.total),
-                    value = "${match.percent} %",
-                    fraction = match.percent / 100f,
-                    tone = if (match.percent >= 60) PillTone.Success else PillTone.Attention,
-                    modifier = Modifier.testTag("match_score_meter"),
+            if (match.total == 0) {
+                Callout(
+                    icon = BewerboIcons.Attention,
+                    title = stringResource(R.string.match_none_read_title),
+                    body = stringResource(R.string.match_none_read_body),
+                    tone = PillTone.Attention,
+                    modifier = Modifier.testTag("match_none_read"),
                 )
+            } else {
+                BewerboCard {
+                    Meter(
+                        label = stringResource(R.string.match_covered, match.covered, match.total),
+                        value = "${match.percent} %",
+                        fraction = match.percent / 100f,
+                        tone = if (match.percent >= 60) PillTone.Success else PillTone.Attention,
+                        modifier = Modifier.testTag("match_score_meter"),
+                    )
+                }
             }
         }
 
