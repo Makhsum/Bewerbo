@@ -95,10 +95,10 @@
     <string name="review_anschreiben_failed">Текст читається як Motivationsschreiben — таке пишуть для навчання і стипендії.</string>
 
     <!-- Машиночитаність, прочитана назад із готового PDF. -->
-    <string name="ats_lesbar">PDF прочитано назад</string>
-    <string name="ats_name">Ім\'я знайдено в тексті</string>
-    <string name="ats_arbeitgeber">Роботодавців знайдено в тексті</string>
-    <string name="ats_zeitraeume">Дати знайдено в тексті</string>
+    <string name="ats_lesbar">PDF, прочитаний назад</string>
+    <string name="ats_name">Ім\'я як текст</string>
+    <string name="ats_arbeitgeber">Роботодавці як текст</string>
+    <string name="ats_zeitraeume">Дати як текст</string>
     <string name="ats_text">Шрифти вбудовано, текст видобувається</string>
     <string name="ats_missing">Бракує: %1$s</string>
     <string name="ats_lesbar_failed">Файл не вдалося відкрити як текст: %1$s</string>

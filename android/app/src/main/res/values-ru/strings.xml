@@ -93,10 +93,10 @@
     <string name="review_anschreiben_failed">Текст читается как Motivationsschreiben — такое пишут для учёбы и стипендии.</string>
 
     <!-- Машиночитаемость, прочитанная обратно из готового PDF. -->
-    <string name="ats_lesbar">PDF прочитан обратно</string>
-    <string name="ats_name">Имя найдено в тексте</string>
-    <string name="ats_arbeitgeber">Работодатели найдены в тексте</string>
-    <string name="ats_zeitraeume">Даты найдены в тексте</string>
+    <string name="ats_lesbar">PDF, прочитанный обратно</string>
+    <string name="ats_name">Имя как текст</string>
+    <string name="ats_arbeitgeber">Работодатели как текст</string>
+    <string name="ats_zeitraeume">Даты как текст</string>
     <string name="ats_text">Шрифты встроены, текст извлекается</string>
     <string name="ats_missing">Не хватает: %1$s</string>
     <string name="ats_lesbar_failed">Файл не удалось открыть как текст: %1$s</string>

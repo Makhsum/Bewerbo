@@ -96,10 +96,10 @@
     <string name="review_anschreiben_failed">Der Text liest sich wie ein Motivationsschreiben — das gehört zu Studium und Stipendium.</string>
 
     <!-- Die Maschinenlesbarkeit, aus dem fertigen PDF zurückgelesen. -->
-    <string name="ats_lesbar">PDF zurückgelesen</string>
-    <string name="ats_name">Name als Text wiedergefunden</string>
-    <string name="ats_arbeitgeber">Arbeitgeber als Text wiedergefunden</string>
-    <string name="ats_zeitraeume">Zeiträume als Text wiedergefunden</string>
+    <string name="ats_lesbar">Das zurückgelesene PDF</string>
+    <string name="ats_name">Der Name als Text</string>
+    <string name="ats_arbeitgeber">Die Arbeitgeber als Text</string>
+    <string name="ats_zeitraeume">Die Zeiträume als Text</string>
     <string name="ats_text">Schriften eingebettet, Text extrahierbar</string>
     <string name="ats_missing">Fehlt: %1$s</string>
     <string name="ats_lesbar_failed">Die Datei ließ sich nicht als Text öffnen: %1$s</string>

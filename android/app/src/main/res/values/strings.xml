@@ -109,11 +109,14 @@
     <string name="review_anschreiben_ok">The text is an Anschreiben and answers the posting.</string>
     <string name="review_anschreiben_failed">The text reads like a Motivationsschreiben — that belongs to a course of study or a scholarship.</string>
 
-    <!-- The machine-readability check, read back out of the finished PDF. -->
-    <string name="ats_lesbar">PDF read back</string>
-    <string name="ats_name">Name found again as text</string>
-    <string name="ats_arbeitgeber">Employers found again as text</string>
-    <string name="ats_zeitraeume">Dates found again as text</string>
+    <!-- The machine-readability check, read back out of the finished PDF. Each label NAMES what
+         is checked and does not state the verdict: the icon and the detail below carry the
+         result, and a label that asserted it read "Name found again as text" over "the name
+         cannot be found". -->
+    <string name="ats_lesbar">The PDF read back</string>
+    <string name="ats_name">The name as text</string>
+    <string name="ats_arbeitgeber">The employers as text</string>
+    <string name="ats_zeitraeume">The dates as text</string>
     <string name="ats_text">Fonts embedded, text extractable</string>
     <string name="ats_missing">Missing: %1$s</string>
     <string name="ats_lesbar_failed">The file could not be opened as text: %1$s</string>
