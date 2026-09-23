@@ -58,6 +58,10 @@
     <string name="error_document_missing">This document is no longer on the server.</string>
     <string name="error_unknown">That did not work. Please try again.</string>
     <string name="error_account_key_invalid">That is not an account key. Copy it from the settings on the other device.</string>
+    <string name="error_link_not_an_address">That is not a web address. Check it and try again.</string>
+    <string name="error_link_unreachable">The page behind that link did not answer. Try again, or paste the text of the posting.</string>
+    <string name="error_link_no_text">There is no posting text on that page. Paste the text instead.</string>
+    <string name="error_photo_unreadable">No words could be made out in that picture. Try a sharper one, or paste the text.</string>
 
     <!-- The outstanding steps. The server says WHICH step it is and what goes into it; the
          sentence is written here, because the server never learns the interface language. -->
@@ -211,11 +215,19 @@
     <string name="experience_missing">Still needed: %1$s</string>
 
     <!-- Posting -->
-    <string name="posting_subtitle">Paste the posting — every field below links back to the words it came from.</string>
-    <string name="posting_paste_label">Paste the posting</string>
+    <string name="posting_subtitle">Bring the posting in — every field below links back to the words it came from.</string>
+    <string name="posting_bring_in">Bring the posting in</string>
+    <string name="posting_source_paste">Text</string>
+    <string name="posting_source_link">Link</string>
+    <string name="posting_source_photo">Picture</string>
+    <string name="posting_link_field">Address of the posting</string>
+    <string name="posting_link_read">Fetch the text</string>
+    <string name="posting_link_hint">A page carries more than the advert. Check the text below and delete what does not belong to it.</string>
+    <string name="posting_photo_choose">Choose a picture</string>
+    <string name="posting_photo_hint">A screenshot or a photo of the advert. The words are read on this device and the picture is not sent anywhere.</string>
     <string name="posting_paste_field">Text of the posting</string>
     <string name="posting_parse">Read the posting</string>
-    <string name="posting_new">Paste a different posting</string>
+    <string name="posting_new">Bring a different posting in</string>
     <string name="posting_source">Source text · %1$d characters</string>
     <string name="posting_read_from">Read from the posting</string>
     <string name="posting_field_contact">Contact</string>

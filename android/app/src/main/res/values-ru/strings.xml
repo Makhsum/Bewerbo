@@ -41,6 +41,10 @@
     <string name="error_document_missing">Этого документа больше нет на сервере.</string>
     <string name="error_unknown">Не получилось. Попробуйте ещё раз.</string>
     <string name="error_account_key_invalid">Это не ключ аккаунта. Скопируйте его из настроек другого устройства.</string>
+    <string name="error_link_not_an_address">Это не веб-адрес. Проверьте его и попробуйте снова.</string>
+    <string name="error_link_unreachable">Страница по этой ссылке не ответила. Попробуйте снова или вставьте текст вакансии.</string>
+    <string name="error_link_no_text">На этой странице нет текста вакансии. Вставьте текст вручную.</string>
+    <string name="error_photo_unreadable">На этом изображении не удалось разобрать слова. Попробуйте более чёткое или вставьте текст.</string>
 
     <!-- Открытые шаги. Сервер говорит, КАКОЙ это шаг и что в него подставить; сама фраза
          пишется здесь, потому что язык интерфейса серверу неизвестен. -->
@@ -188,11 +192,19 @@
     <string name="experience_duties">Обязанности, по одной в строке</string>
     <string name="experience_missing">Ещё нужно: %1$s</string>
 
-    <string name="posting_subtitle">Вставьте текст вакансии — каждое поле ниже ссылается на слова, из которых оно взято.</string>
-    <string name="posting_paste_label">Вставьте вакансию</string>
+    <string name="posting_subtitle">Добавьте вакансию — каждое поле ниже ссылается на слова, из которых оно взято.</string>
+    <string name="posting_bring_in">Добавить вакансию</string>
+    <string name="posting_source_paste">Текст</string>
+    <string name="posting_source_link">Ссылка</string>
+    <string name="posting_source_photo">Снимок</string>
+    <string name="posting_link_field">Адрес вакансии</string>
+    <string name="posting_link_read">Получить текст</string>
+    <string name="posting_link_hint">На странице есть не только объявление. Проверьте текст ниже и удалите всё лишнее.</string>
+    <string name="posting_photo_choose">Выбрать снимок</string>
+    <string name="posting_photo_hint">Снимок экрана или фотография объявления. Слова распознаются на этом устройстве, изображение никуда не отправляется.</string>
     <string name="posting_paste_field">Текст вакансии</string>
     <string name="posting_parse">Прочитать вакансию</string>
-    <string name="posting_new">Вставить другую вакансию</string>
+    <string name="posting_new">Добавить другую вакансию</string>
     <string name="posting_source">Исходный текст · %1$d символов</string>
     <string name="posting_read_from">Прочитано из вакансии</string>
     <string name="posting_field_contact">Контакт</string>

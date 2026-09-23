@@ -1,6 +1,7 @@
 package de.bewerbo.app.ui
 
 import android.content.res.Configuration
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -74,11 +75,25 @@ fun UiLanguageProvider(tag: String, content: @Composable () -> Unit) {
         )
     }
 
+    // The registry a rememberLauncherForActivityResult() needs, read HERE — where LocalContext is
+    // still the activity's — and handed on explicitly below.
+    //
+    // It has no composition local of its own to fall back on: it finds its owner by walking up the
+    // ContextWrapper chain from LocalContext, and [localised] is not on that chain at all, because
+    // createConfigurationContext() returns a fresh Context rather than a wrapper around this one.
+    // So without this the first screen to open the photo picker died on
+    // "No ActivityResultRegistryOwner was provided". Same root as the FLAG_ACTIVITY_NEW_TASK every
+    // startActivity() in this app carries: under this provider, LocalContext is never the activity.
+    val registryOwner = LocalActivityResultRegistryOwner.current
+
     CompositionLocalProvider(
-        LocalUiLanguage provides tag,
-        // Taken off the context rather than kept beside it, so the two can never disagree.
-        LocalConfiguration provides localised.resources.configuration,
-        LocalContext provides localised,
+        values = buildList {
+            add(LocalUiLanguage provides tag)
+            // Taken off the context rather than kept beside it, so the two can never disagree.
+            add(LocalConfiguration provides localised.resources.configuration)
+            add(LocalContext provides localised)
+            registryOwner?.let { add(LocalActivityResultRegistryOwner provides it) }
+        }.toTypedArray(),
         content = content,
     )
 }

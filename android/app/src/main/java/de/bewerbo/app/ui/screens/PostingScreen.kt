@@ -1,5 +1,8 @@
 package de.bewerbo.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +67,11 @@ import kotlinx.coroutines.launch
 private val FIELD_ORDER = listOf("contact", "contactEmail", "company", "reference", "title", "start")
 private val EMPLOYER_TYPES = listOf("Konzern", "Mittelstand", "Startup", "OeffentlicherDienst")
 
+/// The three ways an advert gets into the app. Pasting stands first because it is the one that
+/// always works — a link can be behind a login and a picture can be unreadable, and neither is
+/// worth putting in front of the way that has no failure mode.
+private val SOURCES = listOf("paste", "link", "photo")
+
 /**
  * Stellenanzeige — paste a posting, and see every field the app read shown against the words it
  * came from.
@@ -76,8 +84,19 @@ private val EMPLOYER_TYPES = listOf("Konzern", "Mittelstand", "Startup", "Oeffen
 fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Unit) {
     val colors = LocalSemanticColors.current
     val posting = state.posting
-    var text by remember { mutableStateOf("") }
     var correcting by remember { mutableStateOf(false) }
+
+    // Which way in is open, and the address typed into it. Both are the screen's own: neither
+    // outlives the advert being read, and the text they produce is the view model's.
+    var source by remember { mutableStateOf(SOURCES.first()) }
+    var url by remember { mutableStateOf("") }
+
+    // The system photo picker. It asks for no storage permission — it hands back exactly the one
+    // picture the user chose and nothing else — which is why it is this contract and not a
+    // READ_MEDIA_IMAGES of our own.
+    val pickPicture = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { picked ->
+        picked?.let(viewModel::readPostingImage)
+    }
 
     // The tie between a field and its passage: one marker number, selected from either end. A new
     // posting starts with nothing selected — the numbers alone already say which came from where.
@@ -136,20 +155,54 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
         if (posting == null) {
             item {
                 BewerboCard {
-                    SectionLabel(stringResource(R.string.posting_paste_label))
+                    SectionLabel(stringResource(R.string.posting_bring_in))
                     Box(Modifier.padding(top = Space.s)) {
+                        SegmentedControl(
+                            options = SOURCES,
+                            selectedIndex = SOURCES.indexOf(source).coerceAtLeast(0),
+                            onSelect = { source = SOURCES[it] },
+                            modifier = Modifier.testTag("posting_source_selector"),
+                            tagPrefix = "posting_source",
+                            label = { stringResource(sourceLabel(it)) },
+                        )
+                    }
+
+                    // What each way in needs before it can fill the field. Nothing for "paste":
+                    // there the field itself is the way in.
+                    when (source) {
+                        "link" -> PostingLinkSource(
+                            url = url,
+                            onUrlChange = { url = it },
+                            enabled = state.busy == null,
+                            onRead = { viewModel.readPostingLink(url) },
+                        )
+                        "photo" -> PostingPhotoSource(
+                            enabled = state.busy == null,
+                            onChoose = {
+                                pickPicture.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                        )
+                    }
+
+                    // The one field, whichever way the text came in. This is where "the text that
+                    // was read is shown and can be corrected before it is used" actually lives: a
+                    // link and a picture write into the same box a paste does, and the button below
+                    // reads what is in the box — not what the link or the picture said.
+                    Box(Modifier.padding(top = Space.m)) {
                         LabelledField(
                             label = stringResource(R.string.posting_paste_field),
-                            value = text,
-                            onValueChange = { text = it },
+                            value = state.postingDraft,
+                            onValueChange = viewModel::setPostingDraft,
                             testTag = "posting_input_text",
                             singleLine = false,
                             minLines = 8,
                         )
                     }
                     Button(
-                        onClick = { viewModel.parsePosting(text) },
-                        enabled = text.isNotBlank() && state.busy == null,
+                        onClick = { viewModel.parsePosting(state.postingDraft) },
+                        enabled = state.postingDraft.isNotBlank() && state.busy == null,
                         modifier = Modifier
                             .padding(top = Space.m)
                             .fillMaxWidth()
@@ -324,6 +377,78 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
             },
         )
     }
+}
+
+/**
+ * The link as a way in: an address, and a button that fetches what is behind it.
+ *
+ * The hint is not decoration. A job portal's page carries a navigation menu, a cookie notice and a
+ * list of similar vacancies beside the advert, and all of it arrives in the field — so the user is
+ * told before they read it that cutting it down is their job.
+ */
+@Composable
+private fun PostingLinkSource(
+    url: String,
+    onUrlChange: (String) -> Unit,
+    enabled: Boolean,
+    onRead: () -> Unit,
+) {
+    Box(Modifier.padding(top = Space.m)) {
+        LabelledField(
+            label = stringResource(R.string.posting_link_field),
+            value = url,
+            onValueChange = onUrlChange,
+            testTag = "posting_input_link",
+        )
+    }
+    OutlinedButton(
+        onClick = onRead,
+        enabled = url.isNotBlank() && enabled,
+        modifier = Modifier
+            .padding(top = Space.s)
+            .fillMaxWidth()
+            .testTag("posting_btn_read_link"),
+    ) {
+        Icon(BewerboIcons.Globe, contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(stringResource(R.string.posting_link_read), modifier = Modifier.padding(start = Space.s))
+    }
+    SourceHint(R.string.posting_link_hint, "posting_link_hint")
+}
+
+/**
+ * The picture as a way in: one button, and what the app does with what it is given.
+ *
+ * The hint says where the reading happens, because that is the question a user has about handing
+ * an app a picture — and here the honest answer is "on this device".
+ */
+@Composable
+private fun PostingPhotoSource(enabled: Boolean, onChoose: () -> Unit) {
+    OutlinedButton(
+        onClick = onChoose,
+        enabled = enabled,
+        modifier = Modifier
+            .padding(top = Space.m)
+            .fillMaxWidth()
+            .testTag("posting_btn_choose_photo"),
+    ) {
+        Icon(BewerboIcons.Document, contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(stringResource(R.string.posting_photo_choose), modifier = Modifier.padding(start = Space.s))
+    }
+    SourceHint(R.string.posting_photo_hint, "posting_photo_hint")
+}
+
+/// The sentence under a way in. Muted and small, like every other explaining line on this screen —
+/// see the note under the employer type and the one under the source text.
+@Composable
+private fun SourceHint(text: Int, testTag: String) {
+    Text(
+        stringResource(text),
+        style = MaterialTheme.typography.bodySmall,
+        color = LocalSemanticColors.current.muted,
+        modifier = Modifier
+            .padding(top = Space.s)
+            .testTag(testTag),
+    )
 }
 
 /**
@@ -538,6 +663,14 @@ private fun fieldMarker(key: String, field: EvidenceField?): Pair<Int, PillTone>
     field.confidence != "sicher" || (field.spanStart < 0 && field.quote.isNotBlank()) ->
         R.string.posting_confidence_check to PillTone.Attention
     else -> null
+}
+
+/// The ways in are named in the user's own language: none of the three is a word a posting puts in
+/// front of them, so none of them stays German.
+private fun sourceLabel(source: String) = when (source) {
+    "link" -> R.string.posting_source_link
+    "photo" -> R.string.posting_source_photo
+    else -> R.string.posting_source_paste
 }
 
 private fun fieldIcon(key: String) = when (key) {

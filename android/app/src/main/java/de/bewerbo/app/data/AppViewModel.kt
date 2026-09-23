@@ -34,6 +34,14 @@ data class AppState(
     /// outstanding" over a profile it has not read yet, and offer a first step it then changes.
     val overview: Overview? = null,
     val posting: PostingView? = null,
+    /// The advert text that has been brought in but not read yet — pasted, fetched from a link or
+    /// recognised in a picture, and editable in all three cases before [AppViewModel.parsePosting]
+    /// is asked for anything.
+    ///
+    /// State and not the screen's own `remember`, because two of the three ways in leave the app:
+    /// choosing a picture opens the system picker, and a Compose state that the activity's
+    /// recreation takes with it would lose the advert the user just photographed.
+    val postingDraft: String = "",
     val match: MatchView? = null,
     val application: ApplicationView? = null,
     val review: Review? = null,
@@ -341,11 +349,47 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // -- posting ---------------------------------------------------------------------------
 
+    /**
+     * The advert text the user has brought in, as they are editing it.
+     *
+     * The three ways in — pasting, a link, a picture — all end here, and the screen draws this one
+     * field whichever of them filled it. That is what makes "the text that was read can be
+     * corrected before it is used" a property of the screen rather than of each way in separately.
+     */
+    fun setPostingDraft(text: String) = _state.update { it.copy(postingDraft = text) }
+
+    /**
+     * Fetches the advert behind a link into the draft.
+     *
+     * The text is NOT parsed here. A page carries a navigation menu and a cookie notice beside the
+     * advert, and handing that straight to the parser would read fields out of the furniture; the
+     * user sees what came back and cuts it down first.
+     */
+    fun readPostingLink(url: String) = launch("link") {
+        _state.update { it.copy(postingDraft = api.readLink(ReadLinkRequest(url)).text) }
+    }
+
+    /**
+     * Reads the advert in a photo or a screenshot into the draft.
+     *
+     * On the device — see [readTextFromImage]. A picture with no text the recogniser could make out
+     * is not an error the server knows about, so the kind is raised here, in the same shape a
+     * refused call arrives in.
+     */
+    fun readPostingImage(uri: android.net.Uri) = launch("photo") {
+        val text = readTextFromImage(getApplication(), uri)
+        if (text.isBlank()) throw ApiFailure(PHOTO_UNREADABLE, "")
+        _state.update { it.copy(postingDraft = text) }
+    }
+
     fun parsePosting(text: String) = launch("posting") {
         val id = profileId() ?: return@launch
         val posting = api.parsePosting(ParsePostingRequest(id, text))
         // A new posting invalidates the match and the letter that were written against the old one.
-        _state.update { it.copy(posting = posting, match = null, application = null, review = null, ats = null, previewPages = emptyList()) }
+        // The draft goes with them: it has been read now, and it is the source text of the posting
+        // on screen — keeping a second copy of it is how "Paste a different posting" would come
+        // back with the last advert already in the field.
+        _state.update { it.copy(posting = posting, postingDraft = "", match = null, application = null, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("postingId", posting.id).remove("applicationId").apply()
     }
 
@@ -357,7 +401,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearPosting() {
         prefs().edit().remove("postingId").remove("applicationId").apply()
         _state.update {
-            it.copy(posting = null, match = null, application = null, review = null, ats = null, previewPages = emptyList())
+            it.copy(posting = null, postingDraft = "", match = null, application = null, review = null, ats = null, previewPages = emptyList())
         }
     }
 
@@ -662,5 +706,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
         /// The kind for "the server was not reached at all", which no ProblemDetails can carry.
         const val UNREACHABLE = "unreachable"
+
+        /// The kind for a picture the recogniser found no words in. Client-side, like the two
+        /// above: the reading happens on the device, so no server answer can carry it.
+        const val PHOTO_UNREADABLE = "photo_unreadable"
     }
 }

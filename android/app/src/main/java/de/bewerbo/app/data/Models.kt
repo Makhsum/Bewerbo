@@ -120,6 +120,14 @@ data class GapUpdate(val from: String, val to: String, val reason: String, val g
 data class ParsePostingRequest(val profileId: String, val text: String, val employerType: String? = null)
 
 @Serializable
+data class ReadLinkRequest(val url: String)
+
+/// An advert the server read out of a page, before anything was parsed or stored — the text the
+/// user is about to check.
+@Serializable
+data class PostingText(val text: String = "")
+
+@Serializable
 data class EvidenceField(
     val key: String,
     val value: String,

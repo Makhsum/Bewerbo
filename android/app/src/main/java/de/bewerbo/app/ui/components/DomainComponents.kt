@@ -639,6 +639,12 @@ private fun AtsFinding.arg(index: Int): String = detailArgs.getOrElse(index) { "
 fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     AppViewModel.UNREACHABLE -> stringResource(R.string.error_unreachable)
     AppViewModel.ACCOUNT_KEY_INVALID -> stringResource(R.string.error_account_key_invalid)
+    AppViewModel.PHOTO_UNREADABLE -> stringResource(R.string.error_photo_unreadable)
+    // Three ways a link can fail and three things to do about it: correct the address, try again,
+    // or paste the advert by hand after all.
+    "link_not_an_address" -> stringResource(R.string.error_link_not_an_address)
+    "link_unreachable" -> stringResource(R.string.error_link_unreachable)
+    "link_no_text" -> stringResource(R.string.error_link_no_text)
     "profile_missing" -> stringResource(R.string.error_profile_missing)
     "posting_missing" -> stringResource(R.string.error_posting_missing)
     "application_missing" -> stringResource(R.string.error_application_missing)

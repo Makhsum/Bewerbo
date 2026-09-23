@@ -46,6 +46,16 @@ public record TimelineDto(
 
 public record ParsePostingRequest(Guid ProfileId, string Text, string? EmployerType);
 
+/// <summary>The address of a page the advert is on.</summary>
+public record ReadLinkRequest(string Url);
+
+/// <summary>
+/// An advert read out of something that was not typed — a page behind a link today, whatever else
+/// tomorrow. Deliberately not a <see cref="PostingDto"/>: nothing is parsed and nothing is stored
+/// yet, because the user reads this text and corrects it before it is used.
+/// </summary>
+public record PostingTextDto(string Text);
+
 public record EvidenceFieldDto(
     string Key, string Value, string Quote, string Confidence, int SpanStart, int SpanLength);
 

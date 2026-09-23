@@ -88,6 +88,11 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    // Reads the words out of a photographed or screenshotted advert, on the device. The BUNDLED
+    // recogniser and not the Play-services one: it needs no Google Play on the phone and no model
+    // download before the first use, which is the difference between a way in that works and one
+    // that works later. It also means the advert never leaves the device to be read.
+    implementation(libs.mlkit.text.recognition)
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)

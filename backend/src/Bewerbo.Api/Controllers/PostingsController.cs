@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Bewerbo.Api.Contracts;
 using Bewerbo.Api.Data;
@@ -43,6 +44,58 @@ public class PostingsController(BewerboDbContext db) : BewerboController
         await db.SaveChangesAsync();
 
         return Ok(ToDto(posting));
+    }
+
+    /// <summary>
+    /// The advert text behind a link, read but not parsed and not stored.
+    ///
+    /// The fetch is the SERVER's, not the phone's: a job portal answers a mobile browser with a
+    /// different page than it answers a client that cannot run its JavaScript, and the machine that
+    /// already reads postings is the one place to keep that dealt with. What comes back goes into
+    /// the same field a pasted advert goes into — the user reads it and corrects it, and
+    /// <see cref="Parse"/> takes it from there exactly as before.
+    /// </summary>
+    [HttpPost("from-link")]
+    public async Task<IActionResult> FromLink([FromBody] ReadLinkRequest request,
+        [FromServices] IHttpClientFactory clients, CancellationToken ct)
+    {
+        var address = PostingLinkReader.ReadAddress(request.Url);
+        if (address is null) return RefusedProblem("Das ist keine Web-Adresse.", LinkNotAnAddressKind);
+
+        var client = clients.CreateClient(LinkClient);
+        string body;
+        try
+        {
+            // What the name resolves to decides whether this server may fetch it at all. An advert
+            // is on the public internet, and a link that points into the network Bewerbo itself
+            // runs in is refused as unreachable rather than read out to the user.
+            var resolved = await Dns.GetHostAddressesAsync(address.Host, ct);
+            if (resolved.Length == 0 || !Array.TrueForAll(resolved, PostingLinkReader.IsPublicAddress))
+            {
+                return RefusedProblem("Die Seite hinter dem Link antwortet nicht.", LinkUnreachableKind);
+            }
+
+            var response = await client.GetAsync(address, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                return RefusedProblem("Die Seite hinter dem Link antwortet nicht.", LinkUnreachableKind);
+            }
+
+            body = await response.Content.ReadAsStringAsync(ct);
+        }
+        catch (Exception failure) when (failure is HttpRequestException or TaskCanceledException
+            or System.Net.Sockets.SocketException)
+        {
+            // A dead host, a name that does not resolve, a page that never finishes loading: from
+            // where the user stands these are one thing, and none of them is this server's fault to
+            // report as a 500.
+            return RefusedProblem("Die Seite hinter dem Link antwortet nicht.", LinkUnreachableKind);
+        }
+
+        var text = PostingLinkReader.ToText(body);
+        return PostingLinkReader.IsUsable(text)
+            ? Ok(new PostingTextDto(text))
+            : RefusedProblem("Auf dieser Seite steht kein Anzeigentext.", LinkNoTextKind);
     }
 
     [HttpGet("{id:guid}")]
@@ -113,6 +166,15 @@ public class PostingsController(BewerboDbContext db) : BewerboController
 
     internal const string PostingMissing = "Es gibt keine Stellenanzeige mit dieser Id.";
     internal const string PostingMissingKind = "posting_missing";
+
+    /// <summary>The client that fetches a page behind a link. Configured in Program.cs.</summary>
+    internal const string LinkClient = "posting-link";
+
+    // Three kinds and not one, because each is a different thing for the user to do: correct the
+    // address, try again later, or paste the advert by hand after all.
+    internal const string LinkNotAnAddressKind = "link_not_an_address";
+    internal const string LinkUnreachableKind = "link_unreachable";
+    internal const string LinkNoTextKind = "link_no_text";
 
     private static void ApplyFields(Posting posting, IReadOnlyList<ExtractedField> fields)
     {

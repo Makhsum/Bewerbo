@@ -44,6 +44,10 @@
     <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
     <string name="error_unknown">Das hat nicht geklappt. Bitte versuchen Sie es erneut.</string>
     <string name="error_account_key_invalid">Das ist kein Kontoschlüssel. Kopieren Sie ihn aus den Einstellungen des anderen Geräts.</string>
+    <string name="error_link_not_an_address">Das ist keine Web-Adresse. Prüfen Sie sie und versuchen Sie es erneut.</string>
+    <string name="error_link_unreachable">Die Seite hinter dem Link hat nicht geantwortet. Versuchen Sie es erneut oder fügen Sie den Text der Anzeige ein.</string>
+    <string name="error_link_no_text">Auf dieser Seite steht kein Anzeigentext. Fügen Sie den Text stattdessen ein.</string>
+    <string name="error_photo_unreadable">In diesem Bild waren keine Worte zu erkennen. Versuchen Sie ein schärferes oder fügen Sie den Text ein.</string>
 
     <!-- Die offenen Schritte. Der Server sagt, WELCHER Schritt es ist und was hineingehört; der
          Satz wird hier geschrieben, weil der Server die Oberflächensprache nie erfährt. -->
@@ -191,11 +195,19 @@
     <string name="experience_duties">Tätigkeiten, eine je Zeile</string>
     <string name="experience_missing">Es fehlt noch: %1$s</string>
 
-    <string name="posting_subtitle">Fügen Sie die Anzeige ein — jedes Feld unten verweist auf die Worte, aus denen es stammt.</string>
-    <string name="posting_paste_label">Stellenanzeige einfügen</string>
+    <string name="posting_subtitle">Holen Sie die Anzeige herein — jedes Feld unten verweist auf die Worte, aus denen es stammt.</string>
+    <string name="posting_bring_in">Anzeige hereinholen</string>
+    <string name="posting_source_paste">Text</string>
+    <string name="posting_source_link">Link</string>
+    <string name="posting_source_photo">Bild</string>
+    <string name="posting_link_field">Adresse der Anzeige</string>
+    <string name="posting_link_read">Text holen</string>
+    <string name="posting_link_hint">Auf einer Seite steht mehr als die Anzeige. Prüfen Sie den Text unten und löschen Sie, was nicht dazugehört.</string>
+    <string name="posting_photo_choose">Bild auswählen</string>
+    <string name="posting_photo_hint">Ein Bildschirmfoto oder ein Foto der Anzeige. Die Worte werden auf diesem Gerät gelesen, das Bild wird nirgendwohin gesendet.</string>
     <string name="posting_paste_field">Text der Anzeige</string>
     <string name="posting_parse">Anzeige einlesen</string>
-    <string name="posting_new">Andere Anzeige einfügen</string>
+    <string name="posting_new">Andere Anzeige hereinholen</string>
     <string name="posting_source">Quelltext · %1$d Zeichen</string>
     <string name="posting_read_from">Aus der Anzeige gelesen</string>
     <string name="posting_field_contact">Kontakt</string>

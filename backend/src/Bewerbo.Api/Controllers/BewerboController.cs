@@ -49,4 +49,22 @@ public abstract class BewerboController : ControllerBase
         ModelState.AddModelError(field, detail);
         return ValidationProblem();
     }
+
+    /// <summary>
+    /// The request was understood and could not be carried out — the page behind a link did not
+    /// answer, what came back was not an advert. A 400 like <see cref="InvalidRequest"/>, but
+    /// carrying a <paramref name="kind"/> the way <see cref="NotFoundProblem"/> does, because the
+    /// client has to be able to say which of them happened in the user's own language; the "errors"
+    /// shape has nowhere to put that.
+    /// </summary>
+    protected ObjectResult RefusedProblem(string detail, string kind)
+    {
+        var problem = Problem(statusCode: StatusCodes.Status400BadRequest, detail: detail);
+        if (problem.Value is ProblemDetails details)
+        {
+            details.Extensions["kind"] = kind;
+        }
+
+        return problem;
+    }
 }

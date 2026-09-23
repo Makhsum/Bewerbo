@@ -81,6 +81,21 @@ builder.Services.AddHttpClient<ILanguageModel, LlmClient>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(90);
 });
+
+// The page behind a link the user pasted. Short timeout — the user is waiting in front of a
+// spinner, and a portal that has not answered in fifteen seconds is not going to. The User-Agent
+// is a browser's on purpose: several job portals answer a client without one with a consent wall
+// instead of the advert.
+builder.Services.AddHttpClient(Bewerbo.Api.Controllers.PostingsController.LinkClient, client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36");
+    client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("de-DE,de;q=0.9");
+    // A portal that serves a 40 MB single-page bundle is not serving an advert this can read, and
+    // reading it into a string would cost the server more than saying so.
+    client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
+});
 builder.Services.AddScoped<IApplicationWriter, ApplicationWriter>();
 
 var app = builder.Build();

@@ -43,6 +43,10 @@
     <string name="error_document_missing">Цього документа більше немає на сервері.</string>
     <string name="error_unknown">Не вийшло. Спробуйте ще раз.</string>
     <string name="error_account_key_invalid">Це не ключ облікового запису. Скопіюйте його з налаштувань іншого пристрою.</string>
+    <string name="error_link_not_an_address">Це не веб-адреса. Перевірте її та спробуйте ще раз.</string>
+    <string name="error_link_unreachable">Сторінка за цим посиланням не відповіла. Спробуйте ще раз або вставте текст вакансії.</string>
+    <string name="error_link_no_text">На цій сторінці немає тексту вакансії. Вставте текст вручну.</string>
+    <string name="error_photo_unreadable">На цьому зображенні не вдалося розібрати слова. Спробуйте чіткіше або вставте текст.</string>
 
     <!-- Відкриті кроки. Сервер каже, ЯКИЙ це крок і що в нього підставити; сама фраза
          пишеться тут, бо мова інтерфейсу серверу невідома. -->
@@ -190,11 +194,19 @@
     <string name="experience_duties">Обов\'язки, по одному в рядку</string>
     <string name="experience_missing">Ще потрібно: %1$s</string>
 
-    <string name="posting_subtitle">Вставте текст вакансії — кожне поле нижче посилається на слова, з яких воно взяте.</string>
-    <string name="posting_paste_label">Вставте вакансію</string>
+    <string name="posting_subtitle">Додайте вакансію — кожне поле нижче посилається на слова, з яких воно взяте.</string>
+    <string name="posting_bring_in">Додати вакансію</string>
+    <string name="posting_source_paste">Текст</string>
+    <string name="posting_source_link">Посилання</string>
+    <string name="posting_source_photo">Знімок</string>
+    <string name="posting_link_field">Адреса вакансії</string>
+    <string name="posting_link_read">Отримати текст</string>
+    <string name="posting_link_hint">На сторінці є не лише оголошення. Перевірте текст нижче та вилучіть усе зайве.</string>
+    <string name="posting_photo_choose">Вибрати знімок</string>
+    <string name="posting_photo_hint">Знімок екрана або фотографія оголошення. Слова розпізнаються на цьому пристрої, зображення нікуди не надсилається.</string>
     <string name="posting_paste_field">Текст вакансії</string>
     <string name="posting_parse">Прочитати вакансію</string>
-    <string name="posting_new">Вставити іншу вакансію</string>
+    <string name="posting_new">Додати іншу вакансію</string>
     <string name="posting_source">Текст оригіналу · %1$d символів</string>
     <string name="posting_read_from">Прочитано з вакансії</string>
     <string name="posting_field_contact">Контакт</string>
