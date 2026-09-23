@@ -46,7 +46,11 @@ data class AppState(
     val application: ApplicationView? = null,
     val review: Review? = null,
     val ats: AtsResult? = null,
-    val degrees: List<DegreeEquivalence> = emptyList(),
+    /// The anabin entries offered for ONE qualification, keyed by that entry's id — the same shape
+    /// as [dutyOutcomes] and for the same reason: held for the whole screen, one list was drawn
+    /// under every education card, so an offer looked up for one degree could be confirmed onto
+    /// another. [confirmEquivalence] drops the offers of the entry it stored.
+    val degrees: Map<String, List<DegreeEquivalence>> = emptyMap(),
     /// The German wording proposed for a gap reason while the user is still typing it, keyed by the
     /// gap's start date — one entry per gap card on the screen. It is what [explainGap] then
     /// stores, so the sentence the user read is the sentence the Lebenslauf gets.
@@ -399,9 +403,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(dutyOutcomes = it.dutyOutcomes - entryId) }
     }
 
-    fun lookUpDegrees(country: String?) = launch("degrees") {
-        _state.update { it.copy(degrees = api.degrees(country)) }
+    /// The anabin entries that could match ONE qualification, for the user to pick from. Stored
+    /// against that entry, the way [previewDutyOutcomes] stores a rewrite against its position.
+    fun lookUpDegrees(entry: Education) = launch("degrees") {
+        val entryId = entry.id ?: return@launch
+        val offers = api.degrees(entry.country.ifBlank { null })
+        _state.update { it.copy(degrees = it.degrees + (entryId to offers)) }
     }
+
+    /**
+     * The equivalence the user picked out of the offers, stored on that qualification.
+     *
+     * The offers go with it, as in [acceptDutyOutcomes]: they were the answer to "what could this
+     * degree be", and once it is answered, leaving them under the card invites a second and
+     * contradicting confirmation on a claim that is worse wrong than absent.
+     */
+    fun confirmEquivalence(entry: Education, all: List<Education>, degree: DegreeEquivalence) =
+        launch("education") {
+            val id = profileId() ?: return@launch
+            val entryId = entry.id ?: return@launch
+
+            val saved = api.saveEducation(
+                id,
+                all.map { other ->
+                    if (other.id == entryId) {
+                        other.copy(
+                            germanEquivalent = degree.germanEquivalent,
+                            anabinAssessment = degree.anabinRating,
+                            equivalenceConfirmed = true,
+                        )
+                    } else other
+                },
+            )
+            _state.update { it.copy(profile = saved, degrees = it.degrees - entryId) }
+            refreshDerived()
+        }
 
     fun generateCv() = launch("cv") {
         val id = profileId() ?: return@launch

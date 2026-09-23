@@ -768,7 +768,7 @@ private fun EducationCard(
         }
 
         OutlinedButton(
-            onClick = { viewModel.lookUpDegrees(entry.country.ifBlank { null }) },
+            onClick = { viewModel.lookUpDegrees(entry) },
             modifier = Modifier
                 .padding(top = Space.s)
                 .testTag("profile_recognition_lookup"),
@@ -784,7 +784,12 @@ private fun EducationCard(
         // written into a document until the user has confirmed it, and until now there was no
         // control that could confirm one — the result was shown and could never be acted on, so
         // equivalenceConfirmed stayed false for the lifetime of every profile.
-        if (state.degrees.isNotEmpty() && !entry.equivalenceConfirmed) {
+        //
+        // The offers are this entry's own. One list for the screen was drawn under every card, so
+        // the answer to "what could my Master's be" stood under the Bachelor's too, one tap from
+        // being confirmed onto it.
+        val offers = state.degrees[entry.id].orEmpty()
+        if (offers.isNotEmpty() && !entry.equivalenceConfirmed) {
             Text(
                 stringResource(R.string.profile_anabin_confirm_hint),
                 style = MaterialTheme.typography.bodySmall,
@@ -792,7 +797,7 @@ private fun EducationCard(
                 modifier = Modifier.padding(top = Space.s),
             )
         }
-        state.degrees.take(3).forEachIndexed { degreeIndex, degree ->
+        offers.take(3).forEachIndexed { degreeIndex, degree ->
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -809,19 +814,7 @@ private fun EducationCard(
                     )
                 }
                 Button(
-                    onClick = {
-                        viewModel.saveEducation(
-                            all.mapIndexed { i, other ->
-                                if (i == index) {
-                                    other.copy(
-                                        germanEquivalent = degree.germanEquivalent,
-                                        anabinAssessment = degree.anabinRating,
-                                        equivalenceConfirmed = true,
-                                    )
-                                } else other
-                            },
-                        )
-                    },
+                    onClick = { viewModel.confirmEquivalence(entry, all, degree) },
                     modifier = Modifier.testTag("profile_recognition_confirm_$degreeIndex"),
                 ) {
                     Text(stringResource(R.string.profile_anabin_confirm))
