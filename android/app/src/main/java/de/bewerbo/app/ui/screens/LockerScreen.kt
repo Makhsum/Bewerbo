@@ -279,12 +279,18 @@ private fun kindIcon(kind: String) = when (kind) {
     else -> BewerboIcons.Anlagen
 }
 
-/// What a kind is called on screen. The value keeps the backend's spelling. Two of the four are
-/// German on purpose — Arbeitszeugnis and Sprachnachweis are words a posting uses, and they are
-/// explained where the user first meets them; the other two are not, so they are translated.
+/// What a kind is called on screen. The value keeps the backend's spelling. Two of them are German
+/// on purpose — Arbeitszeugnis and Sprachnachweis are words a posting uses, and they are explained
+/// where the user first meets them; the rest are not, so they are translated.
+///
+/// Every kind of DocumentKind is named, and the fallback is the neutral one rather than the last
+/// branch that happened to be there: a Sonstiges document used to be labelled "anabin-Auszug",
+/// which does not just read wrong, it says the wrong thing about the document. Same shape as
+/// [kindIcon] above, which had it right.
 fun documentKindLabel(kind: String) = when (kind) {
     "Arbeitszeugnis" -> R.string.kind_arbeitszeugnis
     "Zertifikat" -> R.string.kind_zertifikat
     "Sprachnachweis" -> R.string.kind_sprachnachweis
-    else -> R.string.kind_anabin_auszug
+    "AnabinAuszug" -> R.string.kind_anabin_auszug
+    else -> R.string.kind_sonstiges
 }

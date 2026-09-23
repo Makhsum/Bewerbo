@@ -283,6 +283,7 @@
     <string name="kind_zertifikat">Сертифікат</string>
     <string name="kind_sprachnachweis">Sprachnachweis</string>
     <string name="kind_anabin_auszug">Витяг з anabin</string>
+    <string name="kind_sonstiges">Інший документ</string>
 
     <string name="profile_add_education">Додати освіту</string>
     <string name="education_degree">Кваліфікація або ступінь</string>

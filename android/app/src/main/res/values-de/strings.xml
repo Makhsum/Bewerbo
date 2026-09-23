@@ -284,6 +284,7 @@
     <string name="kind_zertifikat">Zertifikat</string>
     <string name="kind_sprachnachweis">Sprachnachweis</string>
     <string name="kind_anabin_auszug">anabin-Auszug</string>
+    <string name="kind_sonstiges">Sonstige Unterlage</string>
 
     <string name="profile_add_education">Ausbildung hinzufügen</string>
     <string name="education_degree">Abschluss oder Qualifikation</string>

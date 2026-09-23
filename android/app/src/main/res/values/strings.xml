@@ -313,6 +313,7 @@
     <string name="kind_zertifikat">Certificate</string>
     <string name="kind_sprachnachweis">Sprachnachweis</string>
     <string name="kind_anabin_auszug">anabin extract</string>
+    <string name="kind_sonstiges">Other document</string>
 
     <string name="profile_add_education">Add a qualification</string>
     <string name="education_degree">Degree or qualification</string>

@@ -281,6 +281,7 @@
     <string name="kind_zertifikat">Сертификат</string>
     <string name="kind_sprachnachweis">Sprachnachweis</string>
     <string name="kind_anabin_auszug">Выписка из anabin</string>
+    <string name="kind_sonstiges">Другой документ</string>
 
     <string name="profile_add_education">Добавить образование</string>
     <string name="education_degree">Квалификация или степень</string>
