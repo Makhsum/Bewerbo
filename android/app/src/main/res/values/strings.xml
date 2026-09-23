@@ -214,6 +214,14 @@
     <string name="experience_workload">Working hours</string>
     <string name="experience_duties">Duties, one per line</string>
     <string name="experience_missing">Still needed: %1$s</string>
+    <string name="experience_rewrite_action">Rewrite the duties as outcomes</string>
+    <string name="experience_rewrite_headline">Your words and the rewrite</string>
+    <string name="experience_rewrite_original">As typed: %1$s</string>
+    <string name="experience_rewrite_outcome">As an outcome: %1$s</string>
+    <string name="experience_rewrite_none">No rewrite for this line — it stays as you typed it.</string>
+    <string name="experience_rewrite_empty">Nothing here could be rewritten, so there is nothing to take over.</string>
+    <string name="experience_rewrite_accept">Take the rewrite</string>
+    <string name="experience_rewrite_keep">Keep my words</string>
 
     <!-- Posting -->
     <string name="posting_subtitle">Bring the posting in — every field below links back to the words it came from.</string>

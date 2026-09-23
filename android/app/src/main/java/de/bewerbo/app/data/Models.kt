@@ -340,6 +340,17 @@ data class Health(val status: String = "", val writer: String = "regeln")
 @Serializable
 data class GapWordingResponse(@SerialName("reason") val reason: String = "", val german: String = "")
 
+/// One duty line beside the result proposed for it. [outcome] is empty where the rewrite does not
+/// fit that line — the card says so and keeps the original, rather than showing a guess.
+@Serializable
+data class DutyOutcome(val original: String = "", val outcome: String = "")
+
+@Serializable
+data class DutyOutcomesRequest(val duties: String = "")
+
+@Serializable
+data class DutyOutcomesResponse(val lines: List<DutyOutcome> = emptyList())
+
 /// A ProblemDetails, as the API answers every failure. [kind] says WHICH failure it is, so the
 /// snackbar can be written in the user's language; [detail] is the German the server sent, kept as
 /// the fallback for a kind this build does not know. Same division as [NextStep].

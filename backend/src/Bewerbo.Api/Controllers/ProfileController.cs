@@ -192,6 +192,19 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public IActionResult GetGapWording([FromQuery, BindRequired] string reason) =>
         Ok(new { reason, german = GapWording.Suggest(reason) });
 
+    // The duties of a position written as results, without storing anything — the same bargain the
+    // gap wording strikes: the user reads the original beside the rewrite and decides which of the
+    // two is saved. A POST rather than a query string because the duties are several lines of the
+    // user's own prose.
+    [HttpPost("duty-outcomes")]
+    public IActionResult PostDutyOutcomes([FromBody] DutyOutcomesRequest request)
+    {
+        // Split by the entry's own DutyLines, so "one duty per line" is defined in exactly one place.
+        var lines = new ExperienceEntry { Duties = request.Duties ?? "" }.DutyLines;
+        return Ok(new DutyOutcomesDto(
+            DutyOutcomes.RewriteAll(lines).Select(l => new DutyOutcomeDto(l.Original, l.Outcome)).ToList()));
+    }
+
     // The Lebenslauf on its own — the first thing a user can hold, before any posting exists.
     [HttpPost("{id:guid}/lebenslauf")]
     public async Task<IActionResult> PostLebenslauf(Guid id, [FromServices] IApplicationWriter writer,

@@ -93,6 +93,11 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     suspend fun gapWording(reason: String): GapWordingResponse =
         client.get("$baseUrl/api/profile/gap-wording") { parameter("reason", reason) }.body()
 
+    /// The duties of one position written as results, without storing anything — what the
+    /// experience card shows beside the originals so the user chooses which of the two is saved.
+    suspend fun dutyOutcomes(duties: String): DutyOutcomesResponse =
+        client.post("$baseUrl/api/profile/duty-outcomes") { json(DutyOutcomesRequest(duties)) }.body()
+
     suspend fun degrees(country: String?): List<DegreeEquivalence> =
         client.get("$baseUrl/api/recognition/degrees" + (country?.let { "?country=$it" } ?: "")).body()
 

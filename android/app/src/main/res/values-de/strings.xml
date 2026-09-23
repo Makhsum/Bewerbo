@@ -195,6 +195,14 @@
     <string name="experience_workload">Arbeitszeit</string>
     <string name="experience_duties">Tätigkeiten, eine je Zeile</string>
     <string name="experience_missing">Es fehlt noch: %1$s</string>
+    <string name="experience_rewrite_action">Tätigkeiten als Ergebnisse formulieren</string>
+    <string name="experience_rewrite_headline">Ihre Worte und die Umformulierung</string>
+    <string name="experience_rewrite_original">So eingegeben: %1$s</string>
+    <string name="experience_rewrite_outcome">Als Ergebnis: %1$s</string>
+    <string name="experience_rewrite_none">Für diese Zeile gibt es keine Umformulierung — sie bleibt, wie Sie sie eingegeben haben.</string>
+    <string name="experience_rewrite_empty">Hier ließ sich nichts umformulieren, es gibt also nichts zu übernehmen.</string>
+    <string name="experience_rewrite_accept">Umformulierung übernehmen</string>
+    <string name="experience_rewrite_keep">Meine Worte behalten</string>
 
     <string name="posting_subtitle">Holen Sie die Anzeige herein — jedes Feld unten verweist auf die Worte, aus denen es stammt.</string>
     <string name="posting_bring_in">Anzeige hereinholen</string>

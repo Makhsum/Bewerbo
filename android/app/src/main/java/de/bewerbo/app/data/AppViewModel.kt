@@ -51,6 +51,11 @@ data class AppState(
     /// gap's start date — one entry per gap card on the screen. It is what [explainGap] then
     /// stores, so the sentence the user read is the sentence the Lebenslauf gets.
     val gapWording: Map<String, String> = emptyMap(),
+    /// The duties of a position written as results, beside the originals, keyed by the entry's id —
+    /// one entry per experience card that has asked for them. Present only while the user is
+    /// deciding: [acceptDutyOutcomes] stores what they read and [discardDutyOutcomes] drops it, so
+    /// nothing here ever reaches a document on its own.
+    val dutyOutcomes: Map<String, List<DutyOutcome>> = emptyMap(),
     /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
     /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
     val previewPages: List<android.graphics.Bitmap> = emptyList(),
@@ -334,6 +339,45 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         val german = runCatching { api.gapWording(reason).german }.getOrNull() ?: return@launch
         _state.update { it.copy(gapWording = it.gapWording + (gap.from to german)) }
+    }
+
+    /**
+     * The duties of one position written as results, for the user to read beside their own words.
+     *
+     * Routed through [launch], unlike [previewGapWording]: this one is asked for by a tap rather
+     * than by typing, so a call that failed is a failure the user is waiting on and belongs in the
+     * snackbar. Nothing is stored — [acceptDutyOutcomes] is what puts a rewrite into the profile.
+     */
+    fun previewDutyOutcomes(entry: Experience) = launch("duty-outcomes") {
+        val id = entry.id ?: return@launch
+        val lines = api.dutyOutcomes(entry.duties).lines
+        _state.update { it.copy(dutyOutcomes = it.dutyOutcomes + (id to lines)) }
+    }
+
+    /**
+     * The rewrite the user accepted, saved as the duties of that position.
+     *
+     * A line with no rewrite keeps the words it was typed with — the offer is to replace what could
+     * be replaced, never to drop what could not.
+     */
+    fun acceptDutyOutcomes(entry: Experience, all: List<Experience>) = launch("experience") {
+        val id = profileId() ?: return@launch
+        val entryId = entry.id ?: return@launch
+        val lines = state.value.dutyOutcomes[entryId] ?: return@launch
+        val duties = lines.joinToString("\n") { it.outcome.ifBlank { it.original } }
+
+        val saved = api.saveExperience(
+            id,
+            all.map { other -> if (other.id == entryId) other.copy(duties = duties) else other },
+        )
+        _state.update { it.copy(profile = saved, dutyOutcomes = it.dutyOutcomes - entryId) }
+        refreshDerived()
+    }
+
+    /// The user kept their own words. Only the comparison goes away; nothing was stored to undo.
+    fun discardDutyOutcomes(entry: Experience) {
+        val entryId = entry.id ?: return
+        _state.update { it.copy(dutyOutcomes = it.dutyOutcomes - entryId) }
     }
 
     fun lookUpDegrees(country: String?) = launch("degrees") {

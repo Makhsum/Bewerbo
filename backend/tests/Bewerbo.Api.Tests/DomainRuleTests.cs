@@ -1010,6 +1010,60 @@ public class DomainRuleTests
         Assert.Equal("", GapWording.Suggest("qwertz"));
     }
 
+    // -- duties written as results ----------------------------------------------------------------
+
+    [Theory]
+    [InlineData("Verantwortlich für die Durchführung von Schulungen", "Schulungen durchgeführt")]
+    [InlineData("Zuständig für die Betreuung von 40 Bestandskunden", "40 Bestandskunden betreut")]
+    [InlineData("Pflege der Datenbank", "Datenbank gepflegt")]
+    [InlineData("Kundenbetreuung im Innendienst", "Kunden im Innendienst betreut")]
+    [InlineData("Qualitätskontrolle der Lieferungen", "Qualität der Lieferungen kontrolliert")]
+    [InlineData("- Erstellung der Monatsberichte", "Monatsberichte erstellt")]
+    [InlineData("Wartung des Fahrzeugs", "Fahrzeug gewartet")]
+    [InlineData("Aufgaben: Montage der Baugruppen", "Baugruppen montiert")]
+    // The user's own framing said what they did with it, so the active form is theirs even where
+    // the head noun is not one this table knows.
+    [InlineData("Verantwortlich für den Empfang", "Empfang verantwortet")]
+    public void A_duty_is_rewritten_as_the_result_a_German_reader_weighs(string duty, string expected)
+    {
+        Assert.Equal(expected, DutyOutcomes.Rewrite(duty));
+    }
+
+    [Theory]
+    // Nothing to move: no framing and no head noun the table knows.
+    [InlineData("Schweißen nach WIG-Verfahren")]
+    // A noun that merely ends in the letters of one in the table. "Überprüfung" is not a "Prüfung"
+    // of something called "Über", and "Anleitung" is not a "Leitung" - a rewrite here would read
+    // as nonsense the user has to catch.
+    [InlineData("Überprüfung der Maschinen")]
+    [InlineData("Anleitung der Auszubildenden")]
+    // A dative plural whose nominative is a different word: "von Monatsberichten" would have to
+    // become "Monatsberichte", and no letter of the word says whether it does - "von Kunden" stays
+    // "Kunden". The rewrite is offered for the second and not for the first.
+    [InlineData("Erstellung von Monatsberichten")]
+    // Not German. This writer does not translate, for the same reason the rule-based letter writer
+    // does not - see ScriptCheck.
+    [InlineData("Обслуживание клиентов")]
+    // A label with nothing behind it.
+    [InlineData("Tätigkeiten:")]
+    public void A_duty_the_move_does_not_fit_gets_no_rewrite_rather_than_a_guess(string duty)
+    {
+        Assert.Equal("", DutyOutcomes.Rewrite(duty));
+    }
+
+    [Fact]
+    public void A_line_with_no_rewrite_keeps_its_place_beside_the_ones_that_have_one()
+    {
+        var lines = DutyOutcomes.RewriteAll(
+            ["Pflege der Datenbank", "Schweißen nach WIG-Verfahren", "Wartung der Anlagen"]);
+
+        Assert.Equal(3, lines.Count);
+        Assert.Equal("Datenbank gepflegt", lines[0].Outcome);
+        Assert.Equal("", lines[1].Outcome);
+        Assert.Equal("Schweißen nach WIG-Verfahren", lines[1].Original);
+        Assert.Equal("Anlagen gewartet", lines[2].Outcome);
+    }
+
     [Fact]
     public void The_named_gap_appears_in_the_Lebenslauf_as_German_wording()
     {

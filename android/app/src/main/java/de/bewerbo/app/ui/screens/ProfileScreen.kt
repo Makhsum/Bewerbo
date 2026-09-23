@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.DutyOutcome
 import de.bewerbo.app.data.Education
 import de.bewerbo.app.data.Experience
 import de.bewerbo.app.data.LanguageSkill
@@ -250,7 +251,12 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                 // here rather than on each card.
                 item { TermNote(germanTerm("zeugnis")) }
                 profile?.experience?.forEachIndexed { index, entry ->
-                    item { ExperienceCard(entry, index, profile.experience, viewModel) }
+                    item {
+                        ExperienceCard(
+                            entry, index, profile.experience,
+                            state.dutyOutcomes[entry.id], viewModel,
+                        )
+                    }
                 }
                 item { AddExperienceButton(state, viewModel) }
             }
@@ -417,6 +423,7 @@ private fun ExperienceCard(
     entry: Experience,
     index: Int,
     all: List<Experience>,
+    outcomes: List<DutyOutcome>?,
     viewModel: AppViewModel,
 ) {
     val colors = LocalSemanticColors.current
@@ -499,10 +506,107 @@ private fun ExperienceCard(
             }
         }
 
-        // "Tätigkeiten in Ergebnisse umformulieren" used to sit here: an accent-coloured row with
-        // the Rewrite icon and no onClick at all, so it read as an action and answered no tap.
-        // There is no endpoint behind it either, with or without a model, so the offer is not made
-        // until there is something to carry it out.
+        // The offer to write the duties as results. It used to stand here as an accent-coloured row
+        // with no onClick and nothing behind it; now it asks the server, and what comes back is a
+        // proposal the user reads beside their own words before anything is saved.
+        if (entry.dutyLines.isNotEmpty()) {
+            DutyOutcomeSection(entry, index, all, outcomes, viewModel)
+        }
+    }
+}
+
+/**
+ * The duties of one position written as results, beside the words they were typed with.
+ *
+ * A German reader weighs what somebody achieved, not what they were in charge of, so this is the
+ * one move that makes a translated list of duties read as local. The rewrite is a SUGGESTION and
+ * nothing more: it is shown next to the original and only reaches the document when the user takes
+ * it — the same bargain the gap wording strikes under the Zeitstrahl.
+ */
+@Composable
+private fun DutyOutcomeSection(
+    entry: Experience,
+    index: Int,
+    all: List<Experience>,
+    outcomes: List<DutyOutcome>?,
+    viewModel: AppViewModel,
+) {
+    val colors = LocalSemanticColors.current
+
+    if (outcomes == null) {
+        OutlinedButton(
+            onClick = { viewModel.previewDutyOutcomes(entry) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Space.s)
+                .testTag("profile_experience_rewrite_$index"),
+        ) {
+            Text(stringResource(R.string.experience_rewrite_action))
+        }
+        return
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = Space.s)
+            .testTag("profile_experience_rewrite_result_$index"),
+    ) {
+        SectionLabel(stringResource(R.string.experience_rewrite_headline))
+
+        outcomes.forEachIndexed { line, duty ->
+            Column(Modifier.padding(top = Space.s)) {
+                Text(
+                    stringResource(R.string.experience_rewrite_original, duty.original),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.muted,
+                )
+                // A line the rewrite does not fit says so in its own row rather than being left
+                // out: the user is comparing two lists and a missing row would read as a loss.
+                Text(
+                    if (duty.outcome.isBlank()) {
+                        stringResource(R.string.experience_rewrite_none)
+                    } else {
+                        stringResource(R.string.experience_rewrite_outcome, duty.outcome)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (duty.outcome.isBlank()) colors.muted else colors.success,
+                    modifier = Modifier.testTag("profile_experience_outcome_${index}_$line"),
+                )
+            }
+        }
+
+        if (outcomes.none { it.outcome.isNotBlank() }) {
+            Text(
+                stringResource(R.string.experience_rewrite_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("profile_experience_rewrite_empty_$index"),
+            )
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.m),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            Button(
+                onClick = { viewModel.acceptDutyOutcomes(entry, all) },
+                enabled = outcomes.any { it.outcome.isNotBlank() },
+                modifier = Modifier.testTag("profile_experience_rewrite_accept_$index"),
+            ) {
+                Text(stringResource(R.string.experience_rewrite_accept))
+            }
+            OutlinedButton(
+                onClick = { viewModel.discardDutyOutcomes(entry) },
+                modifier = Modifier.testTag("profile_experience_rewrite_keep_$index"),
+            ) {
+                Text(stringResource(R.string.experience_rewrite_keep))
+            }
+        }
     }
 }
 

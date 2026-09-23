@@ -192,6 +192,14 @@
     <string name="experience_workload">Занятость</string>
     <string name="experience_duties">Обязанности, по одной в строке</string>
     <string name="experience_missing">Ещё нужно: %1$s</string>
+    <string name="experience_rewrite_action">Переформулировать обязанности как результаты</string>
+    <string name="experience_rewrite_headline">Ваши слова и новая формулировка</string>
+    <string name="experience_rewrite_original">Как введено: %1$s</string>
+    <string name="experience_rewrite_outcome">Как результат: %1$s</string>
+    <string name="experience_rewrite_none">Для этой строки формулировки нет — она останется такой, как вы её ввели.</string>
+    <string name="experience_rewrite_empty">Здесь нечего переформулировать, поэтому и принимать нечего.</string>
+    <string name="experience_rewrite_accept">Принять формулировку</string>
+    <string name="experience_rewrite_keep">Оставить мои слова</string>
 
     <string name="posting_subtitle">Добавьте вакансию — каждое поле ниже ссылается на слова, из которых оно взято.</string>
     <string name="posting_bring_in">Добавить вакансию</string>

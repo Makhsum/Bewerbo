@@ -25,6 +25,17 @@ public record GapDto(string From, string To, int Months, bool Explained, string?
 
 public record GapUpdateDto(string From, string To, string Reason, string? GermanWording);
 
+/// <summary>The duties of one position, as they stand in <see cref="ExperienceDto.Duties"/>.</summary>
+public record DutyOutcomesRequest(string Duties);
+
+/// <summary>
+/// One duty line beside the result proposed for it. <see cref="Outcome"/> is empty when the rewrite
+/// does not fit that line — the screen says so and keeps the original, rather than showing a guess.
+/// </summary>
+public record DutyOutcomeDto(string Original, string Outcome);
+
+public record DutyOutcomesDto(IReadOnlyList<DutyOutcomeDto> Lines);
+
 public record DocumentDto(Guid? Id, string Title, string Kind, string Note, int PageCount);
 
 public record ProfileDto(
