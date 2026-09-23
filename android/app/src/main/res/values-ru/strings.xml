@@ -119,4 +119,21 @@
     <string name="locker_field_pages">Страниц</string>
     <string name="locker_storage_title">Что здесь хранится</string>
     <string name="locker_storage_body">Bewerbo хранит запись о документе — название, вид и число страниц — чтобы Anlagenverzeichnis мог его назвать. Сам файл не загружается.</string>
+    <string name="profile_add_education">Добавить образование</string>
+    <string name="education_degree">Квалификация или степень</string>
+    <string name="education_institution">Учебное заведение</string>
+    <string name="education_location">Место</string>
+    <string name="education_country">Код страны (UA, RU, DE …)</string>
+    <string name="education_from">С (ММ/ГГГГ)</string>
+    <string name="education_to">По (пусто = по сегодня)</string>
+    <string name="profile_add_language">Добавить язык</string>
+    <string name="language_name">Язык</string>
+    <string name="language_level">Уровень</string>
+    <string name="profile_certificate_toggle">Сертификат в Mappe</string>
+    <string name="profile_reference_toggle">Zeugnis в Mappe</string>
+    <string name="profile_anabin_confirm">Использовать это соответствие</string>
+    <string name="profile_anabin_confirm_hint">Ничего не попадёт в Lebenslauf, пока вы это не подтвердите.</string>
+    <string name="profile_anabin_withdraw">Отозвать</string>
+    <string name="application_status">Статус этой заявки</string>
+    <string name="application_export_choose">Что войдёт в файл</string>
 </resources>

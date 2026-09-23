@@ -160,4 +160,21 @@
     <string name="locker_field_pages">Pages</string>
     <string name="locker_storage_title">What is stored here</string>
     <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The file itself is not uploaded.</string>
+    <string name="profile_add_education">Add a qualification</string>
+    <string name="education_degree">Degree or qualification</string>
+    <string name="education_institution">Institution</string>
+    <string name="education_location">Place</string>
+    <string name="education_country">Country code (UA, RU, DE …)</string>
+    <string name="education_from">From (MM/YYYY)</string>
+    <string name="education_to">To (blank = today)</string>
+    <string name="profile_add_language">Add a language</string>
+    <string name="language_name">Language</string>
+    <string name="language_level">Level</string>
+    <string name="profile_certificate_toggle">Certificate is in the Mappe</string>
+    <string name="profile_reference_toggle">Zeugnis is in the Mappe</string>
+    <string name="profile_anabin_confirm">Use this equivalence</string>
+    <string name="profile_anabin_confirm_hint">Nothing is written into the Lebenslauf until you confirm it.</string>
+    <string name="profile_anabin_withdraw">Withdraw</string>
+    <string name="application_status">Status of this application</string>
+    <string name="application_export_choose">What goes into the file</string>
 </resources>

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.Education
 import de.bewerbo.app.data.Experience
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.LabelledField
@@ -226,6 +227,7 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                 profile?.education?.forEachIndexed { index, entry ->
                     item { EducationCard(entry, index, state, viewModel) }
                 }
+                item { AddEducationButton(state, viewModel) }
             }
             "sprachen" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_languages)) }
@@ -688,6 +690,122 @@ private fun AddExperienceButton(state: AppState, viewModel: AppViewModel) {
             OutlinedButton(
                 onClick = { open = false },
                 modifier = Modifier.testTag("experience_btn_cancel"),
+            ) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    }
+}
+
+/**
+ * Adding an Ausbildung entry.
+ *
+ * The country is asked for because it is what decides whether the degree needs an anabin/ZAB
+ * equivalence at all — a German Abschluss does not, and a foreign one is the whole reason this
+ * product exists. Without this form the Ausbildung section was a list nobody could ever add to,
+ * which also put the recognition block out of reach.
+ */
+@Composable
+private fun AddEducationButton(state: AppState, viewModel: AppViewModel) {
+    var open by remember { mutableStateOf(false) }
+    var degree by remember { mutableStateOf("") }
+    var institution by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var country by remember { mutableStateOf("") }
+    var from by remember { mutableStateOf("") }
+    var to by remember { mutableStateOf("") }
+
+    if (!open) {
+        OutlinedButton(
+            onClick = { open = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("profile_btn_add_education"),
+        ) {
+            Icon(BewerboIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.profile_add_education),
+                modifier = Modifier.padding(start = Space.s),
+            )
+        }
+        return
+    }
+
+    BewerboCard(Modifier.testTag("profile_new_education")) {
+        SectionLabel(stringResource(R.string.profile_add_education))
+        Box(Modifier.padding(top = Space.s))
+        LabelledField(stringResource(R.string.education_degree), degree, { degree = it },
+            testTag = "education_input_degree")
+        Box(Modifier.padding(top = Space.s))
+        LabelledField(stringResource(R.string.education_institution), institution, { institution = it },
+            testTag = "education_input_institution")
+        Box(Modifier.padding(top = Space.s))
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            Box(Modifier.weight(0.6f)) {
+                LabelledField(stringResource(R.string.education_location), location, { location = it },
+                    testTag = "education_input_location")
+            }
+            Box(Modifier.weight(0.4f)) {
+                LabelledField(stringResource(R.string.education_country), country, { country = it },
+                    testTag = "education_input_country")
+            }
+        }
+        Box(Modifier.padding(top = Space.s))
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            Box(Modifier.weight(1f)) {
+                LabelledField(stringResource(R.string.education_from), from, { from = it },
+                    testTag = "education_input_from")
+            }
+            Box(Modifier.weight(1f)) {
+                LabelledField(stringResource(R.string.education_to), to, { to = it },
+                    testTag = "education_input_to")
+            }
+        }
+
+        // The same contract the Berufserfahrung form keeps: say what is missing rather than
+        // letting the server reject the save and lose everything the user typed.
+        val missing = buildList {
+            if (degree.isBlank()) add(stringResource(R.string.education_degree))
+            if (institution.isBlank()) add(stringResource(R.string.education_institution))
+            if (normaliseDate(from).length != 10) add(stringResource(R.string.education_from))
+        }
+        if (missing.isNotEmpty()) {
+            Text(
+                stringResource(R.string.experience_missing, missing.joinToString(", ")),
+                style = MaterialTheme.typography.bodySmall,
+                color = LocalSemanticColors.current.attention,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("education_missing_hint"),
+            )
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.m),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            Button(
+                onClick = {
+                    val entry = Education(
+                        degree = degree, institution = institution, location = location,
+                        country = country.trim().uppercase(),
+                        from = normaliseDate(from),
+                        to = to.ifBlank { null }?.let { normaliseDate(it) },
+                    )
+                    viewModel.saveEducation((state.profile?.education ?: emptyList()) + entry)
+                    open = false
+                    degree = ""; institution = ""; location = ""; country = ""; from = ""; to = ""
+                },
+                enabled = missing.isEmpty(),
+                modifier = Modifier.testTag("education_btn_save"),
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+            OutlinedButton(
+                onClick = { open = false },
+                modifier = Modifier.testTag("education_btn_cancel"),
             ) {
                 Text(stringResource(R.string.action_cancel))
             }
