@@ -157,28 +157,9 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             });
 
             // The gap goes in where it belongs chronologically, named, rather than being left as a
-            // hole the reader discovers.
-            //
-            // Only when there IS a German name for it. A reason the wording table does not know
-            // produced an empty title, so the Lebenslauf carried a date range with nothing beside
-            // it - a blank line where the reader was about to find an answer, which is worse than
-            // the gap it was meant to explain. The reason stays stored either way, and the gap card
-            // says on screen that it will go unnamed.
-            foreach (var gap in timeline.Gaps.Where(g => g.To == e.From && g.Explained))
-            {
-                var german = string.IsNullOrWhiteSpace(gap.GermanWording)
-                    ? GapWording.Suggest(gap.Reason)
-                    : gap.GermanWording!;
-                if (string.IsNullOrWhiteSpace(german)) continue;
-
-                work.Add(new CvItem
-                {
-                    Period = $"{gap.From:MM\\/yyyy} – {gap.To:MM\\/yyyy}",
-                    Title = german,
-                    Subtitle = "",
-                    IsGap = true,
-                });
-            }
+            // hole the reader discovers. The list runs newest first, so the gap follows the entry
+            // it runs into.
+            work.AddRange(NamedGaps(timeline.Gaps.Where(g => g.To == e.From)));
         }
         if (work.Count > 0) sections.Add(new CvSection { Title = "Berufserfahrung", Items = work });
 
@@ -203,6 +184,11 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
                     new[] { e.Institution, e.Location }.Where(s => !string.IsNullOrWhiteSpace(s))),
                 Bullets = bullets,
             });
+
+            // A study period is an entry a gap runs into just as much as a job is — the gaps are
+            // found across BOTH lanes. Without this the year before a course began was named on
+            // the Profil screen, counted as explained, and then missing from the document.
+            education.AddRange(NamedGaps(timeline.Gaps.Where(g => g.To == e.From)));
         }
         if (education.Count > 0) sections.Add(new CvSection { Title = "Ausbildung", Items = education });
 
@@ -372,6 +358,34 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             subject += $" — Referenznummer {posting.Reference}";
         }
         return subject;
+    }
+
+    /// <summary>
+    /// The explained gaps of a sequence, as the CV items that name them.
+    ///
+    /// Only a gap that HAS a German name is written. A reason the wording table does not know
+    /// produced an empty title, so the Lebenslauf carried a date range with nothing beside it — a
+    /// blank line where the reader was about to find an answer, which is worse than the gap it was
+    /// meant to explain. The reason stays stored either way, and the gap card says on screen that
+    /// it will go unnamed.
+    /// </summary>
+    private static IEnumerable<CvItem> NamedGaps(IEnumerable<TimelineGap> gaps)
+    {
+        foreach (var gap in gaps.Where(g => g.Explained))
+        {
+            var german = string.IsNullOrWhiteSpace(gap.GermanWording)
+                ? GapWording.Suggest(gap.Reason)
+                : gap.GermanWording!;
+            if (string.IsNullOrWhiteSpace(german)) continue;
+
+            yield return new CvItem
+            {
+                Period = Period(gap.From, gap.To),
+                Title = german,
+                Subtitle = "",
+                IsGap = true,
+            };
+        }
     }
 
     private static string Period(DateOnly from, DateOnly? to) =>

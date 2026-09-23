@@ -887,6 +887,51 @@ public class DomainRuleTests
     }
 
     [Fact]
+    public void A_gap_that_ends_where_a_study_period_begins_is_named_in_the_Ausbildung_section()
+    {
+        // Gaps are found across BOTH lanes, but only the Berufserfahrung loop placed them, so the
+        // year before a course began was named on the Profil screen, counted as explained, and then
+        // missing from the document.
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Buchhalterin", Employer = "Agro Invest",
+                    From = new DateOnly(2016, 1, 1), To = new DateOnly(2018, 6, 30),
+                },
+            ],
+            Education =
+            [
+                new EducationEntry
+                {
+                    Degree = "Magister Betriebswirtschaft", Institution = "KHEU",
+                    From = new DateOnly(2019, 9, 1), To = new DateOnly(2021, 6, 30),
+                },
+            ],
+            Gaps =
+            [
+                new GapExplanation
+                {
+                    From = new DateOnly(2018, 6, 30), To = new DateOnly(2019, 9, 1),
+                    Reason = "переїзд до Німеччини", GermanWording = "Umzug nach Deutschland",
+                },
+            ],
+        };
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2021, 6, 30));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        var ausbildung = Assert.Single(cv.Sections, s => s.Title == "Ausbildung");
+        var gapItem = Assert.Single(ausbildung.Items, i => i.IsGap);
+        Assert.Equal("Umzug nach Deutschland", gapItem.Title);
+        // Directly under the entry it runs into, because the list is newest first.
+        Assert.Equal(1, ausbildung.Items.ToList().FindIndex(i => i.IsGap));
+    }
+
+    [Fact]
     public void A_gap_with_no_German_wording_stays_out_of_the_Lebenslauf()
     {
         // The reason is the user's and is kept; what has no German name simply cannot be written.
