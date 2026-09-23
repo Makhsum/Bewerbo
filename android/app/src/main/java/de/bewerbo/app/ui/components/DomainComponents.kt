@@ -203,7 +203,11 @@ fun EvidenceText(
 
     val text = buildAnnotatedString {
         append(marked.text)
-        marked.passages.forEach { passage ->
+        // Words first and markers after, in two passes rather than one per passage: a passage that
+        // sits inside another would otherwise have the outer one's style laid back over its number.
+        // Within the first pass the selected passage goes last, so it keeps its colours where the
+        // two overlap.
+        marked.passages.sortedBy { it.number == selected }.forEach { passage ->
             // With one passage selected the rest step back rather than vanish: the user is checking
             // one field, not losing sight of what else was read.
             val faded = selected != null && passage.number != selected
@@ -216,6 +220,9 @@ fun EvidenceText(
                 ),
                 passage.words.first, passage.words.last + 1,
             )
+        }
+        marked.passages.forEach { passage ->
+            val faded = selected != null && passage.number != selected
             addStyle(
                 SpanStyle(
                     background = Color.Transparent,
@@ -240,8 +247,11 @@ fun EvidenceText(
         modifier = modifier.pointerInput(marked) {
             detectTapGestures { position ->
                 val offset = layout?.getOffsetForPosition(position) ?: return@detectTapGestures
+                // The innermost passage wins where they are nested: tapping the employer's name
+                // inside the headline means the employer, not the headline that contains it.
                 marked.passages
-                    .firstOrNull { offset >= it.words.first && offset <= it.marker.last }
+                    .filter { offset >= it.words.first && offset <= it.marker.last }
+                    .minByOrNull { it.marker.last - it.words.first }
                     ?.let { onSelect(it.number) }
             }
         },
@@ -260,36 +270,43 @@ private data class MarkedSource(val text: String, val passages: List<MarkedPassa
  * It happens in one pass, before any styling, because every digit inserted moves everything after
  * it along: keeping the offsets in a single place is what stops a number being drawn over the
  * wrong words.
+ *
+ * Passages may sit inside one another, and an advert that names the employer inside its headline
+ * — "Die Nordwind Pflege GmbH sucht eine Pflegefachkraft" — produces exactly that. So the source is
+ * walked character by character rather than passage by passage: a passage that opens inside another
+ * one still gets its own number, because a field the server DID locate and the screen then declines
+ * to point at is the very thing this screen exists to prevent.
  */
 private fun markUp(source: String, spans: List<EvidenceMark>): MarkedSource {
-    val out = StringBuilder(source.length + spans.size * 2)
-    val passages = mutableListOf<MarkedPassage>()
-    var cursor = 0
-
-    spans
+    val drawable = spans
         .filter { it.start >= 0 && it.length > 0 && it.start + it.length <= source.length }
-        .sortedBy { it.start }
-        .forEach { mark ->
-            // Two fields read out of the same words would stack their numbers on one another. The
-            // earlier passage keeps them; the other field simply shows no number.
-            if (mark.start < cursor) return@forEach
+        .sortedWith(compareBy({ it.start }, { it.number }))
+    if (drawable.isEmpty()) return MarkedSource(source, emptyList())
 
-            out.append(source, cursor, mark.start)
-            val wordsFrom = out.length
-            out.append(source, mark.start, mark.start + mark.length)
+    val opens = drawable.groupBy { it.start }
+    val closes = drawable.groupBy { it.start + it.length }
+
+    val out = StringBuilder(source.length + drawable.size * 2)
+    val wordsFrom = mutableMapOf<Int, Int>()
+    val passages = mutableListOf<MarkedPassage>()
+
+    for (i in 0..source.length) {
+        // Close before open, so the number of a passage that ends here is not swallowed by the
+        // words of the next one, which begins at the very same character.
+        closes[i]?.forEach { mark ->
             val markerFrom = out.length
             out.append(mark.number)
-
             passages += MarkedPassage(
                 mark.number,
-                wordsFrom until markerFrom,
+                (wordsFrom[mark.number] ?: markerFrom) until markerFrom,
                 markerFrom until out.length,
             )
-            cursor = mark.start + mark.length
         }
+        opens[i]?.forEach { wordsFrom[it.number] = out.length }
+        if (i < source.length) out.append(source[i])
+    }
 
-    out.append(source, cursor, source.length)
-    return MarkedSource(out.toString(), passages)
+    return MarkedSource(out.toString(), passages.sortedBy { it.words.first })
 }
 
 /// The marker rides above the line, so it has to be small enough not to open the line spacing.
