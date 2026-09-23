@@ -36,6 +36,7 @@
     <string name="overview_active">Active applications</string>
     <string name="overview_flow_start">Start an application</string>
     <string name="overview_flow_continue">Continue the application</string>
+    <string name="overview_flow_another">Begin another application</string>
     <string name="overview_first_profile">Start with your profile</string>
     <string name="overview_next_steps_empty_title">Nothing outstanding</string>
     <string name="overview_next_steps_empty_body">The profile carries everything a Lebenslauf needs. What a single application still needs is written below in its own row.</string>

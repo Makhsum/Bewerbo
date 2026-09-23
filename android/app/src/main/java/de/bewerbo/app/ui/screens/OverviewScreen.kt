@@ -53,8 +53,9 @@ import de.bewerbo.app.ui.theme.Space
  * user with several employers gets back into an unfinished one.
  *
  * It is also the ONE way into the flow that produces an application, now that its steps are no
- * longer on the bottom bar: [flowLabel] says whether the path is being begun or picked up, and
- * [onOpenFlow] leads to the step the user actually got to.
+ * longer on the bottom bar: [flowLabel] says whether the path is being begun or picked up,
+ * [onOpenFlow] leads to the step the user actually got to, and [onBeginAnother] — null while there
+ * is nothing under way — begins the next employer's application beside it.
  */
 @Composable
 fun OverviewScreen(
@@ -62,6 +63,7 @@ fun OverviewScreen(
     viewModel: AppViewModel,
     flowLabel: Int,
     onOpenFlow: () -> Unit,
+    onBeginAnother: (() -> Unit)?,
     navigate: (String) -> Unit,
 ) {
     val overview = state.overview
@@ -158,6 +160,25 @@ fun OverviewScreen(
                     OutlinedButton(onClick = onOpenFlow, modifier = flowModifier, content = flowContent)
                 } else {
                     Button(onClick = onOpenFlow, modifier = flowModifier, content = flowContent)
+                }
+
+                // The second way in, and only once there is something to come back to: the action
+                // above continues the application under way, this one begins the next employer's.
+                // It stands beside it as the flow stands beside the profile step — secondary,
+                // because continuing what is half-written is the likelier thing to want.
+                if (onBeginAnother != null) {
+                    OutlinedButton(
+                        onClick = onBeginAnother,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("overview_btn_flow_another"),
+                    ) {
+                        Icon(BewerboIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.overview_flow_another),
+                            modifier = Modifier.padding(start = Space.s),
+                        )
+                    }
                 }
             }
         }

@@ -28,6 +28,7 @@
     <string name="overview_active">Laufende Bewerbungen</string>
     <string name="overview_flow_start">Bewerbung beginnen</string>
     <string name="overview_flow_continue">Bewerbung fortsetzen</string>
+    <string name="overview_flow_another">Weitere Bewerbung beginnen</string>
     <string name="overview_first_profile">Mit dem Profil beginnen</string>
     <string name="overview_next_steps_empty_title">Nichts offen</string>
     <string name="overview_next_steps_empty_body">Das Profil trägt alles, was ein Lebenslauf braucht. Was an einer einzelnen Bewerbung noch offen ist, steht unten in ihrer Zeile.</string>

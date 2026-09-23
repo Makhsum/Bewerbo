@@ -23,6 +23,7 @@
     <string name="overview_active">Активные заявки</string>
     <string name="overview_flow_start">Начать заявку</string>
     <string name="overview_flow_continue">Продолжить заявку</string>
+    <string name="overview_flow_another">Начать ещё одну заявку</string>
     <string name="overview_first_profile">Начните с профиля</string>
     <string name="overview_next_steps_empty_title">Ничего не осталось</string>
     <string name="overview_next_steps_empty_body">В профиле есть всё, что нужно для Lebenslauf. Что осталось по отдельной заявке, написано ниже в её строке.</string>

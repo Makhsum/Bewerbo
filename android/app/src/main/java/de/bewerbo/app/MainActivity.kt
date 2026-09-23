@@ -174,15 +174,30 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                         // The Übersicht is the ONE way into the flow, so it says where the path is
                         // picked up rather than leaving the user to find the first step.
                         val step = state.resumeStep()
+                        val beginning = step == FlowStep.Posting && state.posting == null
                         OverviewScreen(
                             state,
                             viewModel,
-                            flowLabel = if (step == FlowStep.Posting && state.posting == null) {
+                            flowLabel = if (beginning) {
                                 R.string.overview_flow_start
                             } else {
                                 R.string.overview_flow_continue
                             },
                             onOpenFlow = { navController.openFromOverview(step.route) },
+                            // A path that can be walked once is not a path the user moves along: with
+                            // one application under way the action above leads back INTO it, and the
+                            // next employer had nowhere to start from at all once the Stellenanzeige
+                            // stopped being a tab. Beginning another drops the current posting the way
+                            // the first step's own "Andere Anzeige einfügen" does; the application it
+                            // produced stays, and is reached from the list below.
+                            onBeginAnother = if (beginning) {
+                                null
+                            } else {
+                                {
+                                    viewModel.clearPosting()
+                                    navController.openFromOverview(FlowStep.Posting.route)
+                                }
+                            },
                         ) { route -> navController.openFromOverview(route) }
                     }
                     composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
