@@ -113,6 +113,7 @@
     <string name="posting_source">Source text · %1$d characters</string>
     <string name="posting_read_from">Read from the posting</string>
     <string name="posting_field_contact">Kontakt</string>
+    <string name="posting_field_contact_email">E-Mail</string>
     <string name="posting_field_company">Unternehmen</string>
     <string name="posting_field_reference">Referenz</string>
     <string name="posting_field_title">Stelle</string>

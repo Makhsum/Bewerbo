@@ -46,7 +46,7 @@ import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
-private val FIELD_ORDER = listOf("contact", "company", "reference", "title", "start")
+private val FIELD_ORDER = listOf("contact", "contactEmail", "company", "reference", "title", "start")
 private val EMPLOYER_TYPES = listOf("Konzern", "Mittelstand", "Startup", "OeffentlicherDienst")
 
 /**
@@ -397,6 +397,7 @@ private fun fieldMarker(key: String, field: EvidenceField?): Pair<Int, PillTone>
 
 private fun fieldIcon(key: String) = when (key) {
     "contact" -> BewerboIcons.Person
+    "contactEmail" -> BewerboIcons.Mail
     "company" -> BewerboIcons.Employer
     "reference" -> BewerboIcons.Reference
     "title" -> BewerboIcons.Experience
@@ -405,6 +406,7 @@ private fun fieldIcon(key: String) = when (key) {
 
 private fun fieldLabel(key: String) = when (key) {
     "contact" -> R.string.posting_field_contact
+    "contactEmail" -> R.string.posting_field_contact_email
     "company" -> R.string.posting_field_company
     "reference" -> R.string.posting_field_reference
     "title" -> R.string.posting_field_title

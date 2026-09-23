@@ -582,7 +582,7 @@ private fun PageThumbnail(
 
 /**
  * The Mappe as an e-mail: the PDF attached, the Betreffzeile as the subject, the covering note as
- * the body.
+ * the body, and the address the posting handed the application to as the recipient.
  *
  * ACTION_SEND and not a mailto: URI — mailto carries no attachment, and the attachment is the whole
  * point. But a bare ACTION_SEND chooser is not an e-mail chooser: under a button that says "send by
@@ -607,6 +607,7 @@ private fun emailChooser(context: Context, draft: EmailDraft, title: String): In
         putExtra(Intent.EXTRA_STREAM, uri)
         putExtra(Intent.EXTRA_SUBJECT, draft.subject)
         putExtra(Intent.EXTRA_TEXT, draft.body)
+        if (draft.recipient.isNotBlank()) putExtra(Intent.EXTRA_EMAIL, arrayOf(draft.recipient))
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 

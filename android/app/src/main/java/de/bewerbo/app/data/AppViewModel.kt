@@ -46,8 +46,11 @@ data class AppState(
  *
  * Subject and body stay GERMAN in every interface language, for the same reason the Anschreiben
  * itself does — the person who opens this mail is a German employer, not the applicant.
+ *
+ * [recipient] is empty when the posting named no address; the mail app then asks for one, as it did
+ * before there was anything to fill in.
  */
-data class EmailDraft(val file: File, val subject: String, val body: String)
+data class EmailDraft(val file: File, val recipient: String, val subject: String, val body: String)
 
 /**
  * The whole client state in one place.
@@ -405,9 +408,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update {
             it.copy(
                 lastSavedPdf = describe(file),
+                // The address the posting handed the application to, when it named one. It is an
+                // extracted field like any other, so a wrong one is corrected on the Stellenanzeige
+                // screen rather than here — and the mail app has the last word either way.
                 // The file name is the fallback subject because it already reads
                 // "Bewerbung_Vorname_Nachname_Stelle" — a blank subject line would not.
-                pendingEmail = EmailDraft(file, application.letter.subject.ifBlank { name }, body),
+                pendingEmail = EmailDraft(
+                    file,
+                    _state.value.posting?.field("contactEmail")?.value.orEmpty(),
+                    application.letter.subject.ifBlank { name },
+                    body,
+                ),
             )
         }
         runChecks(application.id)

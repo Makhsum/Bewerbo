@@ -144,6 +144,44 @@ public class DomainRuleTests
     }
 
     [Theory]
+    [InlineData("Bitte senden Sie Ihre Bewerbung an bewerbung@vogt-schneider.de", "bewerbung@vogt-schneider.de")]
+    [InlineData("Ihre Bewerbungsunterlagen senden Sie bitte per E-Mail an jobs@klinikum-nord.de.", "jobs@klinikum-nord.de")]
+    [InlineData("Bewerben Sie sich unter karriere@schwarzwald-technik.de", "karriere@schwarzwald-technik.de")]
+    [InlineData("Ihre Unterlagen an frau.weber@stadt-stuttgart.de", "frau.weber@stadt-stuttgart.de")]
+    public void The_address_the_posting_hands_the_application_to_is_read(string line, string expected)
+    {
+        // This one ends up in the To: line of a real e-mail, so it is read from the sentence that
+        // ASKS for the application rather than from the first address in the advert.
+        var extract = PostingParser.Parse(line);
+        var field = extract.Fields.Single(f => f.Key == "contactEmail");
+
+        Assert.Equal(expected, field.Value);
+        Assert.Equal("sicher", field.Confidence);
+    }
+
+    [Fact]
+    public void An_address_no_sentence_asked_for_is_offered_but_marked_to_be_checked()
+    {
+        // A German advert prints more than one address. Picking the Datenschutz one and presenting
+        // it as fact would put the application in front of the wrong reader; the posting screen
+        // shows a "pruefen" field with a pill, which is the user's cue to correct it.
+        var extract = PostingParser.Parse(
+            "Fragen zum Datenschutz beantwortet datenschutz@schwarzwald-technik.de.");
+
+        var field = extract.Fields.Single(f => f.Key == "contactEmail");
+        Assert.Equal("datenschutz@schwarzwald-technik.de", field.Value);
+        Assert.Equal("pruefen", field.Confidence);
+    }
+
+    [Fact]
+    public void A_posting_that_names_no_address_yields_no_field_rather_than_an_empty_one()
+    {
+        var extract = PostingParser.Parse("Wir freuen uns auf Ihre Bewerbung ueber unser Portal.");
+
+        Assert.DoesNotContain(extract.Fields, f => f.Key == "contactEmail");
+    }
+
+    [Theory]
     [InlineData("Bitte geben Sie die Referenznummer SBT-2026-0417 an.", "SBT-2026-0417")]
     [InlineData("Referenz LOG-2026-11", "LOG-2026-11")]
     [InlineData("Kennziffer: NWH-2026-07", "NWH-2026-07")]

@@ -20,6 +20,7 @@ public static partial class PostingParser
 
         AddIfFound(fields, ContactPerson(text));
         AddIfFound(fields, ContactRole(text));
+        AddIfFound(fields, ContactEmail(text));
         AddIfFound(fields, Company(text));
         AddIfFound(fields, CompanyAddress(text));
         AddIfFound(fields, Reference(text));
@@ -57,6 +58,27 @@ public static partial class PostingParser
         if (!m.Success) return null;
         var value = Tidy(m.Groups["role"].Value);
         return new ExtractedField { Key = "contactRole", Value = value, Quote = value, Confidence = "sicher" };
+    }
+
+    private static ExtractedField? ContactEmail(string text)
+    {
+        // The address the application is sent TO. A German advert prints more than one — a
+        // Datenschutz address, an agency's, sometimes a careers portal's — so the one asked for
+        // first is the one a sentence hands the application to ("Bewerbung an …", "senden Sie …
+        // an …"). Only when no sentence says it does the first address in the text stand in, and
+        // then it goes out as "pruefen": it is a guess, and this one ends up in the To: line.
+        var asked = ApplicationEmailRx().Match(text);
+        var m = asked.Success ? asked : EmailRx().Match(text);
+        if (!m.Success) return null;
+
+        var value = Tidy(asked.Success ? asked.Groups["mail"].Value : m.Value);
+        return new ExtractedField
+        {
+            Key = "contactEmail",
+            Value = value,
+            Quote = value,
+            Confidence = asked.Success ? "sicher" : "pruefen",
+        };
     }
 
     private static ExtractedField? Company(string text)
@@ -285,6 +307,17 @@ public static partial class PostingParser
 
     [GeneratedRegex(@"(?<role>Leitung\s+[A-ZÄÖÜ][\wäöüß-]+|Personalleiter(?:in)?|Recruiter(?:in)?|Personalreferent(?:in)?)")]
     private static partial Regex ContactRoleRx();
+
+    // An address a sentence hands the application to. The words between the verb and the address
+    // are what a German advert puts there — "Ihre Bewerbung", "Ihre Unterlagen", "diese bitte" —
+    // so the gap is bounded rather than open, or "Fragen beantwortet … , bewerben Sie sich unter
+    // www…" would reach across half the advert to the wrong one.
+    [GeneratedRegex(@"(?:Bewerbung(?:sunterlagen)?|Unterlagen|bewerben\s+Sie\s+sich|senden\s+Sie)[^@\r\n]{0,60}?\s(?:an|unter|per\s+E-?Mail\s+an)\s+(?<mail>[\w.+-]+@[\w-]+(?:\.[\w-]+)+)",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex ApplicationEmailRx();
+
+    [GeneratedRegex(@"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")]
+    private static partial Regex EmailRx();
 
     // Two ways to be a company. The first is a name that ENDS in a legal form. On its own that
     // missed every employer this product's users actually apply to — a Klinikum, a Seniorenheim,
