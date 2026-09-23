@@ -278,6 +278,13 @@ public class DomainRuleTests
     [InlineData("Die Stadt Augsburg sucht eine Sachbearbeiterin.", "Stadt Augsburg")]
     [InlineData("Seniorenzentrum Nord sucht Pflegekräfte.", "Seniorenzentrum Nord")]
     [InlineData("Die Schwarzwald Technik GmbH sucht Verstärkung.", "Schwarzwald Technik GmbH")]
+    // The institution word is the head of a COMPOUND. Reading it as a word standing on its own
+    // returned "Stadt" for the first of these, out of the middle of "Stadtklinik".
+    [InlineData("Die Stadtklinik Augsburg sucht eine Pflegefachkraft (m/w/d).", "Stadtklinik Augsburg")]
+    [InlineData("Das Kreiskrankenhaus Erding sucht Verstärkung.", "Kreiskrankenhaus Erding")]
+    [InlineData("Die Fachhochschule Kiel sucht eine Dozentin.", "Fachhochschule Kiel")]
+    [InlineData("Die Stadtverwaltung Bonn sucht eine Sachbearbeiterin.", "Stadtverwaltung Bonn")]
+    [InlineData("Der Waldkindergarten Sonnenschein sucht eine Erzieherin.", "Waldkindergarten Sonnenschein")]
     public void An_employer_without_a_legal_form_in_its_name_is_still_found(string line, string expected)
     {
         // Hospitals, care homes, universities and town halls carry no GmbH — and they are exactly
@@ -286,6 +293,22 @@ public class DomainRuleTests
         var extract = PostingParser.Parse(line);
 
         Assert.Equal(expected, extract.Fields.Single(f => f.Key == "company").Value);
+    }
+
+    [Theory]
+    [InlineData("Die Firma in Darmstadt sucht eine Lageristin.")]
+    [InlineData("Unser Standort in Ingolstadt sucht Verstärkung.")]
+    [InlineData("Wir suchen für unser Team in Neustadt eine Erzieherin.")]
+    public void A_town_whose_name_ends_in_stadt_is_not_read_as_the_employer(string line)
+    {
+        // The mirror image of the "Stadtklinik" bug, and the reason "Stadt" is matched as a whole
+        // word while "-klinik" is allowed to be the tail of a compound: half the towns in Germany
+        // end in -stadt, and naming one as the addressee of the Anschriftenfeld would be just as
+        // wrong as naming "Stadt". No company read at all is the honest answer here — the field
+        // then shows as missing and asks the user to add it.
+        var extract = PostingParser.Parse(line);
+
+        Assert.DoesNotContain(extract.Fields, f => f.Key == "company");
     }
 
     [Theory]

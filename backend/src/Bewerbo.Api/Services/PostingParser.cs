@@ -338,14 +338,33 @@ public static partial class PostingParser
     // missed every employer this product's users actually apply to — a Klinikum, a Seniorenheim,
     // a Stadtverwaltung, a Universitätsklinikum carry no GmbH in the name — and the company is the
     // addressee of the Anschriftenfeld, so failing to find it leaves the letter addressed to
-    // nobody. The second alternative therefore matches a name that BEGINS with the word that says
-    // what kind of institution it is, and takes the proper nouns after it.
+    // nobody. The second alternative therefore matches a name built on the word that says what
+    // kind of institution it is, and takes the proper nouns after it.
+    //
+    // That institution word is the HEAD OF A COMPOUND, not a word standing on its own, and reading
+    // it as one was how "Die Stadtklinik Augsburg" came out as the company "Stadt": the bare
+    // alternative matched the first five letters and the group that takes the following proper
+    // nouns then wanted a space, which "klinik" is not. German builds these names by compounding —
+    // Stadt+klinik, Universitäts+klinikum, Kreis+krankenhaus, Fach+hochschule — so the first group
+    // below matches a capitalised word that ENDS in one of the stems, whatever is welded in front
+    // of it. The stems are matched case-insensitively because the second element of a compound is
+    // written small; the lookahead keeps the requirement that the word itself starts with a
+    // capital, which is what stops it firing inside running prose.
+    //
+    // The words in the second group get no such treatment on purpose. They are the ones that are
+    // also the tail of ordinary words the advert is full of — "Stadt" ends every second German
+    // town (Darmstadt, Neustadt, Ingolstadt), and reading "Die Firma in Darmstadt sucht …" as the
+    // employer "Darmstadt" would trade this bug for its mirror image. They match as whole words,
+    // and the \b at each end is what run 129 had to add to ReferenceRx for the same reason: a
+    // literal alternative with no anchor matches inside a longer word.
     [GeneratedRegex(
         @"[A-ZÄÖÜ][\wäöüß&.-]*(?:\s+[A-ZÄÖÜ][\wäöüß&.-]*){0,3}\s+(?:gGmbH|GmbH(?:\s*&\s*Co\.\s*KG)?|AG|SE|KG|mbH|e\.\s?V\.)" +
-        @"|(?:Universitätsklinikum|Uniklinik(?:um)?|Klinikum|Klinik|Krankenhaus|Pflegeheim|Pflegedienst" +
-        @"|Seniorenheim|Seniorenzentrum|Altenheim|Hospiz|Caritas|Diakonie|Johanniter|Malteser" +
-        @"|Charité|Universität|Hochschule|Fachhochschule|Berufsschule|Kindertagesstätte" +
-        @"|Stadtverwaltung|Stadt|Gemeinde|Landkreis|Bezirksamt|Ministerium|Bundesagentur|Landesamt)" +
+        @"|(?:\b(?=[A-ZÄÖÜ])(?i:[\wäöüß-]*(?:klinikum|kliniken|klinik|krankenhaus|krankenhäuser" +
+        @"|pflegeheim|pflegedienst|pflegezentrum|seniorenheim|seniorenzentrum|altenheim|hospiz" +
+        @"|universität|hochschule|berufsschule|fachschule|kindertagesstätte|kindergarten" +
+        @"|verwaltung))\b" +
+        @"|\b(?:Caritas|Diakonie|Johanniter|Malteser|Charité|Stadt|Gemeinde|Landkreis|Bezirksamt" +
+        @"|Ministerium|Bundesagentur|Landesamt)\b)" +
         @"(?:\s+[A-ZÄÖÜ][\wäöüß&.-]*){0,3}")]
     private static partial Regex CompanyRx();
 
