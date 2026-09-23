@@ -32,6 +32,8 @@
     <string name="overview_first_profile">Mit dem Profil beginnen</string>
     <string name="overview_next_steps_empty_title">Nichts offen</string>
     <string name="overview_next_steps_empty_body">Das Profil trägt alles, was ein Lebenslauf braucht. Was an einer einzelnen Bewerbung noch offen ist, steht unten in ihrer Zeile.</string>
+    <string name="overview_mappe_empty_title">Noch nichts zu messen</string>
+    <string name="overview_mappe_empty_body">Sobald eine Berufserfahrung oder eine Ausbildung im Profil steht, zählt Bewerbo hier, wie vollständig es ist, welche Lücke noch unerklärt ist und welcher Nachweis fehlt.</string>
     <string name="overview_loading_title">Einen Moment</string>
     <string name="overview_loading_body">Bewerbo liest gerade, was Ihrer Bewerbungsmappe noch fehlt.</string>
     <string name="overview_applications_empty_title">Noch keine Bewerbung begonnen</string>

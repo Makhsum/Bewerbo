@@ -40,6 +40,8 @@
     <string name="overview_first_profile">Start with your profile</string>
     <string name="overview_next_steps_empty_title">Nothing outstanding</string>
     <string name="overview_next_steps_empty_body">The profile carries everything a Lebenslauf needs. What a single application still needs is written below in its own row.</string>
+    <string name="overview_mappe_empty_title">Nothing to measure yet</string>
+    <string name="overview_mappe_empty_body">Once a Berufserfahrung or an Ausbildung is in the profile, this is where Bewerbo counts how complete it is, which Lücke is still unexplained and which Nachweis is missing.</string>
     <string name="overview_loading_title">One moment</string>
     <string name="overview_loading_body">Bewerbo is reading what your Bewerbungsmappe still needs.</string>
     <string name="overview_applications_empty_title">No application started yet</string>

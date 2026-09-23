@@ -225,8 +225,19 @@ fun OverviewScreen(
             }
         }
 
+        // The three meters count how far along the Mappe is, and on a profile with no Berufserfahrung
+        // and no Ausbildung there is nothing for them to count: "0 %" over an empty track and two
+        // meters reading "0 / 0", which is the same unanswerable measure the readiness score was and
+        // the same hole the Zeitstrahl had. Same condition it uses, off the same fetch.
         item {
-            BewerboCard(Modifier.testTag("overview_readiness_card")) {
+            if (state.timeline.periods.isEmpty()) {
+                Callout(
+                    icon = BewerboIcons.Anlagen,
+                    title = stringResource(R.string.overview_mappe_empty_title),
+                    body = stringResource(R.string.overview_mappe_empty_body),
+                    modifier = Modifier.testTag("overview_mappe_empty"),
+                )
+            } else BewerboCard(Modifier.testTag("overview_readiness_card")) {
                 SectionLabel(stringResource(R.string.overview_mappe))
                 Column(
                     Modifier

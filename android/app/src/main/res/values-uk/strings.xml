@@ -31,6 +31,8 @@
     <string name="overview_first_profile">Почніть із профілю</string>
     <string name="overview_next_steps_empty_title">Нічого не залишилося</string>
     <string name="overview_next_steps_empty_body">У профілі є все, що потрібно для Lebenslauf. Що залишилося за окремою заявкою, написано нижче в її рядку.</string>
+    <string name="overview_mappe_empty_title">Поки нема чого вимірювати</string>
+    <string name="overview_mappe_empty_body">Щойно в профілі з’явиться Berufserfahrung або Ausbildung, Bewerbo рахуватиме тут, наскільки він повний, який Lücke ще не пояснено і якого Nachweis бракує.</string>
     <string name="overview_loading_title">Одну хвилину</string>
     <string name="overview_loading_body">Bewerbo читає, чого ще бракує вашій Bewerbungsmappe.</string>
     <string name="overview_applications_empty_title">Жодної заявки ще не почато</string>
