@@ -116,6 +116,22 @@ public class DomainRuleTests
         Assert.Equal(expected, field!.Value);
     }
 
+    [Theory]
+    [InlineData("Klinikum München Süd sucht eine Pflegefachkraft (m/w/d).", "Klinikum München Süd")]
+    [InlineData("Das Universitätsklinikum Heidelberg sucht Verstärkung.", "Universitätsklinikum Heidelberg")]
+    [InlineData("Die Stadt Augsburg sucht eine Sachbearbeiterin.", "Stadt Augsburg")]
+    [InlineData("Seniorenzentrum Nord sucht Pflegekräfte.", "Seniorenzentrum Nord")]
+    [InlineData("Die Schwarzwald Technik GmbH sucht Verstärkung.", "Schwarzwald Technik GmbH")]
+    public void An_employer_without_a_legal_form_in_its_name_is_still_found(string line, string expected)
+    {
+        // Hospitals, care homes, universities and town halls carry no GmbH — and they are exactly
+        // the employers this product's users apply to. The company is the addressee of the
+        // Anschriftenfeld, so not finding it leaves the letter addressed to nobody.
+        var extract = PostingParser.Parse(line);
+
+        Assert.Equal(expected, extract.Fields.Single(f => f.Key == "company").Value);
+    }
+
     [Fact]
     public void The_company_does_not_swallow_the_article_or_the_line_above_it()
     {

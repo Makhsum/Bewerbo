@@ -251,7 +251,19 @@ public static partial class PostingParser
     [GeneratedRegex(@"(?<role>Leitung\s+[A-ZÄÖÜ][\wäöüß-]+|Personalleiter(?:in)?|Recruiter(?:in)?|Personalreferent(?:in)?)")]
     private static partial Regex ContactRoleRx();
 
-    [GeneratedRegex(@"[A-ZÄÖÜ][\wäöüß&.-]*(?:\s+[A-ZÄÖÜ][\wäöüß&.-]*){0,3}\s+(?:GmbH(?:\s*&\s*Co\.\s*KG)?|AG|SE|KG|mbH)")]
+    // Two ways to be a company. The first is a name that ENDS in a legal form. On its own that
+    // missed every employer this product's users actually apply to — a Klinikum, a Seniorenheim,
+    // a Stadtverwaltung, a Universitätsklinikum carry no GmbH in the name — and the company is the
+    // addressee of the Anschriftenfeld, so failing to find it leaves the letter addressed to
+    // nobody. The second alternative therefore matches a name that BEGINS with the word that says
+    // what kind of institution it is, and takes the proper nouns after it.
+    [GeneratedRegex(
+        @"[A-ZÄÖÜ][\wäöüß&.-]*(?:\s+[A-ZÄÖÜ][\wäöüß&.-]*){0,3}\s+(?:gGmbH|GmbH(?:\s*&\s*Co\.\s*KG)?|AG|SE|KG|mbH|e\.\s?V\.)" +
+        @"|(?:Universitätsklinikum|Uniklinik(?:um)?|Klinikum|Klinik|Krankenhaus|Pflegeheim|Pflegedienst" +
+        @"|Seniorenheim|Seniorenzentrum|Altenheim|Hospiz|Caritas|Diakonie|Johanniter|Malteser" +
+        @"|Charité|Universität|Hochschule|Fachhochschule|Berufsschule|Kindertagesstätte" +
+        @"|Stadtverwaltung|Stadt|Gemeinde|Landkreis|Bezirksamt|Ministerium|Bundesagentur|Landesamt)" +
+        @"(?:\s+[A-ZÄÖÜ][\wäöüß&.-]*){0,3}")]
     private static partial Regex CompanyRx();
 
     [GeneratedRegex(@"[A-ZÄÖÜ][\wäöüß.-]*(?:stra(?:ß|ss)e|weg|allee|platz|ring|gasse)\s+\d+[a-z]?,?\s+\d{5}\s+[A-ZÄÖÜ][\wäöüß-]+",
