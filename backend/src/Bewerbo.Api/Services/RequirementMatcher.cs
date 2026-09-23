@@ -94,8 +94,12 @@ public static class RequirementMatcher
 
     private static MatchedRequirement? LanguageRequirement(Profile profile, string requirement)
     {
+        // The words between the language and the level are whatever the posting chose to write:
+        // "Deutschkenntnisse auf Niveau B2" alone puts 22 characters there, so a 20-character
+        // window silently read the most ordinary German phrasing as "no language requirement" and
+        // told the applicant their B2 was not in the profile at all.
         var m = Regex.Match(requirement,
-            @"(?<lang>Deutsch|Englisch|Französisch|Russisch)\D{0,20}(?<level>[ABC][12])",
+            @"(?<lang>Deutsch|Englisch|Französisch|Russisch)\D{0,40}?(?<level>[ABC][12])",
             RegexOptions.IgnoreCase);
         if (!m.Success) return null;
 

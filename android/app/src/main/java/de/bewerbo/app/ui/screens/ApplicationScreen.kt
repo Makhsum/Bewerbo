@@ -285,11 +285,21 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                     }
                 }
 
+                // What the file ACTUALLY contains. The Anlagenverzeichnis is only rendered when
+                // the Mappe holds a document (MergedApplicationDocument.Render), so listing it
+                // unconditionally in Success green told the user about a page that was not in the
+                // PDF they had just saved.
                 Row(
                     Modifier.padding(top = Space.s),
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
-                    listOf("anschreiben", "lebenslauf", "anlagenverzeichnis").forEach { part ->
+                    val hasDocuments = !state.profile?.documents.isNullOrEmpty()
+                    val parts = if (hasDocuments) {
+                        listOf("anschreiben", "lebenslauf", "anlagenverzeichnis")
+                    } else {
+                        listOf("anschreiben", "lebenslauf")
+                    }
+                    parts.forEach { part ->
                         StatusPill(
                             stringResource(partLabel(part)),
                             PillTone.Success,

@@ -14,10 +14,24 @@ export MSYS_NO_PATHCONV=1
 PKG=de.bewerbo.app
 TMP=/tmp/bewerbo-ui.xml
 
+# A dump that FAILS must not leave the previous tree lying around: "uiautomator dump" goes quiet
+# when the UiAutomation connection is held by a dead instrumentation, and reading the stale
+# /sdcard/ui.xml then reports the screen you were on minutes ago — every bound, every
+# clickable="…" wrong, and a run drawing confident conclusions from it. Delete first, verify the
+# device wrote a new file, and say so loudly when it did not.
 dump() {
+    adb shell rm -f /sdcard/ui.xml > /dev/null 2>&1
+    rm -f "$TMP"
     adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
-    adb shell cat /sdcard/ui.xml > "$TMP" 2>/dev/null
-    tr -d '\r' < "$TMP" > "$TMP.clean" && mv "$TMP.clean" "$TMP"
+    adb exec-out cat /sdcard/ui.xml 2>/dev/null | tr -d '\r' > "$TMP"
+
+    # Not just "non-empty": a broken dump can still write a few bytes without a single node, and
+    # that is indistinguishable from "the screen is blank" unless the root element is checked.
+    if ! grep -q '<hierarchy' "$TMP"; then
+        echo "FAIL dump (uiautomator wrote no hierarchy — the UiAutomation connection is gone;" \
+             "check for a leftover Appium instrumentation, or reboot the device)" >&2
+        return 1
+    fi
 }
 
 # Prints "x y" for the centre of the node with this resource-id, or nothing.
@@ -31,12 +45,12 @@ centre() {
 }
 
 exists() {
-    dump
+    dump || return 1
     grep -q "resource-id=\"$1\"" "$TMP" && echo "PASS $1" || { echo "FAIL $1"; return 1; }
 }
 
 tap() {
-    dump
+    dump || return 1
     local xy
     xy=$(centre "$1")
     if [ -z "$xy" ]; then echo "FAIL tap $1 (not found)"; return 1; fi
@@ -46,7 +60,7 @@ tap() {
 }
 
 type_into() {
-    dump
+    dump || return 1
     local xy
     xy=$(centre "$1")
     if [ -z "$xy" ]; then echo "FAIL type $1 (not found)"; return 1; fi
@@ -65,7 +79,7 @@ type_into() {
 
 # Prints the text of every TextView under a node carrying this resource-id.
 text_of() {
-    dump
+    dump || return 1
     grep -o "resource-id=\"$1\".\{0,4000\}" "$TMP" | head -1 | grep -o 'text="[^"]*"' | head -20
 }
 

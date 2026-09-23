@@ -46,7 +46,12 @@ private val TONES = listOf("Klassisch", "Sachlich", "Modern")
  * rather than inside the generator is the point — it is a decision the user can see and argue with.
  */
 @Composable
-fun MatchScreen(state: AppState, viewModel: AppViewModel, onGenerated: () -> Unit) {
+fun MatchScreen(
+    state: AppState,
+    viewModel: AppViewModel,
+    navigate: (String) -> Unit,
+    onGenerated: () -> Unit,
+) {
     val colors = LocalSemanticColors.current
     val match = state.match
     var tone by remember { mutableIntStateOf(1) }
@@ -115,10 +120,14 @@ fun MatchScreen(state: AppState, viewModel: AppViewModel, onGenerated: () -> Uni
             item {
                 BewerboCard(Modifier.testTag("match_group_offen")) {
                     offen.forEach { requirement ->
+                        // "Nachweis hochladen" leads to the Mappe, which is where a Nachweis is
+                        // recorded — the same place the Übersicht's own next step for a missing
+                        // Sprachzertifikat points at. It used to be a tappable chip with an empty
+                        // lambda, so the one row on this screen offering a way forward was inert.
                         RequirementRow(
                             requirement,
                             match.requirements.indexOf(requirement),
-                            onAction = { },
+                            onAction = { navigate("mappe") },
                         )
                     }
                 }

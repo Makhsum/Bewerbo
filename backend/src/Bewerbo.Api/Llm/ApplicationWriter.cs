@@ -222,7 +222,10 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
         LetterTone tone)
     {
         var claimable = match.Claimable.ToList();
-        var current = profile.Experience
+        // The most recent entry — which is NOT necessarily an ongoing one. Ordering ongoing first
+        // and then taking the head returns the last job that ended when there is no current one,
+        // so the tense below is decided by To, never by this position.
+        var latest = profile.Experience
             .OrderByDescending(e => e.To is null).ThenByDescending(e => e.From).FirstOrDefault();
         var longest = profile.Experience
             .OrderByDescending(e => TimelineService.MonthsBetween(e.From, e.To ?? DateOnly.FromDateTime(DateTime.Today)))
@@ -263,16 +266,24 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
         paragraphs.Add(opening);
 
         // 2 — what the applicant does now, with the further evidence named.
-        if (current is not null)
+        if (latest is not null)
         {
-            var since = $"Seit {MonthName(current.From)} {current.From.Year}";
-            var where = string.IsNullOrWhiteSpace(current.Workload)
-                ? $"arbeite ich bei {current.Employer} in {current.Location}"
-                : $"arbeite ich in {current.Workload} bei {current.Employer} in {current.Location}";
-            var duties = current.DutyLines.Where(ScriptCheck.IsLatin).Take(2).ToList();
-            var second = duties.Count > 0
-                ? $"{since} {where}. Meine Aufgaben dort: {string.Join("; ", duties)}."
-                : $"{since} {where}.";
+            // A job that has ended is written in the past. Saying "Seit März 2019 arbeite ich bei
+            // X" about a post left in 2023 tells the employer the applicant is still employed
+            // there — an untrue claim about the one fact they are most likely to check.
+            var workload = string.IsNullOrWhiteSpace(latest.Workload) ? "" : $"in {latest.Workload} ";
+            var second = latest.To is null
+                ? $"Seit {MonthName(latest.From)} {latest.From.Year} arbeite ich {workload}" +
+                  $"bei {latest.Employer} in {latest.Location}."
+                : $"Von {MonthName(latest.From)} {latest.From.Year} bis {MonthName(latest.To.Value)} " +
+                  $"{latest.To.Value.Year} habe ich {workload}bei {latest.Employer} " +
+                  $"in {latest.Location} gearbeitet.";
+
+            var duties = latest.DutyLines.Where(ScriptCheck.IsLatin).Take(2).ToList();
+            if (duties.Count > 0)
+            {
+                second += $" Meine Aufgaben dort: {string.Join("; ", duties)}.";
+            }
 
             var degree = profile.Education.FirstOrDefault(e =>
                 e.EquivalenceConfirmed && !string.IsNullOrWhiteSpace(e.GermanEquivalent));

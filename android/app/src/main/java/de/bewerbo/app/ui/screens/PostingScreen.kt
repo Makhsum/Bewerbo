@@ -236,6 +236,7 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                             onSelect = { viewModel.setEmployerType(EMPLOYER_TYPES[it]) },
                             modifier = Modifier.testTag("posting_employer_type_selector"),
                             tagPrefix = "posting_employer_type",
+                            label = ::employerTypeLabel,
                         )
                     }
                     // Photo advice follows from the type. It is never a requirement: the AGG means
@@ -331,6 +332,13 @@ private fun fieldLabel(key: String) = when (key) {
     "reference" -> R.string.posting_field_reference
     "title" -> R.string.posting_field_title
     else -> R.string.posting_field_start
+}
+
+/// The employer types keep the backend's spelling as their value, but "OeffentlicherDienst" is not
+/// a word anybody reads. The German name stays German — it is the term of art for the sector.
+private fun employerTypeLabel(type: String) = when (type) {
+    "OeffentlicherDienst" -> "Öffentlicher Dienst"
+    else -> type
 }
 
 private fun photoAdvice(type: String) = when (type) {

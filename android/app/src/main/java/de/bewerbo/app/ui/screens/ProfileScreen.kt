@@ -47,6 +47,10 @@ import de.bewerbo.app.ui.theme.Space
 
 private val SECTIONS = listOf("person", "berufserfahrung", "ausbildung", "sprachen", "anlagen")
 
+/// The Lebenslauf layouts, in the order the SegmentedControl shows them. They keep their German
+/// names for the same reason the section names do — they are what the document is called.
+private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
+
 /// The languages the product is for. German is on the list because somebody already fluent may
 /// still want the DIN 5008 layout and the Abgleich.
 private val INPUT_LANGUAGES = listOf(
@@ -213,7 +217,7 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             "berufserfahrung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_experience)) }
                 profile?.experience?.forEachIndexed { index, entry ->
-                    item { ExperienceCard(entry, index, profile.experience, viewModel) }
+                    item { ExperienceCard(entry, index) }
                 }
                 item { AddExperienceButton(state, viewModel) }
             }
@@ -264,41 +268,33 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
+        // There is no separate template button beside this one. It used to sit here with an empty
+        // onClick, one row above the control that actually picks the template — a second, silent
+        // affordance for a job the SegmentedControl below already does.
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                Button(
-                    onClick = { viewModel.generateCv() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("profile_btn_generate_cv"),
-                ) {
-                    Icon(BewerboIcons.Document, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(
-                        stringResource(R.string.profile_generate_cv),
-                        modifier = Modifier.padding(start = Space.s),
-                    )
-                }
-                OutlinedButton(
-                    onClick = { },
-                    modifier = Modifier.testTag("profile_template_picker"),
-                ) {
-                    Icon(BewerboIcons.Template, contentDescription = stringResource(R.string.profile_template))
-                }
+            Button(
+                onClick = { viewModel.generateCv() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("profile_btn_generate_cv"),
+            ) {
+                Icon(BewerboIcons.Document, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(
+                    stringResource(R.string.profile_generate_cv),
+                    modifier = Modifier.padding(start = Space.s),
+                )
             }
         }
 
         item {
+            SectionLabel(stringResource(R.string.profile_template))
             SegmentedControl(
-                options = listOf("Klassisch", "Modern", "Fachlich"),
-                selectedIndex = listOf("Klassisch", "Modern", "Fachlich")
-                    .indexOf(profile?.person?.template ?: "Klassisch").coerceAtLeast(0),
+                options = TEMPLATES,
+                selectedIndex = TEMPLATES.indexOf(profile?.person?.template ?: TEMPLATES[0])
+                    .coerceAtLeast(0),
                 onSelect = { index ->
                     profile?.let {
-                        viewModel.savePerson(
-                            it.person.copy(
-                                template = listOf("Klassisch", "Modern", "Fachlich")[index],
-                            ),
-                        )
+                        viewModel.savePerson(it.person.copy(template = TEMPLATES[index]))
                     }
                 },
                 tagPrefix = "profile_template",
@@ -372,12 +368,7 @@ private fun GapCard(gap: de.bewerbo.app.data.Gap, index: Int, viewModel: AppView
 }
 
 @Composable
-private fun ExperienceCard(
-    entry: Experience,
-    index: Int,
-    all: List<Experience>,
-    viewModel: AppViewModel,
-) {
+private fun ExperienceCard(entry: Experience, index: Int) {
     val colors = LocalSemanticColors.current
 
     BewerboCard(Modifier.testTag("profile_entry_experience_$index")) {
@@ -430,26 +421,10 @@ private fun ExperienceCard(
             }
         }
 
-        Row(
-            Modifier
-                .padding(top = Space.s)
-                .testTag("profile_rephrase_duties_$index"),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                BewerboIcons.Rewrite, contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp),
-            )
-            Text(
-                stringResource(R.string.profile_rephrase_duties),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(start = Space.s),
-            )
-        }
-        // Rephrasing duties as results is a model task; without one configured it is offered but
-        // says so rather than silently doing nothing.
-        if (all.isEmpty()) Text("")
+        // "Tätigkeiten in Ergebnisse umformulieren" used to sit here: an accent-coloured row with
+        // the Rewrite icon and no onClick at all, so it read as an action and answered no tap.
+        // There is no endpoint behind it either, with or without a model, so the offer is not made
+        // until there is something to carry it out.
     }
 }
 

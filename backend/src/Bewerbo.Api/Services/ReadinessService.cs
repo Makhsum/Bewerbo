@@ -79,7 +79,10 @@ public static class ReadinessService
             !string.IsNullOrWhiteSpace(profile.Phone),
             !string.IsNullOrWhiteSpace(profile.Email),
             profile.Experience.Count > 0,
-            profile.Experience.All(e => e.DutyLines.Any()),
+            // All() over an empty list is true, so an empty profile used to score this point and
+            // open at "8 % complete" — a number the user cannot account for, since they have
+            // entered nothing. The point is for entries that HAVE duty lines.
+            profile.Experience.Count > 0 && profile.Experience.All(e => e.DutyLines.Any()),
             profile.Education.Count > 0,
             profile.Languages.Count > 0,
             profile.Languages.Any(l => l.Language.Contains("Deutsch", StringComparison.OrdinalIgnoreCase)

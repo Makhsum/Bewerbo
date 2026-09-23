@@ -111,7 +111,11 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                     PostingScreen(state, viewModel) { navController.navigate("abgleich") }
                 }
                 composable("abgleich") {
-                    MatchScreen(state, viewModel) { navController.navigate(Destination.Application.route) }
+                    MatchScreen(
+                        state,
+                        viewModel,
+                        navigate = { route -> navController.navigate(route) },
+                    ) { navController.navigate(Destination.Application.route) }
                 }
                 composable(Destination.Application.route) { ApplicationScreen(state, viewModel) }
                 composable(Destination.Locker.route) { LockerScreen(state, viewModel) }

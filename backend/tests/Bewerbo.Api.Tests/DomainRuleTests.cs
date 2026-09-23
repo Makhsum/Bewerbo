@@ -200,6 +200,21 @@ public class DomainRuleTests
         Assert.Equal("Nachweis hochladen", requirement.Action);
     }
 
+    [Theory]
+    [InlineData("Deutsch B2")]
+    [InlineData("Deutsch mindestens B2")]
+    [InlineData("Deutschkenntnisse auf Niveau B2")]
+    [InlineData("Deutschkenntnisse mindestens auf dem Niveau B2")]
+    public void A_language_requirement_is_recognised_however_the_posting_phrases_it(string text)
+    {
+        // "Deutschkenntnisse auf Niveau B2" puts 22 characters between the language and the level.
+        // A tighter window read this as no language requirement at all and told an applicant with
+        // B2 in her profile that her German was "nicht vorhanden".
+        var match = RequirementMatcher.Match(SampleProfile(), [new ExtractedRequirement { Text = text }]);
+
+        Assert.Equal(RequirementState.Offen, match.Requirements.Single().State);
+    }
+
     [Fact]
     public void A_qualification_the_profile_does_not_have_is_nicht_belegt_and_stays_out_of_the_letter()
     {
@@ -241,6 +256,46 @@ public class DomainRuleTests
         Assert.Contains("DATEV", body);
     }
 
+    [Fact]
+    public void A_job_that_has_ended_is_not_written_up_as_present_employment()
+    {
+        // Every post in this profile is over. Saying "Seit März 2019 arbeite ich bei X" would tell
+        // the employer the applicant is still employed there — the one fact they can check first.
+        var profile = SampleProfile();
+        profile.Experience[1].To = new DateOnly(2024, 5, 31);
+
+        var posting = new Posting { JobTitle = "Buchhalter (m/w/d)", Reference = "X-1" };
+        var match = RequirementMatcher.Match(profile, []);
+
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
+        var body = string.Join(" ", letter.Paragraphs);
+
+        Assert.DoesNotContain("arbeite ich", body);
+        Assert.Contains("gearbeitet", body);
+        Assert.Contains("bis Mai 2024", body);
+    }
+
+    [Fact]
+    public void An_ongoing_job_is_still_written_in_the_present()
+    {
+        var posting = new Posting { JobTitle = "Buchhalter (m/w/d)", Reference = "X-1" };
+        var match = RequirementMatcher.Match(SampleProfile(), []);
+
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var letter = writer.WriteLetterAsync(SampleProfile(), posting, match, LetterTone.Sachlich).Result;
+
+        Assert.Contains("arbeite ich", string.Join(" ", letter.Paragraphs));
+    }
+
+    [Fact]
+    public void An_empty_profile_is_nought_per_cent_complete()
+    {
+        // All() over an empty list is true, which used to award the "every entry has duty lines"
+        // point to a profile with no entries and open the app at "8 % complete".
+        Assert.Equal(0, ReadinessService.Completeness(new Domain.Profile()));
+    }
+
     // -- gaps ------------------------------------------------------------------------------------------
 
     [Fact]
@@ -280,7 +335,53 @@ public class DomainRuleTests
         };
 
         var view = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
-        Assert.Empty(view.Gaps);
+
+        // Nothing between the entries. The stretch AFTER the last one is a real gap and has its
+        // own test below — this one is only about the overlap not inventing a hole.
+        Assert.DoesNotContain(view.Gaps, g => g.From < new DateOnly(2020, 12, 31));
+    }
+
+    [Fact]
+    public void The_stretch_between_the_last_entry_and_today_is_a_gap()
+    {
+        // A Lebenslauf that simply stops three years ago is the loudest question on the page, and
+        // walking only the spaces BETWEEN entries never reaches it.
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Pflegefachkraft", Employer = "Klinikum",
+                    From = new DateOnly(2019, 3, 1), To = new DateOnly(2023, 8, 1),
+                },
+            ],
+        };
+
+        var view = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+
+        var gap = Assert.Single(view.Gaps);
+        Assert.Equal(new DateOnly(2023, 8, 1), gap.From);
+        Assert.Equal(37, gap.Months);
+        Assert.False(gap.Explained);
+    }
+
+    [Fact]
+    public void An_ongoing_job_leaves_no_gap_at_the_end()
+    {
+        var profile = new Domain.Profile
+        {
+            Experience =
+            [
+                new ExperienceEntry
+                {
+                    Position = "Pflegefachkraft", Employer = "Klinikum",
+                    From = new DateOnly(2019, 3, 1), To = null,
+                },
+            ],
+        };
+
+        Assert.Empty(TimelineService.Build(profile, new DateOnly(2026, 9, 22)).Gaps);
     }
 
     [Theory]

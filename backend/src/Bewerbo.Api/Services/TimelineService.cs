@@ -79,6 +79,19 @@ public static class TimelineService
             if (period.To > coveredTo) coveredTo = period.To;
         }
 
+        // The gap that runs from the last entry up to today. It is the one a German recruiter sees
+        // first — a CV that simply stops three years ago is the loudest question on the page — and
+        // walking only the spaces BETWEEN entries never reaches it.
+        if (today > coveredTo)
+        {
+            var months = MonthsBetween(coveredTo, today);
+            if (months >= MinimumGapMonths)
+            {
+                var match = known.FirstOrDefault(g => Overlaps(g, coveredTo, today));
+                gaps.Add(new TimelineGap(coveredTo, today, months, match?.Reason, match?.GermanWording));
+            }
+        }
+
         return gaps;
     }
 

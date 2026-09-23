@@ -259,6 +259,9 @@ fun SegmentedControl(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     tagPrefix: String? = null,
+    /// How an option is written on screen. The option itself stays the value the server knows, so
+    /// a name the backend spells as one word — "OeffentlicherDienst" — is not shown that way.
+    label: (String) -> String = { it },
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -282,7 +285,7 @@ fun SegmentedControl(
                         .clickable { onSelect(index) },
                 ) {
                     Text(
-                        option,
+                        label(option),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                         color = if (selected) {
