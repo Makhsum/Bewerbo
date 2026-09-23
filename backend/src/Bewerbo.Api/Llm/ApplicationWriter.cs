@@ -308,7 +308,7 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
         //     padding, and there is deliberately no "Ich freue mich auf Ihre Antwort".
         var start = string.IsNullOrWhiteSpace(posting.StartDate)
             ? "Ich kann kurzfristig anfangen."
-            : $"Anfangen kann ich {posting.StartDate}.";
+            : $"Anfangen kann ich {EntryDate(posting.StartDate)}.";
         paragraphs.Add($"{start} Über ein Gespräch, in dem ich Ihnen zeige, wie ich die Aufgaben in " +
                        "Ihrem Team übernehmen kann, würde ich mich freuen.");
 
@@ -378,4 +378,16 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
 
     private static string Article(string jobTitle) =>
         string.IsNullOrWhiteSpace(jobTitle) ? "diese Aufgabe" : $"die Stelle als {jobTitle}";
+
+    /// <summary>
+    /// The Eintritt as it can stand in a sentence: "ab sofort" already can, "01.03.2026" cannot.
+    /// </summary>
+    /// <remarks>
+    /// Most postings write the date with its preposition — "ab sofort", "zum nächstmöglichen
+    /// Zeitpunkt", "zum 01.03.2026" — and then there is nothing to add. A bare date is what
+    /// "Eintritt: 01.03.2026" yields, and what a user types into the correction dialog, and
+    /// "Anfangen kann ich 01.03.2026." is not a German sentence.
+    /// </remarks>
+    public static string EntryDate(string startDate) =>
+        char.IsDigit(startDate.FirstOrDefault()) ? $"am {startDate}" : startDate;
 }

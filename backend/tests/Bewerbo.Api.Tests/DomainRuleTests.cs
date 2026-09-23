@@ -85,6 +85,21 @@ public class DomainRuleTests
         Assert.Equal(expected, ApplicationWriter.Salutation(contact));
     }
 
+    // -- the Eintritt in a sentence ----------------------------------------------------------------
+
+    [Theory]
+    [InlineData("01.03.2026", "am 01.03.2026")]
+    [InlineData("ab sofort", "ab sofort")]
+    [InlineData("zum nächstmöglichen Zeitpunkt", "zum nächstmöglichen Zeitpunkt")]
+    [InlineData("zum 01.03.2026", "zum 01.03.2026")]
+    public void The_Eintritt_gets_the_preposition_a_bare_date_is_missing(string start, string expected)
+    {
+        // The close of the letter reads "Anfangen kann ich {…}.". A posting that writes its date
+        // as a phrase brings the preposition with it; "Eintritt: 01.03.2026" does not, and neither
+        // does the correction dialog, so the letter said "Anfangen kann ich 01.03.2026."
+        Assert.Equal(expected, ApplicationWriter.EntryDate(start));
+    }
+
     // -- the posting parser --------------------------------------------------------------------------
 
     private const string Posting = """
