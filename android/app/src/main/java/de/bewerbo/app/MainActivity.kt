@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.ui.components.FitOneLineText
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
 import de.bewerbo.app.ui.screens.LockerScreen
@@ -142,7 +143,17 @@ private fun BottomBar(navController: NavHostController) {
                 icon = {
                     Icon(destination.icon, contentDescription = stringResource(destination.label))
                 },
-                label = { Text(stringResource(destination.label)) },
+                label = {
+                    // Five destinations share the screen width, so a long word — "Application",
+                    // "Bewerbung", "Вакансия" — met the edge of its item and wrapped onto a
+                    // second line. The label shrinks to fit instead; its own tag lets a driver
+                    // read the line back and see that it is still one line.
+                    FitOneLineText(
+                        text = stringResource(destination.label),
+                        modifier = Modifier.fillMaxWidth().testTag("${destination.tag}_label"),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,

@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,8 +36,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -366,3 +377,74 @@ fun Gutter(height: androidx.compose.ui.unit.Dp = Space.m) {
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 fun Modifier.exposeTestTags(): Modifier =
     this.semantics { testTagsAsResourceId = true }
+
+/**
+ * One line of text that SHRINKS until it fits instead of breaking across two lines.
+ *
+ * A bottom-bar label gets the screen width divided by five and not a pixel more. At a large
+ * system font scale — or in a locale whose word for a destination is simply long — "Application"
+ * wrapped to "Applicati / on" and the whole bar lost its baseline. Shrinking a step at a time
+ * keeps the word whole, which an ellipsis would not: "Applicati…" is not a navigation label.
+ *
+ * Below [minFontSize] the text stops shrinking and is ellipsised rather than made illegible, and
+ * a style whose size is not given in sp is rendered unshrunk on one line — there is no sensible
+ * ladder to walk for an em size.
+ */
+@Composable
+fun FitOneLineText(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = LocalTextStyle.current,
+    color: Color = Color.Unspecified,
+    minFontSize: TextUnit = 9.sp,
+) {
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
+        val fitted =
+            if (constraints.hasBoundedWidth) {
+                fitToWidth(measurer, text, style, constraints.maxWidth, minFontSize)
+            } else {
+                style
+            }
+        Text(
+            text = text,
+            style = fitted,
+            color = color,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Each step is small enough that the shrink is not visible as a jump between two destinations. */
+private const val ShrinkFactor = 0.94f
+
+/** The ladder cannot run forever: 0.94^14 is under half size, well past [minFontSize] anywhere. */
+private const val MaxShrinkSteps = 14
+
+private fun fitToWidth(
+    measurer: TextMeasurer,
+    text: String,
+    style: TextStyle,
+    maxWidth: Int,
+    minFontSize: TextUnit,
+): TextStyle {
+    if (style.fontSize.type != TextUnitType.Sp || minFontSize.type != TextUnitType.Sp) return style
+    var candidate = style
+    repeat(MaxShrinkSteps) {
+        val measured = measurer.measure(
+            text = text,
+            style = candidate,
+            maxLines = 1,
+            softWrap = false,
+            constraints = Constraints(maxWidth = maxWidth),
+        )
+        if (!measured.hasVisualOverflow) return candidate
+        val next = candidate.fontSize * ShrinkFactor
+        if (next.value < minFontSize.value) return candidate.copy(fontSize = minFontSize)
+        candidate = candidate.copy(fontSize = next)
+    }
+    return candidate
+}
