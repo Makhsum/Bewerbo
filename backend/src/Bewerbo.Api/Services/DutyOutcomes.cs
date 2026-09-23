@@ -126,7 +126,10 @@ public static class DutyOutcomes
 
         var original = duty.Trim();
         var rest = StripLeadingBullet(original).TrimEnd('.', ';', ',');
-        var framed = StripFraming(ref rest);
+        // The label comes off first, so that "Aufgaben: Verantwortlich für den Empfang" is still
+        // read as the claim it carries.
+        StripLabel(ref rest);
+        var claimed = StripResponsibility(ref rest);
         rest = StripArticle(rest);
         if (rest.Length == 0) return "";
 
@@ -135,7 +138,10 @@ public static class DutyOutcomes
 
         // "Verantwortlich für den Empfang" carries no noun this table knows, but the user's own
         // framing already said what they did with it — so the active form is theirs, not invented.
-        if (outcome.Length == 0 && framed) outcome = $"{rest} verantwortet";
+        // ONLY a responsibility phrase licenses this. A list label says nothing about who answered
+        // for what, and reading it as though it did turns "Tätigkeiten: Stapler fahren" into
+        // "Stapler fahren verantwortet" — a sentence that is neither German nor the user's.
+        if (outcome.Length == 0 && claimed) outcome = $"{rest} verantwortet";
 
         return outcome.Equals(original, StringComparison.Ordinal) ? "" : outcome;
     }
@@ -150,8 +156,11 @@ public static class DutyOutcomes
 
     private static string StripLeadingBullet(string line) => Regex.Replace(line, @"^[-–—•*]\s*", "");
 
-    /// <summary>Removes a responsibility framing or a list label, and says whether there was one.</summary>
-    private static bool StripFraming(ref string line)
+    /// <summary>
+    /// Removes a responsibility framing and says whether there was one. The answer is what licenses
+    /// the "… verantwortet" fallback, so a list label is deliberately not stripped here.
+    /// </summary>
+    private static bool StripResponsibility(ref string line)
     {
         foreach (var framing in Framings)
         {
@@ -163,7 +172,12 @@ public static class DutyOutcomes
             line = after;
             return true;
         }
+        return false;
+    }
 
+    /// <summary>Removes a list label, which says nothing about the work beyond where it begins.</summary>
+    private static void StripLabel(ref string line)
+    {
         foreach (var label in Labels)
         {
             if (!line.StartsWith(label + ":", StringComparison.OrdinalIgnoreCase)) continue;
@@ -172,10 +186,8 @@ public static class DutyOutcomes
             if (after.Length == 0) continue;
 
             line = after;
-            return true;
+            return;
         }
-
-        return false;
     }
 
     private static string StripArticle(string line) => StripLeadingWord(line, Articles, out _);

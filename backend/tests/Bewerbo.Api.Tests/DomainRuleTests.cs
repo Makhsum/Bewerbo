@@ -1024,6 +1024,8 @@ public class DomainRuleTests
     // The user's own framing said what they did with it, so the active form is theirs even where
     // the head noun is not one this table knows.
     [InlineData("Verantwortlich für den Empfang", "Empfang verantwortet")]
+    // A label in front of the claim does not hide it.
+    [InlineData("Aufgaben: Verantwortlich für den Empfang", "Empfang verantwortet")]
     public void A_duty_is_rewritten_as_the_result_a_German_reader_weighs(string duty, string expected)
     {
         Assert.Equal(expected, DutyOutcomes.Rewrite(duty));
@@ -1046,6 +1048,11 @@ public class DomainRuleTests
     [InlineData("Обслуживание клиентов")]
     // A label with nothing behind it.
     [InlineData("Tätigkeiten:")]
+    // A label is a heading somebody put in front of their own list, NOT a claim of responsibility.
+    // Reading it as one produced "Stapler fahren verantwortet" - neither German, nor anything the
+    // user said, and it reached the stored duties and the Lebenslauf from there.
+    [InlineData("Tätigkeiten: Stapler fahren")]
+    [InlineData("Aufgaben: Empfang und Telefon")]
     public void A_duty_the_move_does_not_fit_gets_no_rewrite_rather_than_a_guess(string duty)
     {
         Assert.Equal("", DutyOutcomes.Rewrite(duty));
