@@ -220,7 +220,7 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             "berufserfahrung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_experience)) }
                 profile?.experience?.forEachIndexed { index, entry ->
-                    item { ExperienceCard(entry, index) }
+                    item { ExperienceCard(entry, index, profile.experience, viewModel) }
                 }
                 item { AddExperienceButton(state, viewModel) }
             }
@@ -354,7 +354,12 @@ private fun GapCard(gap: de.bewerbo.app.data.Gap, index: Int, viewModel: AppView
 }
 
 @Composable
-private fun ExperienceCard(entry: Experience, index: Int) {
+private fun ExperienceCard(
+    entry: Experience,
+    index: Int,
+    all: List<Experience>,
+    viewModel: AppViewModel,
+) {
     val colors = LocalSemanticColors.current
 
     BewerboCard(Modifier.testTag("profile_entry_experience_$index")) {
@@ -393,6 +398,34 @@ private fun ExperienceCard(entry: Experience, index: Int) {
                     } else R.string.profile_reference_missing,
                 ),
                 if (entry.referenceOnFile) PillTone.Success else PillTone.Attention,
+            )
+        }
+
+        // The Zeugnis switch, for the same reason the language card has one: "Nachweise on file"
+        // counts one Arbeitszeugnis per finished job, and until this existed that count could
+        // only ever go down as the user added experience.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.s),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                stringResource(R.string.profile_reference_toggle),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+            )
+            Switch(
+                checked = entry.referenceOnFile,
+                onCheckedChange = { on ->
+                    viewModel.saveExperience(
+                        all.mapIndexed { i, other ->
+                            if (i == index) other.copy(referenceOnFile = on) else other
+                        },
+                    )
+                },
+                modifier = Modifier.testTag("profile_experience_reference_$index"),
             )
         }
 
