@@ -17,6 +17,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +35,7 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.Education
 import de.bewerbo.app.data.Experience
+import de.bewerbo.app.data.LanguageSkill
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.exposeTestTags
@@ -232,27 +234,9 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             "sprachen" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_languages)) }
                 profile?.languages?.forEachIndexed { index, skill ->
-                    item {
-                        BewerboCard(Modifier.testTag("profile_entry_language_$index")) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(skill.language, style = MaterialTheme.typography.titleMedium)
-                                StatusPill(
-                                    skill.level,
-                                    if (skill.certificateOnFile) PillTone.Success else PillTone.Attention,
-                                )
-                            }
-                            Text(
-                                stringResource(
-                                    if (skill.certificateOnFile) {
-                                        R.string.profile_certificate_on_file
-                                    } else R.string.profile_certificate_missing,
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.muted,
-                            )
-                        }
-                    }
+                    item { LanguageCard(skill, index, profile.languages, viewModel) }
                 }
+                item { AddLanguageButton(state, viewModel) }
             }
             "anlagen" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_attachments)) }
@@ -690,6 +674,141 @@ private fun AddExperienceButton(state: AppState, viewModel: AppViewModel) {
             OutlinedButton(
                 onClick = { open = false },
                 modifier = Modifier.testTag("experience_btn_cancel"),
+            ) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    }
+}
+
+/**
+ * One language, with the switch that says whether its certificate is in the Mappe.
+ *
+ * That switch is not cosmetic: `certificateOnFile` is what turns an "offen" requirement into a
+ * "belegt" one at the Abgleich and what the Übersicht counts under "Nachweise". Until it existed
+ * the flag could never become true, so the app went on asking for a certificate the user had
+ * already filed.
+ */
+@Composable
+private fun LanguageCard(
+    skill: LanguageSkill,
+    index: Int,
+    all: List<LanguageSkill>,
+    viewModel: AppViewModel,
+) {
+    val colors = LocalSemanticColors.current
+
+    BewerboCard(Modifier.testTag("profile_entry_language_$index")) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(skill.language, style = MaterialTheme.typography.titleMedium)
+            StatusPill(
+                skill.level,
+                if (skill.certificateOnFile) PillTone.Success else PillTone.Attention,
+            )
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.s),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                stringResource(
+                    if (skill.certificateOnFile) {
+                        R.string.profile_certificate_on_file
+                    } else R.string.profile_certificate_missing,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+            )
+            Switch(
+                checked = skill.certificateOnFile,
+                onCheckedChange = { on ->
+                    viewModel.saveLanguages(
+                        all.mapIndexed { i, entry ->
+                            if (i == index) entry.copy(certificateOnFile = on) else entry
+                        },
+                    )
+                },
+                modifier = Modifier.testTag("profile_language_certificate_$index"),
+            )
+        }
+    }
+}
+
+/**
+ * Adding a language. Level is typed rather than picked from a list because the levels a posting
+ * asks for are not only the CEFR ones — "Muttersprache" is the other half of this product's
+ * audience, and the Abgleich reads it.
+ */
+@Composable
+private fun AddLanguageButton(state: AppState, viewModel: AppViewModel) {
+    var open by remember { mutableStateOf(false) }
+    var language by remember { mutableStateOf("") }
+    var level by remember { mutableStateOf("") }
+
+    if (!open) {
+        OutlinedButton(
+            onClick = { open = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("profile_btn_add_language"),
+        ) {
+            Icon(BewerboIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.profile_add_language),
+                modifier = Modifier.padding(start = Space.s),
+            )
+        }
+        return
+    }
+
+    BewerboCard(Modifier.testTag("profile_new_language")) {
+        SectionLabel(stringResource(R.string.profile_add_language))
+        Box(Modifier.padding(top = Space.s))
+        LabelledField(stringResource(R.string.language_name), language, { language = it },
+            testTag = "language_input_name")
+        Box(Modifier.padding(top = Space.s))
+        LabelledField(stringResource(R.string.language_level), level, { level = it },
+            testTag = "language_input_level")
+
+        val missing = buildList {
+            if (language.isBlank()) add(stringResource(R.string.language_name))
+            if (level.isBlank()) add(stringResource(R.string.language_level))
+        }
+        if (missing.isNotEmpty()) {
+            Text(
+                stringResource(R.string.experience_missing, missing.joinToString(", ")),
+                style = MaterialTheme.typography.bodySmall,
+                color = LocalSemanticColors.current.attention,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("language_missing_hint"),
+            )
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.m),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            Button(
+                onClick = {
+                    val entry = LanguageSkill(language = language.trim(), level = level.trim())
+                    viewModel.saveLanguages((state.profile?.languages ?: emptyList()) + entry)
+                    open = false
+                    language = ""; level = ""
+                },
+                enabled = missing.isEmpty(),
+                modifier = Modifier.testTag("language_btn_save"),
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+            OutlinedButton(
+                onClick = { open = false },
+                modifier = Modifier.testTag("language_btn_cancel"),
             ) {
                 Text(stringResource(R.string.action_cancel))
             }
