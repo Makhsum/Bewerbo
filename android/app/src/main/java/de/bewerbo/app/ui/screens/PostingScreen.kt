@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -82,14 +86,31 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
+    // Where the source text sits inside its card, and where each passage sits inside that text.
+    // Both are measured rather than worked out: the card's label row and padding stand above the
+    // text and grow with the font scale, and only the laid-out text knows which line a passage
+    // landed on. Together they turn a passage into a scroll offset — and for an advert longer than
+    // the screen, the top of the card and the passage are nowhere near the same place.
+    var cardTop by remember(posting?.id) { mutableFloatStateOf(0f) }
+    var textTop by remember(posting?.id) { mutableFloatStateOf(0f) }
+    var passageTop by remember(posting?.id) { mutableStateOf(emptyMap<Int, Int>()) }
+    val passageMargin = with(LocalDensity.current) { Space.m.toPx() }
+
+    /// How far into the source card the scroll has to reach to put this passage on screen. Zero
+    /// where nothing has been measured yet, which lands on the top of the card as it did before.
+    fun passageOffset(number: Int): Int =
+        ((textTop - cardTop) + (passageTop[number] ?: 0) - passageMargin)
+            .toInt()
+            .coerceAtLeast(0)
+
     /// Selecting shows the other side, which is only true if the other side is on screen: the two
     /// cards are far enough apart on a phone that one of them is always scrolled away.
-    fun select(number: Int, show: Int) {
+    fun select(number: Int, show: Int, offset: Int) {
         if (selected == number) {
             selected = null
         } else {
             selected = number
-            scope.launch { listState.animateScrollToItem(show) }
+            scope.launch { listState.animateScrollToItem(show, offset) }
         }
     }
 
@@ -144,7 +165,9 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
             }
         } else {
             item {
-                BewerboCard {
+                BewerboCard(
+                    Modifier.onGloballyPositioned { cardTop = it.positionInWindow().y },
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             BewerboIcons.Document, contentDescription = null,
@@ -163,8 +186,13 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                                     ?.let { EvidenceMark(it.spanStart, it.spanLength, number) }
                             },
                             selected = selected,
-                            onSelect = { number -> select(number, FieldsItem) },
-                            modifier = Modifier.testTag("posting_source_text"),
+                            // From a passage the field card is the target, and its rows all sit
+                            // within one screen of its top — no offset into it is needed.
+                            onSelect = { number -> select(number, FieldsItem, 0) },
+                            modifier = Modifier
+                                .testTag("posting_source_text")
+                                .onGloballyPositioned { textTop = it.positionInWindow().y },
+                            onPassagesLaidOut = { passageTop = it },
                         )
                     }
                     if (marks.isNotEmpty()) {
@@ -199,7 +227,7 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                             field = posting.field(key),
                             number = number,
                             selected = number != null && number == selected,
-                            onSelect = number?.let { { select(it, SourceItem) } },
+                            onSelect = number?.let { { select(it, SourceItem, passageOffset(it)) } },
                         )
                     }
                     TextButton(

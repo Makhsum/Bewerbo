@@ -192,6 +192,9 @@ fun EvidenceText(
     selected: Int?,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /// Where each passage sits, in pixels from the top of this text. The screen needs it to scroll
+    /// to the passage itself; only the laid-out text knows which line a passage ended up on.
+    onPassagesLaidOut: (Map<Int, Int>) -> Unit = {},
 ) {
     val colors = LocalSemanticColors.current
     val accent = colors.accent
@@ -240,7 +243,12 @@ fun EvidenceText(
     Text(
         text,
         style = MaterialTheme.typography.bodySmall,
-        onTextLayout = { layout = it },
+        onTextLayout = { result ->
+            layout = result
+            onPassagesLaidOut(
+                marked.passages.associate { it.number to result.getBoundingBox(it.words.first).top.toInt() },
+            )
+        },
         // Keyed on the marked-up text rather than on the selection: the tappable ranges move only
         // when the posting or its passages change, and restarting the gesture detector on every
         // selection would drop the tap that caused it.
