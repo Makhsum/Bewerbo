@@ -3,6 +3,7 @@ package de.bewerbo.app.ui
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +29,15 @@ val UI_LANGUAGES = listOf(
 fun defaultUiLanguage(): String =
     UI_LANGUAGES.firstOrNull { it.first == Locale.getDefault().language }?.first ?: "en"
 
+/// The tag the interface is currently drawn in.
+///
+/// A dialog and a dropdown menu are composed in windows of their own, and those windows provide
+/// LocalContext and LocalConfiguration AFRESH from the phone — so the language has to be applied
+/// again inside them. This local is not re-provided at a window boundary, which is how that code
+/// learns which language to re-apply without every screen threading the tag down to it. The same
+/// reason [Modifier.exposeTestTags] exists, for the same boundary.
+val LocalUiLanguage = compositionLocalOf { "en" }
+
 /**
  * Draws everything below it in [tag], whatever the phone is set to.
  *
@@ -51,6 +61,7 @@ fun UiLanguageProvider(tag: String, content: @Composable () -> Unit) {
     }
 
     CompositionLocalProvider(
+        LocalUiLanguage provides tag,
         LocalConfiguration provides localised,
         LocalContext provides context.createConfigurationContext(localised),
         content = content,

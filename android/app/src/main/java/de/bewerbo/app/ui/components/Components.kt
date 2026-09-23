@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +39,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import de.bewerbo.app.ui.LocalUiLanguage
+import de.bewerbo.app.ui.UiLanguageProvider
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -391,6 +394,40 @@ fun Gutter(height: androidx.compose.ui.unit.Dp = Space.m) {
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 fun Modifier.exposeTestTags(): Modifier =
     this.semantics { testTagsAsResourceId = true }
+
+/**
+ * An AlertDialog that keeps the app's own rules inside its own window.
+ *
+ * TWO things of ours do not cross that boundary, and each dialog used to have to remember them.
+ * The testTagsAsResourceId flag is the one the app already knew about. The interface language is
+ * the other, and it was missed: the dialog's window provides LocalContext and LocalConfiguration
+ * afresh from the PHONE's locale, so every stringResource inside came back in the phone's language
+ * — the title read "Correct the fields" and the buttons "Cancel"/"Save" while the app behind the
+ * dialog was German. The language is re-applied around each slot, because the slots are what the
+ * dialog composes in that window.
+ *
+ * Both are applied here once so that the next dialog gets them without knowing any of this.
+ */
+@Composable
+fun BewerboDialog(
+    onDismissRequest: () -> Unit,
+    testTag: String,
+    title: @Composable () -> Unit,
+    text: @Composable () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable () -> Unit,
+) {
+    val language = LocalUiLanguage.current
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.exposeTestTags().testTag(testTag),
+        title = { UiLanguageProvider(language) { title() } },
+        text = { UiLanguageProvider(language) { text() } },
+        confirmButton = { UiLanguageProvider(language) { confirmButton() } },
+        dismissButton = { UiLanguageProvider(language) { dismissButton() } },
+    )
+}
 
 /**
  * One line of text that SHRINKS until it fits instead of breaking across two lines.

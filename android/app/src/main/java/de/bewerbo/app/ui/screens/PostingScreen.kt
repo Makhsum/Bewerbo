@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,9 +35,9 @@ import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EvidenceField
 import de.bewerbo.app.data.PostingView
 import de.bewerbo.app.ui.components.BewerboCard
+import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.EvidenceText
 import de.bewerbo.app.ui.components.LabelledField
-import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
@@ -331,10 +330,9 @@ private fun PostingCorrectionDialog(
         }
     }
 
-    AlertDialog(
+    BewerboDialog(
         onDismissRequest = onDismiss,
-        // A dialog is its own window: without its own flag nothing inside it has a resource-id.
-        modifier = Modifier.exposeTestTags().testTag("posting_edit_dialog"),
+        testTag = "posting_edit_dialog",
         title = { Text(stringResource(R.string.posting_correct_fields)) },
         text = {
             Column(

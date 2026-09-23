@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +30,7 @@ import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.Requirement
 import de.bewerbo.app.data.StoredDocument
 import de.bewerbo.app.ui.components.BewerboCard
+import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.Meter
@@ -38,7 +38,6 @@ import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.RequirementRow
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
-import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -270,10 +269,9 @@ private fun FileCertificateDialog(
     var note by remember(language) { mutableStateOf("") }
     var pages by remember(language) { mutableStateOf("1") }
 
-    AlertDialog(
+    BewerboDialog(
         onDismissRequest = onDismiss,
-        // A dialog is its own window: without its own flag nothing inside it has a resource-id.
-        modifier = Modifier.exposeTestTags().testTag("match_file_dialog"),
+        testTag = "match_file_dialog",
         title = { Text(stringResource(R.string.match_file_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
