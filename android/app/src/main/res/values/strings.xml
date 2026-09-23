@@ -36,7 +36,7 @@
     <string name="overview_eu_body">Profile data is held encrypted on EU servers and deleted after export whenever you ask for it.</string>
 
     <string name="translation_pending_title">Translation is pending</string>
-    <string name="translation_pending_body">%1$d entries are still in your own language. Bewerbo writes the German once a language model is configured for this installation; until then the Lebenslauf keeps your wording for those entries.</string>
+    <string name="translation_pending_body">%1$d entries are still in your own language. Bewerbo writes the German once a language model is configured for this installation; until then the Lebenslauf and the Anschreiben keep your wording for those entries.</string>
 
     <!-- Profile -->
     <string name="profile_subtitle">Enter everything in your own language. Bewerbo writes the German.</string>

@@ -27,7 +27,7 @@
     <string name="overview_eu_body">Дані профілю зберігаються зашифровано на серверах у ЄС і видаляються після експорту, щойно ви цього попросите.</string>
 
     <string name="translation_pending_title">Переклад ще не виконано</string>
-    <string name="translation_pending_body">%1$d записів досі вашою мовою. Bewerbo напише німецькою, коли для цієї інсталяції буде налаштовано мовну модель; доти Lebenslauf збереже ваше формулювання для цих записів.</string>
+    <string name="translation_pending_body">%1$d записів досі вашою мовою. Bewerbo напише німецькою, коли для цієї інсталяції буде налаштовано мовну модель; доти Lebenslauf і Anschreiben збережуть ваше формулювання для цих записів.</string>
 
     <string name="profile_subtitle">Вводьте все своєю мовою. Bewerbo напише німецькою.</string>
     <string name="profile_input_language">Мова введення: %1$s</string>
