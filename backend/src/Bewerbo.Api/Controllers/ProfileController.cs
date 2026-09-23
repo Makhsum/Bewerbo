@@ -26,13 +26,13 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id) =>
-        await Load(id) is { } dto ? Ok(dto) : NotFoundProblem(ProfileMissing);
+        await Load(id) is { } dto ? Ok(dto) : NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
     [HttpPatch("{id:guid}/sections/person")]
     public async Task<IActionResult> PatchPerson(Guid id, [FromBody] PersonDto person)
     {
         var profile = await db.Profiles.FindAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
         Apply(profile, person);
         await db.SaveChangesAsync();
         return Ok(await Load(id));
@@ -42,7 +42,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public async Task<IActionResult> PatchExperience(Guid id, [FromBody] ExperienceDto[] entries)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         // A positional record deserialises an omitted member as null even where the type says it is
         // not nullable, so leaving "industry" out of the JSON used to reach the database as null and
@@ -78,7 +78,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public async Task<IActionResult> PatchEducation(Guid id, [FromBody] EducationDto[] entries)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         if (Missing(entries, e => e.Degree, "degree") is { } bad)
         {
@@ -113,7 +113,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public async Task<IActionResult> PatchLanguages(Guid id, [FromBody] LanguageDto[] entries)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         if (Missing(entries, l => l.Language, "language") is { } bad)
         {
@@ -140,7 +140,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public async Task<IActionResult> GetTimeline(Guid id)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         var view = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         return Ok(new TimelineDto(
@@ -156,7 +156,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     public async Task<IActionResult> PostGap(Guid id, [FromBody] GapUpdateDto update)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         var from = ParseDate(update.From);
         var to = ParseDate(update.To);
@@ -197,7 +197,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
         CancellationToken ct)
     {
         var profile = await db.FullProfileAsync(id);
-        if (profile is null) return NotFoundProblem(ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
@@ -208,6 +208,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
     }
 
     internal const string ProfileMissing = "Es gibt kein Profil mit dieser Id.";
+    internal const string ProfileMissingKind = "profile_missing";
 
     private static void Apply(Profile profile, PersonDto person)
     {

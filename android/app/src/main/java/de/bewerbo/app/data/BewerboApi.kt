@@ -5,6 +5,7 @@ import de.bewerbo.app.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
@@ -13,15 +14,22 @@ import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readBytes
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import java.io.File
 
 /// The backend, as the client sees it. One place that knows a URL.
 class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
+
+    /// Lenient on purpose: a ProblemDetails carries members this app does not model, and a failure
+    /// that cannot be parsed must still come out as a failure rather than as a parser exception.
+    /// Declared above [client] because the validator below reads it.
+    private val problemJson = Json { ignoreUnknownKeys = true }
 
     private val client = HttpClient(Android) {
         install(ContentNegotiation) {
@@ -34,6 +42,21 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
             // Rendering a Bewerbungsmappe and reading the PDF back takes longer than a normal call.
             requestTimeoutMillis = 60_000
             connectTimeoutMillis = 10_000
+        }
+
+        // Every non-2xx becomes an [ApiFailure] carrying the server's kind, and that is two things
+        // at once. It is what lets the snackbar be written in the user's language rather than
+        // showing whatever a parser threw. And it is what stops [download] from writing a refusal
+        // to disk: a 400 body used to be saved as the Bewerbungsmappe under its .pdf name, with
+        // the success message naming the file.
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status.isSuccess()) return@validateResponse
+
+                val problem = runCatching { problemJson.decodeFromString<ApiProblem>(response.bodyAsText()) }
+                    .getOrNull()
+                throw ApiFailure(problem?.kind.orEmpty(), problem?.detail.orEmpty())
+            }
         }
     }
 
@@ -140,3 +163,8 @@ fun Context.documentFile(name: String): File = File(File(filesDir, "bewerbungen"
 /// Where the preview's copy of the Mappe goes. The cache and not [documentFile]: it is re-rendered
 /// every time the chosen parts change and it is not the file the user asked to keep.
 fun Context.previewFile(): File = File(cacheDir, "vorschau.pdf")
+
+/// A call the server refused. [kind] is what to say about it in the user's language; [detail] is
+/// the German the server sent, kept as the message so a log line still says what happened and as
+/// the fallback for a kind this build does not know.
+class ApiFailure(val kind: String, val detail: String) : Exception(detail)

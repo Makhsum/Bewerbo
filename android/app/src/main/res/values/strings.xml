@@ -50,6 +50,14 @@
     <string name="term_din_5008">the German standard for how a business letter is laid out</string>
     <string name="term_agg">the equal-treatment law: no employer may demand a photo or personal details</string>
 
+    <!-- Why a call failed. The server names the kind; this is what the snackbar says about it. -->
+    <string name="error_unreachable">Bewerbo could not be reached. Check the connection and try again.</string>
+    <string name="error_profile_missing">This profile is no longer on the server.</string>
+    <string name="error_posting_missing">This posting is no longer on the server.</string>
+    <string name="error_application_missing">This application is no longer on the server.</string>
+    <string name="error_document_missing">This document is no longer on the server.</string>
+    <string name="error_unknown">That did not work. Please try again.</string>
+
     <!-- The outstanding steps. The server says WHICH step it is and what goes into it; the
          sentence is written here, because the server never learns the interface language. -->
     <string name="step_person_title">Complete your personal details</string>

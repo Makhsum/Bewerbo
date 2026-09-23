@@ -11,7 +11,7 @@ public class OverviewController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> Get(Guid profileId)
     {
         var profile = await db.FullProfileAsync(profileId);
-        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var postings = db.Postings.Where(p => p.ProfileId == profileId).ToList();

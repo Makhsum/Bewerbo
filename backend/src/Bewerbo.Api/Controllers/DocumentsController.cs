@@ -37,7 +37,7 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
     {
         var profile = await db.FullProfileAsync(profileId);
         return profile is null
-            ? NotFoundProblem(ProfileController.ProfileMissing)
+            ? NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind)
             : Ok(profile.Documents.Select(d => d.ToDto()).ToList());
     }
 
@@ -45,9 +45,12 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> Delete(Guid id)
     {
         var document = await db.Documents.FindAsync(id);
-        if (document is null) return NotFoundProblem("Es gibt kein Dokument mit dieser Id.");
+        if (document is null) return NotFoundProblem(DocumentMissing, DocumentMissingKind);
         db.Documents.Remove(document);
         await db.SaveChangesAsync();
         return NoContent();
     }
+
+    internal const string DocumentMissing = "Es gibt kein Dokument mit dieser Id.";
+    internal const string DocumentMissingKind = "document_missing";
 }

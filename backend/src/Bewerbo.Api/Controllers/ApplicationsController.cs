@@ -20,8 +20,8 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     {
         var profile = await db.FullProfileAsync(request.ProfileId);
         var posting = await db.Postings.FindAsync(request.PostingId);
-        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing);
-        if (posting is null) return NotFoundProblem(PostingsController.PostingMissing);
+        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
+        if (posting is null) return NotFoundProblem(PostingsController.PostingMissing, PostingsController.PostingMissingKind);
 
         var match = MatchFor(profile, posting);
         var tone = ParseEnum(request.Tone, LetterTone.Sachlich);
@@ -48,7 +48,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> Get(Guid id)
     {
         var loaded = await LoadAsync(id);
-        if (loaded is null) return NotFoundProblem(ApplicationMissing);
+        if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (application, profile, posting, letter) = loaded.Value;
         return Ok(ToDto(application, profile, posting, letter, "gespeichert"));
     }
@@ -60,7 +60,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         [FromServices] IApplicationWriter writer, CancellationToken ct)
     {
         var loaded = await LoadAsync(id);
-        if (loaded is null) return NotFoundProblem(ApplicationMissing);
+        if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (application, profile, posting, _) = loaded.Value;
 
         application.Tone = ParseEnum(tone, application.Tone);
@@ -77,7 +77,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> Review(Guid id)
     {
         var loaded = await LoadAsync(id);
-        if (loaded is null) return NotFoundProblem(ApplicationMissing);
+        if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (_, _, posting, letter) = loaded.Value;
 
         var review = TextReview.Run(letter, posting.ContactName, posting.Reference);
@@ -92,7 +92,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         CancellationToken ct)
     {
         var loaded = await LoadAsync(id);
-        if (loaded is null) return NotFoundProblem(ApplicationMissing);
+        if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (_, profile, posting, letter) = loaded.Value;
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
@@ -112,7 +112,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         [FromServices] IApplicationWriter writer, CancellationToken ct)
     {
         var loaded = await LoadAsync(id);
-        if (loaded is null) return NotFoundProblem(ApplicationMissing);
+        if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
         var (_, profile, posting, letter) = loaded.Value;
 
         // The parts are the user's choice now, so an empty one is reachable — and the renderer
@@ -134,7 +134,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> SetStatus(Guid id, [FromBody] StatusRequest request)
     {
         var application = await db.Applications.FindAsync(id);
-        if (application is null) return NotFoundProblem(ApplicationMissing);
+        if (application is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
 
         application.Status = ParseEnum(request.Status, application.Status);
         application.SentAt = application.Status == ApplicationStatus.Entwurf
@@ -145,6 +145,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     }
 
     internal const string ApplicationMissing = "Es gibt keine Bewerbung mit dieser Id.";
+    internal const string ApplicationMissingKind = "application_missing";
 
     private static ApplicationParts ParseParts(string? parts)
     {

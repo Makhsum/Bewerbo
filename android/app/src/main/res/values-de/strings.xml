@@ -36,6 +36,14 @@
     <string name="term_din_5008">die Norm dafür, wie ein Geschäftsbrief gesetzt wird</string>
     <string name="term_agg">das Gleichbehandlungsgesetz: kein Arbeitgeber darf Foto oder persönliche Angaben verlangen</string>
 
+    <!-- Warum ein Aufruf scheiterte. Der Server nennt die Art; das hier sagt die Meldung dazu. -->
+    <string name="error_unreachable">Bewerbo war nicht erreichbar. Prüfen Sie die Verbindung und versuchen Sie es erneut.</string>
+    <string name="error_profile_missing">Dieses Profil liegt nicht mehr auf dem Server.</string>
+    <string name="error_posting_missing">Diese Stellenanzeige liegt nicht mehr auf dem Server.</string>
+    <string name="error_application_missing">Diese Bewerbung liegt nicht mehr auf dem Server.</string>
+    <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
+    <string name="error_unknown">Das hat nicht geklappt. Bitte versuchen Sie es erneut.</string>
+
     <!-- Die offenen Schritte. Der Server sagt, WELCHER Schritt es ist und was hineingehört; der
          Satz wird hier geschrieben, weil der Server die Oberflächensprache nie erfährt. -->
     <string name="step_person_title">Angaben zur Person vervollständigen</string>

@@ -12,9 +12,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
+/**
+ * Why a call failed, in the two pieces the snackbar needs. [kind] is what the message says, looked
+ * up in the user's language by the screen; [detail] is the German the server sent, shown only for
+ * a kind this build does not know.
+ *
+ * A view model has no resources to read, and it must not: the interface language is the app's own
+ * preference and it is applied in the composition. So the failure travels as a kind here for the
+ * same reason a [NextStep] does — see `errorMessage` on the UI side.
+ */
+data class ErrorMessage(val kind: String, val detail: String = "")
+
 data class AppState(
     val loading: Boolean = true,
-    val error: String? = null,
+    val error: ErrorMessage? = null,
     /// What the backend said about itself — which writer is in use.
     val writer: String = "regeln",
     val profile: ProfileView? = null,
@@ -503,10 +514,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(busy = busy, error = null) }
         runCatching { block() }
             .onFailure { failure ->
-                _state.update {
-                    it.copy(error = failure.message ?: failure::class.simpleName ?: "Fehler", loading = false)
-                }
+                _state.update { it.copy(error = errorOf(failure), loading = false) }
             }
         _state.update { it.copy(busy = null) }
+    }
+
+    /**
+     * What to tell the user about a failure.
+     *
+     * A server that refused the call names the kind itself. Everything else — no network, a
+     * timeout, a body that did not parse — is one case as far as the user is concerned: the app
+     * could not reach Bewerbo. It used to be the exception's own message, so a Russian screen
+     * showed "Failed to connect to /10.0.2.2:5099" and, failing that, the literal "Fehler".
+     */
+    private fun errorOf(failure: Throwable): ErrorMessage = when (failure) {
+        is ApiFailure -> ErrorMessage(failure.kind, failure.detail)
+        else -> ErrorMessage(UNREACHABLE)
+    }
+
+    companion object {
+        /// The kind for "the server was not reached at all", which no ProblemDetails can carry.
+        const val UNREACHABLE = "unreachable"
     }
 }

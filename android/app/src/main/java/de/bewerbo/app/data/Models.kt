@@ -319,3 +319,9 @@ data class Health(val status: String = "", val writer: String = "regeln")
 
 @Serializable
 data class GapWordingResponse(@SerialName("reason") val reason: String = "", val german: String = "")
+
+/// A ProblemDetails, as the API answers every failure. [kind] says WHICH failure it is, so the
+/// snackbar can be written in the user's language; [detail] is the German the server sent, kept as
+/// the fallback for a kind this build does not know. Same division as [NextStep].
+@Serializable
+data class ApiProblem(val detail: String = "", val kind: String = "")

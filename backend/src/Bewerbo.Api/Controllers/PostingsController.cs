@@ -47,14 +47,14 @@ public class PostingsController(BewerboDbContext db) : BewerboController
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id) =>
-        await db.Postings.FindAsync(id) is { } posting ? Ok(ToDto(posting)) : NotFoundProblem(PostingMissing);
+        await db.Postings.FindAsync(id) is { } posting ? Ok(ToDto(posting)) : NotFoundProblem(PostingMissing, PostingMissingKind);
 
     // Every extracted field is correctable — that is the point of showing it against its source.
     [HttpPatch("{id:guid}/fields")]
     public async Task<IActionResult> PatchField(Guid id, [FromBody] CorrectFieldRequest request)
     {
         var posting = await db.Postings.FindAsync(id);
-        if (posting is null) return NotFoundProblem(PostingMissing);
+        if (posting is null) return NotFoundProblem(PostingMissing, PostingMissingKind);
 
         var fields = JsonSerializer.Deserialize<List<ExtractedField>>(posting.FieldsJson) ?? [];
         var index = fields.FindIndex(f => f.Key == request.Key);
@@ -79,7 +79,7 @@ public class PostingsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> PatchEmployerType(Guid id, [FromQuery, BindRequired] string type)
     {
         var posting = await db.Postings.FindAsync(id);
-        if (posting is null) return NotFoundProblem(PostingMissing);
+        if (posting is null) return NotFoundProblem(PostingMissing, PostingMissingKind);
         posting.EmployerType = ParseEnum(type, EmployerType.Mittelstand);
         await db.SaveChangesAsync();
         return Ok(ToDto(posting));
@@ -89,10 +89,10 @@ public class PostingsController(BewerboDbContext db) : BewerboController
     public async Task<IActionResult> Match(Guid id)
     {
         var posting = await db.Postings.FindAsync(id);
-        if (posting is null) return NotFoundProblem(PostingMissing);
+        if (posting is null) return NotFoundProblem(PostingMissing, PostingMissingKind);
 
         var profile = await db.FullProfileAsync(posting.ProfileId);
-        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing);
+        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
 
         var requirements = JsonSerializer.Deserialize<List<ExtractedRequirement>>(posting.RequirementsJson) ?? [];
         var match = RequirementMatcher.Match(profile, requirements);
@@ -112,6 +112,7 @@ public class PostingsController(BewerboDbContext db) : BewerboController
     }
 
     internal const string PostingMissing = "Es gibt keine Stellenanzeige mit dieser Id.";
+    internal const string PostingMissingKind = "posting_missing";
 
     private static void ApplyFields(Posting posting, IReadOnlyList<ExtractedField> fields)
     {

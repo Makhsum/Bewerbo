@@ -22,9 +22,22 @@ public abstract class BewerboController : ControllerBase
     /// The record the route names does not exist. The title is left to the framework on purpose, so
     /// that a 404 the API writes and a 404 the router writes for an address that matches nothing
     /// read alike; what this route knows goes into the detail.
+    ///
+    /// <paramref name="kind"/> goes out beside the detail as an extension member, for the reason
+    /// every user-facing sentence of this API now carries one: the server never learns the
+    /// interface language, so the detail is German on every screen. The client writes the sentence
+    /// from the kind and keeps the German as its fallback. See <see cref="Contracts.NextStepDto"/>.
     /// </summary>
-    protected ObjectResult NotFoundProblem(string detail) =>
-        Problem(statusCode: StatusCodes.Status404NotFound, detail: detail);
+    protected ObjectResult NotFoundProblem(string detail, string kind)
+    {
+        var problem = Problem(statusCode: StatusCodes.Status404NotFound, detail: detail);
+        if (problem.Value is ProblemDetails details)
+        {
+            details.Extensions["kind"] = kind;
+        }
+
+        return problem;
+    }
 
     /// <summary>
     /// The request parsed but the API will not act on it. Reported under the same "errors" member

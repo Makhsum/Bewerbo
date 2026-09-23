@@ -30,7 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
+import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.AtsFinding
+import de.bewerbo.app.data.ErrorMessage
 import de.bewerbo.app.data.Gap
 import de.bewerbo.app.data.NextStep
 import de.bewerbo.app.data.Requirement
@@ -486,3 +488,21 @@ private fun Requirement.actionArg(index: Int): String = actionArgs.getOrElse(ind
 private fun ReviewCheck.arg(index: Int): String = detailArgs.getOrElse(index) { "" }
 
 private fun AtsFinding.arg(index: Int): String = detailArgs.getOrElse(index) { "" }
+
+/**
+ * What the snackbar says about a failed call.
+ *
+ * Same division as the steps and the checks above: the server names the kind, the screen writes
+ * the sentence. The German detail is the fallback for a kind this build does not know, which is
+ * better than an empty snackbar — and better than what stood here before, the raw message of
+ * whatever was thrown.
+ */
+@Composable
+fun errorMessage(error: ErrorMessage): String = when (error.kind) {
+    AppViewModel.UNREACHABLE -> stringResource(R.string.error_unreachable)
+    "profile_missing" -> stringResource(R.string.error_profile_missing)
+    "posting_missing" -> stringResource(R.string.error_posting_missing)
+    "application_missing" -> stringResource(R.string.error_application_missing)
+    "document_missing" -> stringResource(R.string.error_document_missing)
+    else -> error.detail.ifBlank { stringResource(R.string.error_unknown) }
+}

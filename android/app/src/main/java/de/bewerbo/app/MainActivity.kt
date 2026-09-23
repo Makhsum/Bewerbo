@@ -55,6 +55,7 @@ import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
 import de.bewerbo.app.ui.components.SectionLabel
+import de.bewerbo.app.ui.components.errorMessage
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
 import de.bewerbo.app.ui.screens.LockerScreen
@@ -124,19 +125,23 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
     val snackbar = remember { SnackbarHostState() }
     val keyboardOpen = WindowInsets.isImeVisible
 
-    LaunchedEffect(state.error) {
-        state.error?.let {
-            snackbar.showSnackbar(it)
-            viewModel.dismissError()
-        }
-    }
-    LaunchedEffect(state.lastSavedPdf) {
-        state.lastSavedPdf?.let { snackbar.showSnackbar(it) }
-    }
-
     // The interface language is the app's own, not the phone's, and it wraps the whole tree for
     // the same reason testTagsAsResourceId does: every screen below reads strings through it.
     UiLanguageProvider(state.uiLanguage) {
+        // INSIDE the provider, and that is the whole point: the error text is read out of the
+        // resources, so resolving it above this line would draw it in the PHONE's language over an
+        // app the user had set to something else. Same boundary BewerboDialog exists for.
+        val errorText = state.error?.let { errorMessage(it) }
+        LaunchedEffect(errorText) {
+            errorText?.let {
+                snackbar.showSnackbar(it)
+                viewModel.dismissError()
+            }
+        }
+        LaunchedEffect(state.lastSavedPdf) {
+            state.lastSavedPdf?.let { snackbar.showSnackbar(it) }
+        }
+
         Box(
             Modifier
                 // testTagsAsResourceId is set ONCE, here, above every branch of the tree. Compose test

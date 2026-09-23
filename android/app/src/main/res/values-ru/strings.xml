@@ -33,6 +33,14 @@
     <string name="term_din_5008">немецкий стандарт оформления делового письма</string>
     <string name="term_agg">закон о равном обращении: работодатель не вправе требовать фото и личные данные</string>
 
+    <!-- Почему вызов не удался. Сервер называет вид, а здесь написано, что сказать об этом. -->
+    <string name="error_unreachable">Bewerbo недоступен. Проверьте соединение и попробуйте снова.</string>
+    <string name="error_profile_missing">Этого профиля больше нет на сервере.</string>
+    <string name="error_posting_missing">Этой вакансии больше нет на сервере.</string>
+    <string name="error_application_missing">Этой заявки больше нет на сервере.</string>
+    <string name="error_document_missing">Этого документа больше нет на сервере.</string>
+    <string name="error_unknown">Не получилось. Попробуйте ещё раз.</string>
+
     <!-- Открытые шаги. Сервер говорит, КАКОЙ это шаг и что в него подставить; сама фраза
          пишется здесь, потому что язык интерфейса серверу неизвестен. -->
     <string name="step_person_title">Заполните личные данные</string>
