@@ -42,7 +42,6 @@ import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.exposeTestTags
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
-import de.bewerbo.app.ui.components.SegmentedControl
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.components.Timeline
 import de.bewerbo.app.ui.icons.BewerboIcons
@@ -50,10 +49,6 @@ import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
 private val SECTIONS = listOf("person", "berufserfahrung", "ausbildung", "sprachen", "anlagen")
-
-/// The Lebenslauf layouts, in the order the SegmentedControl shows them. They keep their German
-/// names for the same reason the section names do — they are what the document is called.
-private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
 
 /// The languages the product is for. German is on the list because somebody already fluent may
 /// still want the DIN 5008 layout and the Abgleich.
@@ -269,9 +264,12 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
-        // There is no separate template button beside this one. It used to sit here with an empty
-        // onClick, one row above the control that actually picks the template — a second, silent
-        // affordance for a job the SegmentedControl below already does.
+        // The screen ends here, with the action that leads out of it. There is no separate
+        // template button beside this one either: the Vorlage used to be picked one row BELOW
+        // this button, which asked a user still filling in a profile to choose between
+        // Klassisch, Modern and Fachlich with nothing to judge them by, and asked it after the
+        // button that had already produced the file. It is chosen on the Bewerbung screen now,
+        // beside the document it changes.
         item {
             Button(
                 onClick = { viewModel.generateCv() },
@@ -285,21 +283,6 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                     modifier = Modifier.padding(start = Space.s),
                 )
             }
-        }
-
-        item {
-            SectionLabel(stringResource(R.string.profile_template))
-            SegmentedControl(
-                options = TEMPLATES,
-                selectedIndex = TEMPLATES.indexOf(profile?.person?.template ?: TEMPLATES[0])
-                    .coerceAtLeast(0),
-                onSelect = { index ->
-                    profile?.let {
-                        viewModel.savePerson(it.person.copy(template = TEMPLATES[index]))
-                    }
-                },
-                tagPrefix = "profile_template",
-            )
         }
     }
 }

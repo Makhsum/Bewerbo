@@ -142,4 +142,5 @@
     <string name="timeline_legend_education">Ausbildung</string>
     <string name="timeline_legend_work">Beruf</string>
     <string name="timeline_legend_gap">Lücke</string>
+    <string name="application_template">Як оформлено Lebenslauf</string>
 </resources>

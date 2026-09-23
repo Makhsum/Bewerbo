@@ -52,6 +52,10 @@ import de.bewerbo.app.ui.theme.Space
 /// because that is the value the status endpoint takes.
 private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 
+/// The Lebenslauf layouts, in the order the SegmentedControl shows them. They keep their German
+/// names for the same reason the parts of the Mappe do — they are what the document is called.
+private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
+
 /**
  * Bewerbung — the rendered letter, the DIN inspector over it, the Prüfung, and the export.
  *
@@ -360,6 +364,34 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                                 },
                         )
                     }
+                }
+
+                // The Vorlage of the Lebenslauf, next to the file it lays out. It used to sit on
+                // the Profil screen one row BELOW the button that produces the Lebenslauf: a
+                // decision about the document, asked after the action it belongs to and of a user
+                // who had no document in front of them to choose against. Here the Lebenslauf is
+                // one of the parts listed above it, so the choice has something to be about.
+                //
+                // It is stored on the person, which is why it is savePerson that writes it — the
+                // same call the Profil screen made.
+                val person = state.profile?.person
+                Text(
+                    stringResource(R.string.application_template),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.muted,
+                    modifier = Modifier.padding(top = Space.m),
+                )
+                Box(Modifier.padding(top = Space.s)) {
+                    SegmentedControl(
+                        options = TEMPLATES,
+                        selectedIndex = TEMPLATES.indexOf(person?.template ?: TEMPLATES[0])
+                            .coerceAtLeast(0),
+                        onSelect = { index ->
+                            person?.let { viewModel.savePerson(it.copy(template = TEMPLATES[index])) }
+                        },
+                        modifier = Modifier.testTag("application_template_selector"),
+                        tagPrefix = "application_template",
+                    )
                 }
             }
         }

@@ -65,7 +65,6 @@
     <string name="profile_anabin_lookup">Look up in anabin</string>
     <string name="profile_equivalent_to">Equivalent in Germany to: %1$s</string>
     <string name="profile_generate_cv">Lebenslauf erzeugen</string>
-    <string name="profile_template">Vorlage</string>
     <string name="profile_add_experience">Add a position</string>
 
     <string name="person_first_name">First name</string>
@@ -181,4 +180,5 @@
     <string name="timeline_legend_education">Ausbildung</string>
     <string name="timeline_legend_work">Beruf</string>
     <string name="timeline_legend_gap">Lücke</string>
+    <string name="application_template">How the Lebenslauf is laid out</string>
 </resources>
