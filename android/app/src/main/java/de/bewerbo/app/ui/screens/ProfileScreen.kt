@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
-import de.bewerbo.app.data.DutyOutcome
+import de.bewerbo.app.data.DutyChoice
 import de.bewerbo.app.data.Education
 import de.bewerbo.app.data.Experience
 import de.bewerbo.app.data.LanguageSkill
@@ -424,7 +424,7 @@ private fun ExperienceCard(
     entry: Experience,
     index: Int,
     all: List<Experience>,
-    outcomes: List<DutyOutcome>?,
+    outcomes: List<DutyChoice>?,
     viewModel: AppViewModel,
 ) {
     val colors = LocalSemanticColors.current
@@ -529,7 +529,7 @@ private fun DutyOutcomeSection(
     entry: Experience,
     index: Int,
     all: List<Experience>,
-    outcomes: List<DutyOutcome>?,
+    outcomes: List<DutyChoice>?,
     viewModel: AppViewModel,
 ) {
     val colors = LocalSemanticColors.current
@@ -557,10 +557,13 @@ private fun DutyOutcomeSection(
 
         outcomes.forEachIndexed { line, duty ->
             Column(Modifier.padding(top = Space.s)) {
+                // Whichever of the two will reach the document is the one drawn in full; the other
+                // steps back. That is the whole answer to "which of these am I sending", and it is
+                // read off the colour without counting switches.
                 Text(
                     stringResource(R.string.experience_rewrite_original, duty.original),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colors.muted,
+                    color = if (duty.taken) colors.muted else colors.success,
                 )
                 // A line the rewrite does not fit says so in its own row rather than being left
                 // out: the user is comparing two lists and a missing row would read as a loss.
@@ -571,9 +574,34 @@ private fun DutyOutcomeSection(
                         stringResource(R.string.experience_rewrite_outcome, duty.outcome)
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (duty.outcome.isBlank()) colors.muted else colors.success,
+                    color = if (duty.taken) colors.success else colors.muted,
                     modifier = Modifier.testTag("profile_experience_outcome_${index}_$line"),
                 )
+                // The decision belongs to the LINE, the same way the card's other switch belongs to
+                // the Zeugnis of that one position. A list that rewrites well twice and badly once
+                // used to be all three or none, and the bad one is exactly what somebody would
+                // otherwise have struck out by hand after the fact — which this app offers no way
+                // to do.
+                if (duty.outcome.isNotBlank()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = Space.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            stringResource(R.string.experience_rewrite_use_line),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.muted,
+                        )
+                        Switch(
+                            checked = duty.taken,
+                            onCheckedChange = { viewModel.chooseDutyOutcome(entry, line, it) },
+                            modifier = Modifier.testTag("profile_experience_choose_${index}_$line"),
+                        )
+                    }
+                }
             }
         }
 
@@ -596,7 +624,9 @@ private fun DutyOutcomeSection(
         ) {
             Button(
                 onClick = { viewModel.acceptDutyOutcomes(entry, all) },
-                enabled = outcomes.any { it.outcome.isNotBlank() },
+                // Nothing chosen is nothing to save — the user is then keeping their own words,
+                // which is what the button beside this one is for.
+                enabled = outcomes.any { it.taken },
                 modifier = Modifier.testTag("profile_experience_rewrite_accept_$index"),
             ) {
                 Text(stringResource(R.string.experience_rewrite_accept))

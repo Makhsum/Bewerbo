@@ -203,7 +203,8 @@
     <string name="experience_rewrite_outcome">Як результат: %1$s</string>
     <string name="experience_rewrite_none">Для цього рядка формулювання немає — він залишиться таким, як ви його ввели.</string>
     <string name="experience_rewrite_empty">Тут нічого переформулювати, тож і приймати нічого.</string>
-    <string name="experience_rewrite_accept">Прийняти формулювання</string>
+    <string name="experience_rewrite_accept">Зберегти вибране</string>
+    <string name="experience_rewrite_use_line">Використати це формулювання</string>
     <string name="experience_rewrite_keep">Залишити мої слова</string>
 
     <string name="posting_subtitle">Додайте вакансію — кожне поле нижче посилається на слова, з яких воно взяте.</string>

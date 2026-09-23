@@ -201,7 +201,8 @@
     <string name="experience_rewrite_outcome">Как результат: %1$s</string>
     <string name="experience_rewrite_none">Для этой строки формулировки нет — она останется такой, как вы её ввели.</string>
     <string name="experience_rewrite_empty">Здесь нечего переформулировать, поэтому и принимать нечего.</string>
-    <string name="experience_rewrite_accept">Принять формулировку</string>
+    <string name="experience_rewrite_accept">Сохранить выбранное</string>
+    <string name="experience_rewrite_use_line">Использовать эту формулировку</string>
     <string name="experience_rewrite_keep">Оставить мои слова</string>
 
     <string name="posting_subtitle">Добавьте вакансию — каждое поле ниже ссылается на слова, из которых оно взято.</string>

@@ -223,7 +223,8 @@
     <string name="experience_rewrite_outcome">As an outcome: %1$s</string>
     <string name="experience_rewrite_none">No rewrite for this line — it stays as you typed it.</string>
     <string name="experience_rewrite_empty">Nothing here could be rewritten, so there is nothing to take over.</string>
-    <string name="experience_rewrite_accept">Take the rewrite</string>
+    <string name="experience_rewrite_accept">Save what I chose</string>
+    <string name="experience_rewrite_use_line">Use the rewrite for this line</string>
     <string name="experience_rewrite_keep">Keep my words</string>
 
     <!-- Posting -->

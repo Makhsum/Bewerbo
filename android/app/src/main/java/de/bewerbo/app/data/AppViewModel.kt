@@ -51,11 +51,11 @@ data class AppState(
     /// gap's start date — one entry per gap card on the screen. It is what [explainGap] then
     /// stores, so the sentence the user read is the sentence the Lebenslauf gets.
     val gapWording: Map<String, String> = emptyMap(),
-    /// The duties of a position written as results, beside the originals, keyed by the entry's id —
-    /// one entry per experience card that has asked for them. Present only while the user is
-    /// deciding: [acceptDutyOutcomes] stores what they read and [discardDutyOutcomes] drops it, so
-    /// nothing here ever reaches a document on its own.
-    val dutyOutcomes: Map<String, List<DutyOutcome>> = emptyMap(),
+    /// The duties of a position written as results, beside the originals and with the user's choice
+    /// per line, keyed by the entry's id — one entry per experience card that has asked for them.
+    /// Present only while the user is deciding: [acceptDutyOutcomes] stores what they chose and
+    /// [discardDutyOutcomes] drops it, so nothing here ever reaches a document on its own.
+    val dutyOutcomes: Map<String, List<DutyChoice>> = emptyMap(),
     /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
     /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
     val previewPages: List<android.graphics.Bitmap> = emptyList(),
@@ -350,21 +350,40 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun previewDutyOutcomes(entry: Experience) = launch("duty-outcomes") {
         val id = entry.id ?: return@launch
+        // Every line that HAS a rewrite starts chosen: asking for the rewrite is the user saying
+        // they want it. Turning one back off is the correction, not the other way round.
         val lines = api.dutyOutcomes(entry.duties).lines
+            .map { DutyChoice(it.original, it.outcome, it.outcome.isNotBlank()) }
         _state.update { it.copy(dutyOutcomes = it.dutyOutcomes + (id to lines)) }
     }
 
     /**
-     * The rewrite the user accepted, saved as the duties of that position.
+     * Which of the two readings of ONE duty line is to reach the document.
      *
-     * A line with no rewrite keeps the words it was typed with — the offer is to replace what could
-     * be replaced, never to drop what could not.
+     * Nothing is stored here — the choice only moves in the comparison the card is showing, and
+     * [acceptDutyOutcomes] is still what writes it. Kept on [AppState] rather than in the
+     * composable's own `remember`, because the card is an item of a LazyColumn and a choice made at
+     * the top of a long list would be dropped by scrolling past it.
+     */
+    fun chooseDutyOutcome(entry: Experience, line: Int, taken: Boolean) {
+        val entryId = entry.id ?: return
+        val lines = state.value.dutyOutcomes[entryId] ?: return
+        val chosen = lines.mapIndexed { i, choice -> if (i == line) choice.copy(taken = taken) else choice }
+        _state.update { it.copy(dutyOutcomes = it.dutyOutcomes + (entryId to chosen)) }
+    }
+
+    /**
+     * What the user chose, saved as the duties of that position.
+     *
+     * Line by line: a rewrite they turned off, and a line that had none to begin with, both keep the
+     * words they were typed with. The offer is to replace what the user accepted, never to drop what
+     * they did not.
      */
     fun acceptDutyOutcomes(entry: Experience, all: List<Experience>) = launch("experience") {
         val id = profileId() ?: return@launch
         val entryId = entry.id ?: return@launch
         val lines = state.value.dutyOutcomes[entryId] ?: return@launch
-        val duties = lines.joinToString("\n") { it.outcome.ifBlank { it.original } }
+        val duties = lines.joinToString("\n") { it.chosen }
 
         val saved = api.saveExperience(
             id,

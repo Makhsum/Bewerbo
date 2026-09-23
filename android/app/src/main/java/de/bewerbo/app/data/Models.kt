@@ -352,6 +352,15 @@ data class DutyOutcomesRequest(val duties: String = "")
 @Serializable
 data class DutyOutcomesResponse(val lines: List<DutyOutcome> = emptyList())
 
+/// One proposed line and what the user has decided about it, while they are deciding. [taken]
+/// starts true wherever there is a rewrite to take — asking for the rewrite is the user saying they
+/// want it — and is turned off for a line they would rather keep in their own words. Client-side
+/// only: nothing here is ever sent anywhere, and nothing is stored until the choice is saved.
+data class DutyChoice(val original: String, val outcome: String, val taken: Boolean) {
+    /// The reading of this line that will reach the document.
+    val chosen: String get() = if (taken) outcome else original
+}
+
 /// A ProblemDetails, as the API answers every failure. [kind] says WHICH failure it is, so the
 /// snackbar can be written in the user's language; [detail] is the German the server sent, kept as
 /// the fallback for a kind this build does not know. Same division as [NextStep].
