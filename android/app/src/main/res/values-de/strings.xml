@@ -14,6 +14,8 @@
     <string name="nav_application">Bewerbung</string>
     <string name="nav_locker">Mappe</string>
 
+    <string name="flow_step_of">Schritt %1$d von %2$d</string>
+
     <string name="action_save">Speichern</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_delete">Löschen</string>
@@ -25,8 +27,10 @@
     <string name="overview_evidence">Nachweise abgelegt</string>
     <string name="overview_next_steps">Nächste Schritte</string>
     <string name="overview_active">Laufende Bewerbungen</string>
+    <string name="overview_flow_start">Bewerbung beginnen</string>
+    <string name="overview_flow_continue">Bewerbung fortsetzen</string>
     <string name="overview_applications_empty_title">Noch keine Bewerbung begonnen</string>
-    <string name="overview_applications_empty_body">Fügen Sie auf dem Bildschirm »Stellenanzeige« eine Anzeige ein. Jede begonnene Bewerbung steht hier mit Arbeitgeber, Referenznummer und Stand, und von hier kommen Sie in eine unfertige zurück.</string>
+    <string name="overview_applications_empty_body">Beginnen Sie oben eine und fügen Sie eine Anzeige ein. Jede begonnene Bewerbung steht hier mit Arbeitgeber, Referenznummer und Stand, und von hier kommen Sie in eine unfertige zurück.</string>
     <string name="overview_your_locker">Ihre Mappe</string>
     <string name="overview_eu_title">Ihre Daten bleiben in der EU</string>
     <string name="overview_eu_body">Profildaten liegen verschlüsselt auf Servern in der EU und werden nach dem Export gelöscht, sobald Sie es verlangen.</string>

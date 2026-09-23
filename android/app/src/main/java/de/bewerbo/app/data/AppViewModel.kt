@@ -77,7 +77,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Brings back the posting and the letter the user was last working on.
+     * Brings back the posting, the Abgleich and the letter the user was last working on.
      *
      * Only the profile used to survive a restart, so a user interrupted between pasting a posting
      * and sending the Mappe came back to an empty Stellenanzeige screen and "Noch kein Anschreiben"
@@ -96,7 +96,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             application
         } else null
 
-        _state.update { it.copy(posting = posting, application = pair) }
+        // The Abgleich is derived rather than stored, so a restart left the middle step of the flow
+        // empty underneath the letter that came out of it — the rail then had the Bewerbung open
+        // with the Abgleich behind it unreachable. It comes back only ALONGSIDE the letter, as it
+        // does in openApplication(): where there is a letter the Abgleich behind it happened, and
+        // where there is only a pasted posting the user has not made one yet.
+        val match = pair?.let { runCatching { api.match(it.postingId) }.getOrNull() }
+
+        _state.update { it.copy(posting = posting, match = match, application = pair) }
         if (pair != null) runChecks(pair.id)
     }
 

@@ -11,6 +11,10 @@
     <string name="nav_application">Заявка</string>
     <string name="nav_locker">Mappe</string>
 
+    <!-- «із» rather than the shorter «з»: the caption is set in capitals, and a lone
+         uppercase З between two figures is read as another digit — «КРОК 2 З 3» looks like «2 3 3». -->
+    <string name="flow_step_of">Крок %1$d із %2$d</string>
+
     <string name="action_save">Зберегти</string>
     <string name="action_cancel">Скасувати</string>
     <string name="action_delete">Видалити</string>
@@ -22,8 +26,10 @@
     <string name="overview_evidence">Підтверджень додано</string>
     <string name="overview_next_steps">Наступні кроки</string>
     <string name="overview_active">Активні заявки</string>
+    <string name="overview_flow_start">Почати заявку</string>
+    <string name="overview_flow_continue">Продовжити заявку</string>
     <string name="overview_applications_empty_title">Жодної заявки ще не почато</string>
-    <string name="overview_applications_empty_body">Вставте вакансію на екрані «Вакансія». Кожна почата заявка з’явиться тут із роботодавцем, Referenznummer і поточним станом, і звідси ж ви повернетесь до незавершеної.</string>
+    <string name="overview_applications_empty_body">Почніть її вище та вставте вакансію. Кожна почата заявка з’явиться тут із роботодавцем, Referenznummer і поточним станом, і звідси ж ви повернетесь до незавершеної.</string>
     <string name="overview_your_locker">Ваша Mappe</string>
     <string name="overview_eu_title">Ваші дані залишаються в ЄС</string>
     <string name="overview_eu_body">Дані профілю зберігаються зашифровано на серверах у ЄС і видаляються після експорту, щойно ви цього попросите.</string>

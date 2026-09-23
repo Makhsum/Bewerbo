@@ -4,14 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -21,26 +28,33 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
+import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
 import de.bewerbo.app.ui.screens.LockerScreen
@@ -49,6 +63,9 @@ import de.bewerbo.app.ui.screens.OverviewScreen
 import de.bewerbo.app.ui.screens.PostingScreen
 import de.bewerbo.app.ui.screens.ProfileScreen
 import de.bewerbo.app.ui.theme.BewerboTheme
+import de.bewerbo.app.ui.theme.CardElevation
+import de.bewerbo.app.ui.theme.LocalSemanticColors
+import de.bewerbo.app.ui.theme.Space
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,12 +79,38 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * The PLACES — and the bottom bar is nothing else.
+ *
+ * A place is somewhere the user goes back to whenever they like, in whatever order: how ready the
+ * Mappe is, what the profile says, what is filed in the Mappe. That is exactly the freedom a tab
+ * promises, so these three are the only things allowed on the bar.
+ *
+ * Producing an application is not a place and never was — see [FlowStep].
+ */
 enum class Destination(val route: String, val tag: String, val label: Int, val icon: ImageVector) {
     Overview("uebersicht", "nav_uebersicht", R.string.nav_overview, BewerboIcons.Overview),
     Profile("profil", "nav_profil", R.string.nav_profile, BewerboIcons.Person),
-    Posting("stellenanzeige", "nav_stellenanzeige", R.string.nav_posting, BewerboIcons.Posting),
-    Application("bewerbung", "nav_bewerbung", R.string.nav_application, BewerboIcons.Document),
     Locker("mappe", "nav_mappe", R.string.nav_locker, BewerboIcons.Anlagen),
+}
+
+/**
+ * The STEPS of the one path an application is produced along, in the order they happen.
+ *
+ * Three of these used to sit on the bottom bar as two tabs with the Abgleich hidden inside the
+ * Stellenanzeige one, and that promised an order the product does not have: no Abgleich without a
+ * posting, no Bewerbung without a letter. A user who did not already know the sequence tapped
+ * "Bewerbung", read "Noch kein Anschreiben" and had nothing telling them where to start.
+ *
+ * They keep their routes — "stellenanzeige", "abgleich", "bewerbung" — because the Übersicht's
+ * deep links carry them as the backend writes them, and a step is still a destination of its own.
+ * What changed is that they are drawn with the rail of [ApplicationFlow] above them instead of
+ * posing as places, and the bar keeps the three places reachable from inside every one of them.
+ */
+enum class FlowStep(val route: String, val tag: String, val label: Int) {
+    Posting("stellenanzeige", "flow_stellenanzeige", R.string.nav_posting),
+    Match("abgleich", "flow_abgleich", R.string.match_title),
+    Application("bewerbung", "flow_bewerbung", R.string.nav_application),
 }
 
 @OptIn(
@@ -128,19 +171,45 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                         .imePadding(),
                 ) {
                     composable(Destination.Overview.route) {
-                        OverviewScreen(state, viewModel) { route -> navController.openFromOverview(route) }
+                        // The Übersicht is the ONE way into the flow, so it says where the path is
+                        // picked up rather than leaving the user to find the first step.
+                        val step = state.resumeStep()
+                        OverviewScreen(
+                            state,
+                            viewModel,
+                            flowLabel = if (step == FlowStep.Posting && state.posting == null) {
+                                R.string.overview_flow_start
+                            } else {
+                                R.string.overview_flow_continue
+                            },
+                            onOpenFlow = { navController.openFromOverview(step.route) },
+                        ) { route -> navController.openFromOverview(route) }
                     }
                     composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
-                    composable(Destination.Posting.route) {
-                        PostingScreen(state, viewModel) { navController.navigate("abgleich") }
-                    }
-                    composable("abgleich") {
-                        MatchScreen(state, viewModel) {
-                            navController.navigate(Destination.Application.route)
+                    composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
+
+                    // The flow. Each step is drawn inside the same rail, which is what says where
+                    // along the path the user is — and the screen's own primary button is the move
+                    // to the next step, as it already was.
+                    composable(FlowStep.Posting.route) {
+                        ApplicationFlow(FlowStep.Posting, state, navController) {
+                            PostingScreen(state, viewModel) {
+                                navController.openStep(FlowStep.Match)
+                            }
                         }
                     }
-                    composable(Destination.Application.route) { ApplicationScreen(state, viewModel) }
-                    composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
+                    composable(FlowStep.Match.route) {
+                        ApplicationFlow(FlowStep.Match, state, navController) {
+                            MatchScreen(state, viewModel) {
+                                navController.openStep(FlowStep.Application)
+                            }
+                        }
+                    }
+                    composable(FlowStep.Application.route) {
+                        ApplicationFlow(FlowStep.Application, state, navController) {
+                            ApplicationScreen(state, viewModel)
+                        }
+                    }
                 }
             }
         }
@@ -148,9 +217,9 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
 }
 
 /**
- * Follows a link out of the Übersicht — a next step, an application, the Mappe card.
+ * Follows a link out of the Übersicht — a next step, an application, the Mappe card, the flow.
  *
- * Every one of them leads to another TAB, so it has to change tab the way the bar does. A plain
+ * Every one of them leaves the Übersicht behind, so it has to leave it the way the bar does. A plain
  * navigate() pushed the destination on top of the Übersicht's own entry instead, and the bar then
  * had nothing to go back to: tapping "Übersicht" returned the user to the screen they had just
  * come from, and the list they came from could not be reached again at all.
@@ -160,6 +229,174 @@ private fun NavHostController.openFromOverview(route: String) {
         popUpTo(graph.startDestinationId) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+/**
+ * Moves along the flow, forwards or back.
+ *
+ * Popping up to the step itself is what makes going BACK to an earlier one mean going back rather
+ * than stacking a second copy of it: the steps walked since are dropped, so the system back gesture
+ * still leads out of the flow and not around it. Where the step is not on the stack at all — the
+ * Übersicht deep-links straight into the Bewerbung of an application — nothing is popped and the
+ * step is pushed as usual.
+ */
+private fun NavHostController.openStep(step: FlowStep) {
+    navigate(step.route) {
+        popUpTo(step.route) { inclusive = false }
+        launchSingleTop = true
+    }
+}
+
+/**
+ * Whether a step has already produced what the step after it reads.
+ *
+ * This is the whole of what makes the path sequential, and the rail says it out loud instead of
+ * letting the user discover it by tapping something that then explains it has nothing to show.
+ */
+private fun AppState.hasProduced(step: FlowStep): Boolean = when (step) {
+    FlowStep.Posting -> posting != null
+    FlowStep.Match -> match != null
+    FlowStep.Application -> application != null
+}
+
+/// The step the Übersicht's one action leads to: the furthest along the path the user already got.
+private fun AppState.resumeStep(): FlowStep =
+    FlowStep.entries.lastOrNull { hasProduced(it) } ?: FlowStep.Posting
+
+/**
+ * The frame every step of the flow is drawn in: the rail, and the step's own screen below it.
+ *
+ * The bar is deliberately still there underneath. The steps stopped posing as places, but the
+ * places have to stay reachable from inside the flow — a user halfway through an application who
+ * remembers something about their profile should not have to finish first or press back three times.
+ */
+@Composable
+private fun ApplicationFlow(
+    step: FlowStep,
+    state: AppState,
+    navController: NavHostController,
+    content: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        FlowRail(step, state) { target -> navController.openStep(target) }
+        Box(Modifier.weight(1f)) { content() }
+    }
+}
+
+/**
+ * The rail: which step this is, what the path is made of, and how far along it the user has got.
+ *
+ * A step the user has already been through is tappable and carries a check; one whose input does
+ * not exist yet is drawn muted and does nothing, because there is nothing there to look at. That
+ * is the same rule the screens themselves follow — the Abgleich already says "Noch keine
+ * Stellenanzeige" — said here before the tap instead of after it.
+ */
+@Composable
+private fun FlowRail(current: FlowStep, state: AppState, onOpen: (FlowStep) -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = CardElevation) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Space.m, vertical = Space.s)
+                .testTag("flow_rail"),
+        ) {
+            SectionLabel(
+                stringResource(R.string.flow_step_of, current.ordinal + 1, FlowStep.entries.size),
+                Modifier.testTag("flow_step_caption"),
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = Space.s),
+            ) {
+                FlowStep.entries.forEach { step ->
+                    if (step.ordinal > 0) {
+                        // The line between two steps is what makes the row read as a path rather
+                        // than as three tabs that happen to be numbered.
+                        Box(
+                            Modifier
+                                .padding(top = StepBadgeSize / 2)
+                                .width(Space.m)
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.outline),
+                        )
+                    }
+                    FlowRailStep(step, current, state, Modifier.weight(1f), onOpen)
+                }
+            }
+        }
+    }
+}
+
+/// The badge is the size of a pill, not of an [IconRow] icon: it sits in a rail, not in a list row.
+private val StepBadgeSize = 24.dp
+
+@Composable
+private fun FlowRailStep(
+    step: FlowStep,
+    current: FlowStep,
+    state: AppState,
+    modifier: Modifier,
+    onOpen: (FlowStep) -> Unit,
+) {
+    val colors = LocalSemanticColors.current
+    val isCurrent = step == current
+    val isDone = state.hasProduced(step)
+    // The first step needs nothing to have happened; every other one needs its own output to exist.
+    val reachable = step == FlowStep.entries.first() || isDone
+
+    // The three tones are the ones the app already uses for these three meanings: filled primary
+    // for where you are, the success tint for what is done, the neutral pill for what is not there.
+    val (foreground, background) = when {
+        isCurrent -> MaterialTheme.colorScheme.onPrimary to MaterialTheme.colorScheme.primary
+        isDone -> colors.success to colors.successTint
+        else -> colors.muted to MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    Column(
+        modifier
+            .then(
+                if (reachable && !isCurrent) Modifier.clickable { onOpen(step) } else Modifier,
+            )
+            .testTag(step.tag),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(StepBadgeSize)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(background),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (isDone && !isCurrent) {
+                Icon(
+                    BewerboIcons.Check, contentDescription = null,
+                    tint = foreground, modifier = Modifier.size(14.dp),
+                )
+            } else {
+                Text(
+                    "${step.ordinal + 1}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = foreground,
+                )
+            }
+        }
+        // Shrunk rather than wrapped, for the reason the bar's labels are: three step names share
+        // the screen width and "Stellenanzeige" does not fit a third of it at every font scale.
+        FitOneLineText(
+            text = stringResource(step.label),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Space.xs)
+                .testTag("${step.tag}_label"),
+            style = MaterialTheme.typography.labelMedium,
+            color = when {
+                isCurrent -> MaterialTheme.colorScheme.primary
+                reachable -> MaterialTheme.colorScheme.onSurface
+                else -> colors.muted
+            },
+        )
     }
 }
 
@@ -174,19 +411,14 @@ private fun BottomBar(navController: NavHostController) {
                 // The tag goes on the item itself — the clickable wrapper — not on the label
                 // inside it, so a driver taps a node that is actually clickable.
                 modifier = Modifier.testTag(destination.tag),
-                selected = current == destination.route ||
-                    (destination == Destination.Posting && current == "abgleich"),
+                // Inside the flow no item is selected, and that is the point: the user is on a step
+                // of a path, not at one of the places, and the bar should not claim otherwise.
+                selected = current == destination.route,
                 onClick = {
-                    // The Abgleich lives inside the Posting tab, so restoreState put the user
-                    // back on the Abgleich when they tapped "Stellenanzeige" from it — the tab
-                    // they pressed to get BACK to the posting did nothing at all, and only the
-                    // system back gesture returned, which nothing on screen suggests. Tapping the
-                    // tab you are already inside goes to the root of it.
-                    val insidePosting = destination == Destination.Posting && current == "abgleich"
                     navController.navigate(destination.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
-                        restoreState = !insidePosting
+                        restoreState = true
                     }
                 },
                 icon = {

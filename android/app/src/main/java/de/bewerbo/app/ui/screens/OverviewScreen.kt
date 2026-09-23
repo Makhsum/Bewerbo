@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,9 +43,19 @@ import de.bewerbo.app.ui.theme.Space
  * are what it is made of, and each "Nächster Schritt" deep-links to the screen that closes it.
  * An application's own steps work the same way, and so does the application itself — this is the
  * one screen from which a user with several employers gets back into an unfinished one.
+ *
+ * It is also the ONE way into the flow that produces an application, now that its steps are no
+ * longer on the bottom bar: [flowLabel] says whether the path is being begun or picked up, and
+ * [onOpenFlow] leads to the step the user actually got to.
  */
 @Composable
-fun OverviewScreen(state: AppState, viewModel: AppViewModel, navigate: (String) -> Unit) {
+fun OverviewScreen(
+    state: AppState,
+    viewModel: AppViewModel,
+    flowLabel: Int,
+    onOpenFlow: () -> Unit,
+    navigate: (String) -> Unit,
+) {
     val overview = state.overview
     val colors = LocalSemanticColors.current
 
@@ -134,6 +145,21 @@ fun OverviewScreen(state: AppState, viewModel: AppViewModel, navigate: (String) 
                         )
                     }
                 }
+            }
+        }
+
+        // The way onto the path, above the fold and before anything the user could read first. The
+        // steps used to be tabs, so "where do I start" was answered by knowing the order of them;
+        // this is the answer on screen.
+        item {
+            Button(
+                onClick = onOpenFlow,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("overview_btn_flow"),
+            ) {
+                Icon(BewerboIcons.Posting, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(flowLabel), modifier = Modifier.padding(start = Space.s))
             }
         }
 
