@@ -187,13 +187,16 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                             modifier = Modifier.padding(start = Space.s),
                         )
                     }
-                    if (state.timeline.gaps.isNotEmpty()) {
+                    // The count is of gaps still OPEN. Counting every gap meant the pill stayed
+                    // amber at "1 GAP" after the user had answered it, on the same screen where
+                    // the answer is shown in green underneath — and the Übersicht's own meter for
+                    // the same fact had already gone to 1 / 1. Nothing told them they were done.
+                    val openGaps = state.timeline.gaps.count { !it.explained }
+                    if (openGaps > 0) {
                         StatusPill(
-                            pluralStringResource(
-                                R.plurals.profile_gap_count,
-                                state.timeline.gaps.size, state.timeline.gaps.size,
-                            ),
+                            pluralStringResource(R.plurals.profile_gap_count, openGaps, openGaps),
                             PillTone.Attention,
+                            Modifier.testTag("profile_open_gap_count"),
                         )
                     }
                 }
