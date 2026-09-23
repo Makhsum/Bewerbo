@@ -180,6 +180,7 @@
     <string name="profile_gap_reason_label">Reason for the gap</string>
     <string name="profile_gap_save">Save reason</string>
     <string name="profile_gap_in_cv">In the Lebenslauf: »%1$s«</string>
+    <string name="profile_gap_wording_none">Not recognised yet — name a move, a language course or a recognition procedure, or the gap stays unnamed in the Lebenslauf.</string>
     <string name="profile_reference_on_file">Zeugnis on file</string>
     <string name="profile_reference_missing">Zeugnis missing</string>
     <string name="profile_certificate_on_file">Certificate is on file</string>

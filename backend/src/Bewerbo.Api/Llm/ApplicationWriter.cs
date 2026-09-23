@@ -158,14 +158,23 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
 
             // The gap goes in where it belongs chronologically, named, rather than being left as a
             // hole the reader discovers.
+            //
+            // Only when there IS a German name for it. A reason the wording table does not know
+            // produced an empty title, so the Lebenslauf carried a date range with nothing beside
+            // it - a blank line where the reader was about to find an answer, which is worse than
+            // the gap it was meant to explain. The reason stays stored either way, and the gap card
+            // says on screen that it will go unnamed.
             foreach (var gap in timeline.Gaps.Where(g => g.To == e.From && g.Explained))
             {
+                var german = string.IsNullOrWhiteSpace(gap.GermanWording)
+                    ? GapWording.Suggest(gap.Reason)
+                    : gap.GermanWording!;
+                if (string.IsNullOrWhiteSpace(german)) continue;
+
                 work.Add(new CvItem
                 {
                     Period = $"{gap.From:MM\\/yyyy} – {gap.To:MM\\/yyyy}",
-                    Title = string.IsNullOrWhiteSpace(gap.GermanWording)
-                        ? GapWording.Suggest(gap.Reason)
-                        : gap.GermanWording!,
+                    Title = german,
                     Subtitle = "",
                     IsGap = true,
                 });

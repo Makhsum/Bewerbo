@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,8 +51,14 @@ import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
+import kotlinx.coroutines.delay
 
 private val SECTIONS = listOf("person", "berufserfahrung", "ausbildung", "sprachen", "anlagen")
+
+/// How long the typing has to stand still before the German wording for a gap is fetched. Long
+/// enough that a word is not looked up letter by letter, short enough that the sentence is there
+/// by the time the user has finished reading what they wrote.
+private const val GAP_PREVIEW_DELAY_MS = 350L
 
 /// The languages the product is for. German is on the list because somebody already fluent may
 /// still want the DIN 5008 layout and the Abgleich.
@@ -231,7 +238,7 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
         // Every gap gets asked about inline, where the user is already looking.
         state.timeline.gaps.forEachIndexed { index, gap ->
             item {
-                GapCard(gap, index, viewModel)
+                GapCard(gap, index, state.gapWording[gap.from], viewModel)
             }
         }
 
@@ -318,11 +325,27 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
  * The inline gap field. The German wording the user will actually see in the Lebenslauf is shown
  * under the input — not to reassure them, but because that sentence is what a recruiter reads and
  * they should be the one to approve it.
+ *
+ * [preview] is what the server proposes for the reason currently in the field, fetched while the
+ * user is still typing, and it falls back to the wording already stored — so the line reads the
+ * same before a save as after one, and the sentence is never first met in the finished document.
  */
 @Composable
-private fun GapCard(gap: de.bewerbo.app.data.Gap, index: Int, viewModel: AppViewModel) {
+private fun GapCard(
+    gap: de.bewerbo.app.data.Gap,
+    index: Int,
+    preview: String?,
+    viewModel: AppViewModel,
+) {
     val colors = LocalSemanticColors.current
     var reason by remember(gap.from) { mutableStateOf(gap.reason.orEmpty()) }
+
+    // One fetch per pause in the typing rather than one per keystroke: LaunchedEffect cancels the
+    // previous delay whenever the reason changes, so only the last version typed is looked up.
+    LaunchedEffect(reason) {
+        delay(GAP_PREVIEW_DELAY_MS)
+        viewModel.previewGapWording(gap, reason)
+    }
 
     BewerboCard(Modifier.testTag("profile_timeline_gap_$index")) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -353,6 +376,25 @@ private fun GapCard(gap: de.bewerbo.app.data.Gap, index: Int, viewModel: AppView
                 testTag = "profile_gap_reason_$index",
             )
         }
+        // The sentence that will stand in the Lebenslauf, under the input that produces it. A
+        // reason the writer has no German for is said out loud rather than left as a blank line:
+        // the reason is stored either way, but the gap then stays unnamed in the document, and
+        // reading that here is the difference between a choice and a surprise.
+        val wording = preview ?: gap.germanWording
+        if (reason.isNotBlank() && wording != null) {
+            Text(
+                if (wording.isBlank()) {
+                    stringResource(R.string.profile_gap_wording_none)
+                } else {
+                    stringResource(R.string.profile_gap_in_cv, wording)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (wording.isBlank()) colors.muted else colors.success,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("profile_gap_wording_$index"),
+            )
+        }
         Row(
             Modifier
                 .fillMaxWidth()
@@ -365,14 +407,6 @@ private fun GapCard(gap: de.bewerbo.app.data.Gap, index: Int, viewModel: AppView
                 modifier = Modifier.testTag("profile_gap_save_$index"),
             ) {
                 Text(stringResource(R.string.profile_gap_save))
-            }
-            if (!gap.germanWording.isNullOrBlank()) {
-                Text(
-                    stringResource(R.string.profile_gap_in_cv, gap.germanWording),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.success,
-                    modifier = Modifier.testTag("profile_gap_wording_$index"),
-                )
             }
         }
     }

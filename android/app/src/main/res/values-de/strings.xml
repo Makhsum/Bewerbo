@@ -161,6 +161,7 @@
     <string name="profile_gap_reason_label">Grund für die Lücke</string>
     <string name="profile_gap_save">Grund speichern</string>
     <string name="profile_gap_in_cv">Im Lebenslauf: »%1$s«</string>
+    <string name="profile_gap_wording_none">Noch nicht erkannt — benennen Sie Umzug, Sprachkurs oder Anerkennungsverfahren, sonst bleibt die Lücke im Lebenslauf unbenannt.</string>
     <string name="profile_reference_on_file">Zeugnis abgelegt</string>
     <string name="profile_reference_missing">Zeugnis fehlt</string>
     <string name="profile_certificate_on_file">Zertifikat ist abgelegt</string>

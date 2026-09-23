@@ -39,6 +39,10 @@ data class AppState(
     val review: Review? = null,
     val ats: AtsResult? = null,
     val degrees: List<DegreeEquivalence> = emptyList(),
+    /// The German wording proposed for a gap reason while the user is still typing it, keyed by the
+    /// gap's start date — one entry per gap card on the screen. It is what [explainGap] then
+    /// stores, so the sentence the user read is the sentence the Lebenslauf gets.
+    val gapWording: Map<String, String> = emptyMap(),
     /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
     /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
     val previewPages: List<android.graphics.Bitmap> = emptyList(),
@@ -299,8 +303,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun explainGap(gap: Gap, reason: String) = launch("gap") {
         val id = profileId() ?: return@launch
-        api.explainGap(id, GapUpdate(gap.from, gap.to, reason))
+        // The wording the user read under the input is what gets stored. The server only falls back
+        // to its own suggestion when the client sends none, and deriving it a second time could
+        // hand the Lebenslauf a sentence other than the one that was approved.
+        api.explainGap(id, GapUpdate(gap.from, gap.to, reason, state.value.gapWording[gap.from]))
         refreshDerived()
+    }
+
+    /**
+     * The German wording for what the user is typing about a gap, so they read the sentence that
+     * will stand in the Lebenslauf before any document is produced.
+     *
+     * Deliberately NOT routed through [launch]: this runs while the user types, and that helper
+     * drives the global busy flag and clears the error snackbar — a preview would flicker the one
+     * and swallow the other. A suggestion that could not be fetched is simply not shown; it is not
+     * a failure the user has anything to do about.
+     */
+    fun previewGapWording(gap: Gap, reason: String) = viewModelScope.launch {
+        if (reason.isBlank()) {
+            _state.update { it.copy(gapWording = it.gapWording - gap.from) }
+            return@launch
+        }
+        val german = runCatching { api.gapWording(reason).german }.getOrNull() ?: return@launch
+        _state.update { it.copy(gapWording = it.gapWording + (gap.from to german)) }
     }
 
     fun lookUpDegrees(country: String?) = launch("degrees") {

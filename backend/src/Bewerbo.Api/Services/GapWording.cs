@@ -21,10 +21,11 @@ public static class GapWording
     private static readonly Phrase[] Table =
     [
         new("Umzug nach Deutschland",
-            "umzug", "переезд", "переїзд", "переехал", "переїхал", "relocation", "moved", "moving",
+            "umzug", "переезд", "переїзд", "переехал", "переїхал", "relocation", "move",
             "taşınma", "göç"),
         new("Sprachkurs Deutsch",
-            "sprachkurs", "deutschkurs", "курс немецкого", "курс німецької", "языков",
+            "sprachkurs", "deutschkurs", "курс немецкого", "курсы немецкого", "курс німецької",
+            "курси німецької", "языков", "мовні курс", "мовний курс", "мовних курс",
             "language course", "german course", "almanca kursu", "dil kursu"),
         new("Anerkennungsverfahren",
             "anerkennung", "признание диплома", "визнання диплома", "нострификация",

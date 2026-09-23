@@ -158,6 +158,7 @@
     <string name="profile_gap_reason_label">Причина пробела</string>
     <string name="profile_gap_save">Сохранить причину</string>
     <string name="profile_gap_in_cv">В Lebenslauf: »%1$s«</string>
+    <string name="profile_gap_wording_none">Пока не распознано — назовите переезд, языковые курсы или признание диплома, иначе пробел останется в Lebenslauf без названия.</string>
     <string name="profile_reference_on_file">Zeugnis приложен</string>
     <string name="profile_reference_missing">Zeugnis отсутствует</string>
     <string name="profile_certificate_on_file">Сертификат приложен</string>

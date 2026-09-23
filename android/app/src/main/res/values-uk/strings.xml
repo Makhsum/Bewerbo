@@ -160,6 +160,7 @@
     <string name="profile_gap_reason_label">Причина прогалини</string>
     <string name="profile_gap_save">Зберегти причину</string>
     <string name="profile_gap_in_cv">У Lebenslauf: »%1$s«</string>
+    <string name="profile_gap_wording_none">Поки не розпізнано — назвіть переїзд, мовні курси або визнання диплома, інакше прогалина залишиться в Lebenslauf без назви.</string>
     <string name="profile_reference_on_file">Zeugnis додано</string>
     <string name="profile_reference_missing">Zeugnis відсутній</string>
     <string name="profile_certificate_on_file">Сертифікат додано</string>

@@ -828,6 +828,38 @@ public class DomainRuleTests
         Assert.Equal(expected, GapWording.Suggest(reason));
     }
 
+    [Theory]
+    // Every one of these is the wording that locale's OWN profile_gap_explainer tells the user to
+    // write. Three of the four were not on the trigger list: the Ukrainian "language courses" and
+    // the Russian plural both fell through to the generic Weiterbildung - taking the CEFR level
+    // with them - and the English "a move" matched nothing at all, because only "moved"/"moving"
+    // were listed. A product that asks for a phrase has to be able to read it back.
+    [InlineData("переїзд, мовні курси, визнання диплома")]
+    [InlineData("переезд, языковые курсы, признание диплома")]
+    [InlineData("a move, a language course, a recognition procedure")]
+    [InlineData("Umzug, Sprachkurs, Anerkennungsverfahren")]
+    public void The_phrase_each_explainer_suggests_is_one_the_wording_table_reads(string suggested)
+    {
+        var german = GapWording.Suggest(suggested);
+
+        Assert.Contains("Umzug nach Deutschland", german);
+        Assert.Contains("Sprachkurs Deutsch", german);
+        Assert.Contains("Anerkennungsverfahren", german);
+        // The specific wording is what a German reader learns something from, so the catch-all
+        // must not be left standing next to it.
+        Assert.DoesNotContain("Weiterbildung", german);
+    }
+
+    [Theory]
+    [InlineData("мовні курси B2", "Sprachkurs Deutsch B2")]
+    [InlineData("мовний курс B1", "Sprachkurs Deutsch B1")]
+    [InlineData("курсы немецкого B2", "Sprachkurs Deutsch B2")]
+    [InlineData("a move to Germany", "Umzug nach Deutschland")]
+    public void The_level_survives_the_wording_the_user_actually_types(string reason, string expected)
+    {
+        Assert.Equal(expected, GapWording.Suggest(reason));
+    }
+
     [Fact]
     public void An_unrecognised_reason_produces_no_wording_rather_than_an_invented_one()
     {
@@ -852,6 +884,26 @@ public class DomainRuleTests
         var items = cv.Sections.SelectMany(s => s.Items).ToList();
         var gapItem = Assert.Single(items, i => i.IsGap);
         Assert.Equal("Umzug nach Deutschland, Sprachkurs Deutsch B2", gapItem.Title);
+    }
+
+    [Fact]
+    public void A_gap_with_no_German_wording_stays_out_of_the_Lebenslauf()
+    {
+        // The reason is the user's and is kept; what has no German name simply cannot be written.
+        // It used to be written anyway, as a date range with an empty title beside it - a blank
+        // line exactly where the reader was looking for the answer.
+        var profile = SampleProfile();
+        profile.Gaps.Add(new GapExplanation
+        {
+            From = new DateOnly(2023, 7, 31), To = new DateOnly(2023, 9, 1),
+            Reason = "qwertz", GermanWording = "",
+        });
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        Assert.DoesNotContain(cv.Sections.SelectMany(s => s.Items), i => i.IsGap);
     }
 
     // -- recognition ----------------------------------------------------------------------------------

@@ -10,6 +10,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -85,6 +86,12 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
 
     suspend fun explainGap(id: String, update: GapUpdate): Gap =
         client.post("$baseUrl/api/profile/$id/gaps") { json(update) }.body()
+
+    /// The German wording proposed for a reason, without storing anything — what the gap card shows
+    /// under the input while the user is still typing. Takes the reason as a [parameter] rather than
+    /// in the path: it is the user's own prose, in their own alphabet, and it has to be encoded.
+    suspend fun gapWording(reason: String): GapWordingResponse =
+        client.get("$baseUrl/api/profile/gap-wording") { parameter("reason", reason) }.body()
 
     suspend fun degrees(country: String?): List<DegreeEquivalence> =
         client.get("$baseUrl/api/recognition/degrees" + (country?.let { "?country=$it" } ?: "")).body()
