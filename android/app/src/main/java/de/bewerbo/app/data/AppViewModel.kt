@@ -379,6 +379,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(match = api.match(posting.id)) }
     }
 
+    /**
+     * Runs the start again after it failed.
+     *
+     * Without a profile there is no app — every screen reads from it — and [bootstrap] is the only
+     * thing that fetches or creates one. It runs once, from init, so a first launch that could not
+     * reach the server left the Übersicht saying it was fetching for as long as the app stayed
+     * open, including long after the server was answering again.
+     */
+    fun retryStart() = bootstrap()
+
     fun dismissError() = _state.update { it.copy(error = null) }
 
     // -- plumbing --------------------------------------------------------------------------

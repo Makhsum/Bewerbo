@@ -31,6 +31,9 @@
     <string name="overview_mappe_empty_body">Как только в профиле появится Berufserfahrung или Ausbildung, Bewerbo будет считать здесь, насколько он полон, какой Lücke ещё не объяснён и какого Nachweis не хватает.</string>
     <string name="overview_loading_title">Одну минуту</string>
     <string name="overview_loading_body">Bewerbo читает, чего ещё не хватает вашей Bewerbungsmappe.</string>
+    <string name="overview_unreachable_title">Bewerbo недоступен</string>
+    <string name="overview_unreachable_body">Ваша Bewerbungsmappe хранится на сервере, поэтому показать нечего, пока он не ответит. Проверьте соединение и попробуйте снова.</string>
+    <string name="overview_retry">Попробовать снова</string>
     <string name="overview_applications_empty_title">Ни одной заявки не начато</string>
     <string name="overview_applications_empty_body">Начните её выше и вставьте вакансию. Каждая начатая заявка появится здесь с работодателем, Referenznummer и текущим состоянием, и отсюда же вы вернётесь к незавершённой.</string>
     <string name="overview_your_locker">Ваша Mappe</string>

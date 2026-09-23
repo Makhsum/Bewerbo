@@ -104,6 +104,37 @@ fun OverviewScreen(
             }
         }
 
+        // The start itself failed. bootstrap() is what sets the profile and clears loading, so no
+        // profile once loading is done means the server was never reached — and nothing runs
+        // bootstrap() a second time by itself, so "one moment" there is a wait that never ends. It
+        // outlasted the server coming back, and the snackbar that said so is long gone.
+        if (state.profile == null && !state.loading) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                    Callout(
+                        icon = BewerboIcons.Attention,
+                        title = stringResource(R.string.overview_unreachable_title),
+                        body = stringResource(R.string.overview_unreachable_body),
+                        tone = PillTone.Attention,
+                        modifier = Modifier.testTag("overview_unreachable"),
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.retryStart() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("overview_btn_retry"),
+                    ) {
+                        Icon(BewerboIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.overview_retry),
+                            modifier = Modifier.padding(start = Space.s),
+                        )
+                    }
+                }
+            }
+            return@LazyColumn
+        }
+
         // Everything below says what is outstanding and what to do first, and neither is known until
         // the Übersicht has been fetched. Drawn from an empty default they read as answers — "nothing
         // outstanding" over a profile with nothing in it, and a first step that then changes under

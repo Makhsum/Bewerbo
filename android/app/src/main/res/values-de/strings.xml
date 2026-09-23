@@ -36,6 +36,9 @@
     <string name="overview_mappe_empty_body">Sobald eine Berufserfahrung oder eine Ausbildung im Profil steht, zählt Bewerbo hier, wie vollständig es ist, welche Lücke noch unerklärt ist und welcher Nachweis fehlt.</string>
     <string name="overview_loading_title">Einen Moment</string>
     <string name="overview_loading_body">Bewerbo liest gerade, was Ihrer Bewerbungsmappe noch fehlt.</string>
+    <string name="overview_unreachable_title">Bewerbo war nicht erreichbar</string>
+    <string name="overview_unreachable_body">Ihre Bewerbungsmappe liegt auf dem Server, deshalb lässt sich nichts anzeigen, bis er antwortet. Prüfen Sie die Verbindung und versuchen Sie es erneut.</string>
+    <string name="overview_retry">Erneut versuchen</string>
     <string name="overview_applications_empty_title">Noch keine Bewerbung begonnen</string>
     <string name="overview_applications_empty_body">Beginnen Sie oben eine und fügen Sie eine Anzeige ein. Jede begonnene Bewerbung steht hier mit Arbeitgeber, Referenznummer und Stand, und von hier kommen Sie in eine unfertige zurück.</string>
     <string name="overview_your_locker">Ihre Mappe</string>

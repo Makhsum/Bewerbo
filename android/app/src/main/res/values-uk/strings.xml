@@ -35,6 +35,9 @@
     <string name="overview_mappe_empty_body">Щойно в профілі з’явиться Berufserfahrung або Ausbildung, Bewerbo рахуватиме тут, наскільки він повний, який Lücke ще не пояснено і якого Nachweis бракує.</string>
     <string name="overview_loading_title">Одну хвилину</string>
     <string name="overview_loading_body">Bewerbo читає, чого ще бракує вашій Bewerbungsmappe.</string>
+    <string name="overview_unreachable_title">Bewerbo недоступний</string>
+    <string name="overview_unreachable_body">Ваша Bewerbungsmappe зберігається на сервері, тому показати нічого, доки він не відповість. Перевірте з’єднання та спробуйте ще раз.</string>
+    <string name="overview_retry">Спробувати ще раз</string>
     <string name="overview_applications_empty_title">Жодної заявки ще не почато</string>
     <string name="overview_applications_empty_body">Почніть її вище та вставте вакансію. Кожна почата заявка з’явиться тут із роботодавцем, Referenznummer і поточним станом, і звідси ж ви повернетесь до незавершеної.</string>
     <string name="overview_your_locker">Ваша Mappe</string>
