@@ -302,6 +302,8 @@
     <string name="application_export">Export</string>
     <string name="application_file_detail">%1$d pages · %2$d KB</string>
     <string name="application_save_pdf">Save as one PDF</string>
+    <string name="application_export_incomplete_title">The letter no longer has your details</string>
+    <string name="application_export_incomplete_body">The file is produced from the profile as it is now, and this is missing from it: %1$s. Add it under »%2$s« — until then the letter goes out with no sender address and no name under the closing.</string>
     <string name="application_export_blocked_title">A check has failed</string>
     <string name="application_export_blocked_body">Not passed: %1$s. This is the document the employer reads, so the export waits until that is put right.</string>
     <string name="application_preview_page">Page %1$d of %2$d</string>

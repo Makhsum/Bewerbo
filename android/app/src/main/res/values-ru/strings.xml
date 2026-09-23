@@ -275,6 +275,8 @@
     <string name="application_export">Экспорт</string>
     <string name="application_file_detail">Страниц: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Сохранить одним PDF</string>
+    <string name="application_export_incomplete_title">В письме больше нет ваших данных</string>
+    <string name="application_export_incomplete_body">Файл создаётся из профиля в его нынешнем виде, а в нём не хватает: %1$s. Добавьте это в разделе »%2$s« — иначе письмо уйдёт без адреса отправителя и без имени под прощальной строкой.</string>
     <string name="application_export_blocked_title">Проверка не пройдена</string>
     <string name="application_export_blocked_body">Не пройдено: %1$s. Это тот документ, который прочитает работодатель, поэтому экспорт ждёт, пока это не исправлено.</string>
     <string name="application_preview_page">Страница %1$d из %2$d</string>

@@ -59,6 +59,7 @@ import de.bewerbo.app.ui.components.applicationStatusLabel
 import de.bewerbo.app.ui.components.atsFailedLabels
 import de.bewerbo.app.ui.components.atsFindingDetail
 import de.bewerbo.app.ui.components.atsFindingLabel
+import de.bewerbo.app.ui.components.letterBlockerItems
 import de.bewerbo.app.ui.components.reviewCheckDetail
 import de.bewerbo.app.ui.components.reviewCheckTitle
 import de.bewerbo.app.ui.components.reviewFailedLabels
@@ -620,8 +621,33 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         // for the reason the two sections above state.
         val failedChecks = state.review?.checks.orEmpty().filter { it.verdict == "fehler" }
         val failedFindings = state.ats?.findings.orEmpty().filter { it.verdict == "fehler" }
-        val failed = failedChecks.isNotEmpty() || failedFindings.isNotEmpty()
-        if (failed) {
+
+        // The second thing that holds the export, and it is not a failed check: the profile no
+        // longer carries what the letter is MADE of. The file is rendered from the profile as it is
+        // now, not from the one the letter was written against, so a name cleared afterwards leaves
+        // an Anschreiben with no sender address and nothing under the closing — and the
+        // Maschinenlesbarkeit calls that "ungeprueft", which by design does not stop anything.
+        // Same list the Abgleich refuses to write a letter from, so the two cannot drift apart.
+        val blockers = state.overview?.letterBlockers.orEmpty()
+        val failed = failedChecks.isNotEmpty() || failedFindings.isNotEmpty() || blockers.isNotEmpty()
+
+        if (blockers.isNotEmpty()) {
+            item {
+                Callout(
+                    icon = BewerboIcons.Attention,
+                    title = stringResource(R.string.application_export_incomplete_title),
+                    body = stringResource(
+                        R.string.application_export_incomplete_body,
+                        letterBlockerItems(blockers),
+                        stringResource(placeOf("profil")?.label ?: R.string.nav_profile),
+                    ),
+                    tone = PillTone.Attention,
+                    modifier = Modifier.testTag("application_export_incomplete"),
+                )
+            }
+        }
+
+        if (failedChecks.isNotEmpty() || failedFindings.isNotEmpty()) {
             item {
                 // Both halves are already in the user's language here, so THIS join is a plain one.
                 val named = listOf(reviewFailedLabels(failedChecks), atsFailedLabels(failedFindings))

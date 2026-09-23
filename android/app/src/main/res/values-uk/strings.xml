@@ -277,6 +277,8 @@
     <string name="application_export">Експорт</string>
     <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Зберегти одним PDF</string>
+    <string name="application_export_incomplete_title">У листі більше немає ваших даних</string>
+    <string name="application_export_incomplete_body">Файл створюється з профілю в його теперішньому вигляді, а в ньому бракує: %1$s. Додайте це в розділі »%2$s« — інакше лист піде без адреси відправника та без імені під прощальним рядком.</string>
     <string name="application_export_blocked_title">Перевірку не пройдено</string>
     <string name="application_export_blocked_body">Не пройдено: %1$s. Це той документ, який прочитає роботодавець, тому експорт чекає, доки це не виправлено.</string>
     <string name="application_preview_page">Сторінка %1$d із %2$d</string>
