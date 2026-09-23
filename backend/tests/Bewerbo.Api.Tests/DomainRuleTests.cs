@@ -142,6 +142,35 @@ public class DomainRuleTests
         Assert.Equal(expected, extract.Fields.Single(f => f.Key == "title").Value);
     }
 
+    [Theory]
+    [InlineData("Senior Softwareentwickler C#/.NET (m/w/d)", "Senior Softwareentwickler C#/.NET (m/w/d)")]
+    [InlineData("C++ Entwickler (m/w/d)", "C++ Entwickler (m/w/d)")]
+    [InlineData("Fachkraft für Lagerlogistik (m/w/d)", "Fachkraft für Lagerlogistik (m/w/d)")]
+    [InlineData("Kaufmann im Einzelhandel (m/w/d)", "Kaufmann im Einzelhandel (m/w/d)")]
+    [InlineData("Leiter der Buchhaltung (m/w/d)", "Leiter der Buchhaltung (m/w/d)")]
+    [InlineData("Pflegefachkraft (m/w/d)", "Pflegefachkraft (m/w/d)")]
+    public void The_job_title_keeps_the_punctuation_and_the_small_words_it_was_written_with(
+        string line, string expected)
+    {
+        // Reading the title backwards from the marker over capitalised words only kept the tail:
+        // "NET (m/w/d)" for a C#/.NET role, "Lagerlogistik (m/w/d)" for "Fachkraft für
+        // Lagerlogistik". Both shapes are ordinary, and the wrong Bezeichnung is carried into the
+        // Betreffzeile, the first line of the Anschreiben and the name of the exported PDF.
+        var extract = PostingParser.Parse(line);
+
+        Assert.Equal(expected, extract.Fields.Single(f => f.Key == "title").Value);
+    }
+
+    [Fact]
+    public void A_title_read_out_of_a_sentence_is_offered_for_checking_rather_than_called_certain()
+    {
+        var headline = PostingParser.Parse("Fachkraft für Lagerlogistik (m/w/d)");
+        var sentence = PostingParser.Parse("Klinikum München sucht eine Pflegefachkraft (m/w/d).");
+
+        Assert.Equal("sicher", headline.Fields.Single(f => f.Key == "title").Confidence);
+        Assert.Equal("pruefen", sentence.Fields.Single(f => f.Key == "title").Confidence);
+    }
+
     [Fact]
     public void The_company_does_not_swallow_the_article_or_the_line_above_it()
     {

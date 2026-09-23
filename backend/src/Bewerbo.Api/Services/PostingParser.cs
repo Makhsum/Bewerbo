@@ -109,12 +109,39 @@ public static partial class PostingParser
 
     private static ExtractedField? JobTitle(string text)
     {
-        // The Stellenbezeichnung is conventionally the first line and carries the (m/w/d) marker.
-        var m = JobTitleRx().Match(text);
-        if (m.Success)
+        // The Stellenbezeichnung is conventionally the first line and carries the (m/w/d) marker,
+        // so the LINE the marker sits on is the title — read up to the marker, not backwards from
+        // it. Walking back over capitalised words instead dropped the front of every title that
+        // holds punctuation ("Senior Softwareentwickler C#/.NET (m/w/d)" arrived as "NET (m/w/d)")
+        // or a lowercase word ("Fachkraft für Lagerlogistik (m/w/d)" as "Lagerlogistik (m/w/d)"),
+        // and still reported "sicher" — so the chip never asked anyone to correct it, and the
+        // wrong Bezeichnung went on into the Betreffzeile, the Anschreiben and the export name.
+        var marker = GenderMarkerRx().Match(text);
+        if (marker.Success)
         {
-            var value = Tidy(m.Value);
-            return new ExtractedField { Key = "title", Value = value, Quote = value, Confidence = "sicher" };
+            var lineStart = text.LastIndexOf('\n', marker.Index) + 1;
+            var markerLine = text[lineStart..(marker.Index + marker.Length)];
+
+            // A posting that announces the role inside a sentence — "Klinikum München sucht eine
+            // Pflegefachkraft (m/w/d)" — must not hand the whole sentence over as the title. Only
+            // that case cuts anything, and only as far as the article the vacancy verb introduces.
+            var lead = VacancyLeadRx().Match(markerLine);
+            if (lead.Success) markerLine = markerLine[(lead.Index + lead.Length)..];
+
+            var value = Tidy(markerLine);
+            if (value.Length > 0)
+            {
+                return new ExtractedField
+                {
+                    Key = "title",
+                    Value = value,
+                    Quote = value,
+                    // A whole headline is the title as written. Cutting a sentence down to the role
+                    // it names is a reading, so it goes to the user to confirm rather than passing
+                    // as certain.
+                    Confidence = lead.Success ? "pruefen" : "sicher",
+                };
+            }
         }
 
         var firstLine = text.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
@@ -278,8 +305,15 @@ public static partial class PostingParser
     // not everything since the last full stop. A character class containing a space ran back over
     // the whole sentence, so "Klinikum Muenchen sucht eine Pflegefachkraft (m/w/d)" became the job
     // title — and that string then went into the Betreffzeile and the export file name.
-    [GeneratedRegex(@"[A-ZÄÖÜ][\wäöüß-]*(?:[ /-][A-ZÄÖÜ][\wäöüß-]*){0,3}\s*\((?:m/w/d|w/m/d|m/w/x|d/m/w)\)")]
-    private static partial Regex JobTitleRx();
+    [GeneratedRegex(@"\((?:m/w/d|w/m/d|m/w/x|d/m/w)\)")]
+    private static partial Regex GenderMarkerRx();
+
+    // Only a vacancy verb makes the words before the role part of a sentence rather than part of
+    // the title. Without that gate, cutting at the last article would eat the title's own — the
+    // role in "Leiter der Buchhaltung (m/w/d)" is not "Buchhaltung".
+    [GeneratedRegex(@"\b(?:sucht|suchen|gesucht|besetzt|besetzen|stellt\s+ein)\b(?:[^()]*?\b(?:einen|eine|einer|eines|ein|der|die|das)\b)?[\s:,-]*",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex VacancyLeadRx();
 
     [GeneratedRegex(@"(?:zum nächstmöglichen Zeitpunkt|ab sofort|zum \d{1,2}\.\d{1,2}\.\d{4}|ab dem \d{1,2}\.\d{1,2}\.\d{4})",
         RegexOptions.IgnoreCase)]
