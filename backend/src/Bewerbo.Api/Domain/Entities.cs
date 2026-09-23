@@ -76,6 +76,14 @@ public class EducationEntry
     public string? AnabinAssessment { get; set; }
     public string? GermanEquivalent { get; set; }
     public bool EquivalenceConfirmed { get; set; }
+
+    /// <summary>
+    /// A Zeugnisbewertung applied for at the ZAB whose result is not back yet. That is a fact about
+    /// the user's own application and not a claim about the degree, so it reaches the Lebenslauf
+    /// while <see cref="EquivalenceConfirmed"/> is still false — named as outstanding, never as a
+    /// settled equivalence.
+    /// </summary>
+    public bool ZabAssessmentPending { get; set; }
 }
 
 public class LanguageSkill

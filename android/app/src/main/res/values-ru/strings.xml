@@ -30,6 +30,7 @@
     <string name="term_nachweis">документ, подтверждающий требование: сертификат, диплом, характеристика</string>
     <string name="term_referenznummer">номер вакансии, по которому работодатель различает заявки</string>
     <string name="term_anabin">немецкая база данных: чему здесь соответствует иностранный диплом</string>
+    <string name="term_zab">ведомство, которое по заявлению официально оценивает иностранный диплом</string>
     <string name="term_din_5008">немецкий стандарт оформления делового письма</string>
     <string name="term_agg">закон о равном обращении: работодатель не вправе требовать фото и личные данные</string>
 
@@ -171,6 +172,8 @@
     <string name="profile_rephrase_duties">Переписать обязанности как результаты</string>
     <string name="profile_anabin_rating">anabin %1$s</string>
     <string name="profile_anabin_open">Признание не подтверждено</string>
+    <string name="profile_zab_pending">Оценка ZAB ещё не готова</string>
+    <string name="profile_zab_toggle">Оценка запрошена в ZAB</string>
     <string name="profile_anabin_lookup">Найти в anabin</string>
     <string name="profile_equivalent_to">Эквивалент в Германии: %1$s</string>
     <string name="profile_generate_cv">Написать Lebenslauf</string>

@@ -1288,6 +1288,50 @@ public class DomainRuleTests
         Assert.Contains(bullets, b => b.Contains("Bachelorabschluss") && b.Contains("H+"));
     }
 
+    [Fact]
+    public void An_assessment_that_is_still_open_is_named_beside_the_degree()
+    {
+        var profile = SampleProfile();
+        profile.Education.Add(new EducationEntry
+        {
+            Degree = "Diplom", Institution = "KHEU", Country = "UA",
+            From = new DateOnly(2014, 9, 1), To = new DateOnly(2019, 6, 30),
+            ZabAssessmentPending = true,
+        });
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        // Beside the degree, not somewhere else on the page: the reader weighs the qualification
+        // where they read it.
+        var item = cv.Sections.SelectMany(s => s.Items).Single(i => i.Title == "Diplom");
+        Assert.Contains(item.Bullets, b => b.Contains("Zeugnisbewertung") && b.Contains("steht noch aus"));
+    }
+
+    [Fact]
+    public void An_open_assessment_is_not_written_as_a_settled_equivalence()
+    {
+        var profile = SampleProfile();
+        profile.Education.Add(new EducationEntry
+        {
+            Degree = "Diplom", Institution = "KHEU", Country = "UA",
+            From = new DateOnly(2014, 9, 1), To = new DateOnly(2019, 6, 30),
+            AnabinAssessment = "H+", GermanEquivalent = "Bachelorabschluss",
+            EquivalenceConfirmed = false, ZabAssessmentPending = true,
+        });
+
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 22));
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var cv = writer.WriteCvAsync(profile, timeline).Result;
+
+        // The outstanding assessment is the one thing that may be said while the user has not
+        // confirmed anything. It must not carry the equivalence in with it.
+        var bullets = cv.Sections.SelectMany(s => s.Items).SelectMany(i => i.Bullets).ToList();
+        Assert.Contains(bullets, b => b.Contains("Zeugnisbewertung"));
+        Assert.DoesNotContain(bullets, b => b.Contains("gleichwertig"));
+    }
+
     // -- the output the card asks for --------------------------------------------------------------------
 
     [Fact]

@@ -33,6 +33,7 @@
     <string name="term_nachweis">das Dokument, das eine Anforderung belegt: Zertifikat, Urkunde, Zeugnis</string>
     <string name="term_referenznummer">die Kennziffer der Anzeige, an der der Arbeitgeber Bewerbungen auseinanderhält</string>
     <string name="term_anabin">die Datenbank, die sagt, was ein ausländischer Abschluss hier entspricht</string>
+    <string name="term_zab">die Stelle, die einen ausländischen Abschluss auf Antrag amtlich bewertet</string>
     <string name="term_din_5008">die Norm dafür, wie ein Geschäftsbrief gesetzt wird</string>
     <string name="term_agg">das Gleichbehandlungsgesetz: kein Arbeitgeber darf Foto oder persönliche Angaben verlangen</string>
 
@@ -174,6 +175,8 @@
     <string name="profile_rephrase_duties">Tätigkeiten in Ergebnisse umformulieren</string>
     <string name="profile_anabin_rating">anabin %1$s</string>
     <string name="profile_anabin_open">Anerkennung offen</string>
+    <string name="profile_zab_pending">ZAB-Bewertung steht aus</string>
+    <string name="profile_zab_toggle">Bewertung bei der ZAB beantragt</string>
     <string name="profile_anabin_lookup">In anabin nachschlagen</string>
     <string name="profile_equivalent_to">Entspricht in Deutschland: %1$s</string>
     <string name="profile_generate_cv">Lebenslauf schreiben</string>

@@ -48,6 +48,7 @@ data class Education(
     val anabinAssessment: String? = null,
     val germanEquivalent: String? = null,
     val equivalenceConfirmed: Boolean = false,
+    val zabAssessmentPending: Boolean = false,
 )
 
 @Serializable

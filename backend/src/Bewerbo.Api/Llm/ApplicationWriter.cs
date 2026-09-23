@@ -99,7 +99,11 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
             var equiv = e.EquivalenceConfirmed && !string.IsNullOrWhiteSpace(e.GermanEquivalent)
                 ? $" | anabin: {e.AnabinAssessment}, gleichwertig mit: {e.GermanEquivalent}"
                 : " | keine bestätigte Gleichwertigkeit — NICHT behaupten";
-            lines.Add($"- {Period(e.From, e.To)} | {e.Degree} | {e.Institution}, {e.Location}{equiv}");
+            var zab = e.ZabAssessmentPending
+                ? " | ZAB-Zeugnisbewertung beantragt, Ergebnis steht aus — als offen nennen, " +
+                  "nicht als Gleichwertigkeit"
+                : "";
+            lines.Add($"- {Period(e.From, e.To)} | {e.Degree} | {e.Institution}, {e.Location}{equiv}{zab}");
         }
         lines.Add("");
         lines.Add("Sprachen: " + string.Join(", ", profile.Languages.Select(l => $"{l.Language} {l.Level}")));
@@ -173,6 +177,13 @@ public class ApplicationWriter(ILanguageModel model, ILogger<ApplicationWriter> 
                             (string.IsNullOrWhiteSpace(e.AnabinAssessment)
                                 ? ""
                                 : $" (anabin: {e.AnabinAssessment})"));
+            }
+            // An assessment that is under way is the other half of the standing. Without it a
+            // degree the user is waiting on reaches the page unframed, and calling it settled would
+            // be exactly the equivalence they have not got yet — so it is named as outstanding.
+            if (e.ZabAssessmentPending)
+            {
+                bullets.Add("Zeugnisbewertung der ZAB beantragt — Ergebnis steht noch aus");
             }
             education.Add(new CvItem
             {

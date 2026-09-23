@@ -47,6 +47,7 @@
     <string name="term_nachweis">the document that proves a requirement: a certificate, a diploma, a reference</string>
     <string name="term_referenznummer">the number a posting carries so the employer can tell applications apart</string>
     <string name="term_anabin">the German database that says what a foreign qualification counts for here</string>
+    <string name="term_zab">the German office that assesses a foreign degree formally, on request</string>
     <string name="term_din_5008">the German standard for how a business letter is laid out</string>
     <string name="term_agg">the equal-treatment law: no employer may demand a photo or personal details</string>
 
@@ -193,6 +194,8 @@
     <string name="profile_rephrase_duties">Rewrite duties as results</string>
     <string name="profile_anabin_rating">anabin %1$s</string>
     <string name="profile_anabin_open">Recognition not confirmed</string>
+    <string name="profile_zab_pending">Assessment by the ZAB outstanding</string>
+    <string name="profile_zab_toggle">Assessment applied for at the ZAB</string>
     <string name="profile_anabin_lookup">Look up in anabin</string>
     <string name="profile_equivalent_to">Equivalent in Germany to: %1$s</string>
     <string name="profile_generate_cv">Write the Lebenslauf</string>

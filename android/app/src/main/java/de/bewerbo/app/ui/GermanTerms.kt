@@ -64,6 +64,9 @@ val GERMAN_TERMS = listOf(
     ),
     GermanTerm("Referenznummer", "referenznummer", R.string.term_referenznummer),
     GermanTerm("anabin", "anabin", R.string.term_anabin),
+    // The office beside anabin: it is the sender of the Zeugnisbewertung the user applies for, so
+    // the abbreviation stands on the form they fill in and on the document that comes back.
+    GermanTerm("ZAB", "zab", R.string.term_zab),
     GermanTerm("DIN 5008", "din_5008", R.string.term_din_5008, listOf("DIN")),
     GermanTerm("AGG", "agg", R.string.term_agg),
     // The three the legal pages brought with them. Each is met outside the app before it is met

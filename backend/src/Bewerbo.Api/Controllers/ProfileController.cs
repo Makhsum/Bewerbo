@@ -104,6 +104,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
                 // Nothing here may set that flag on the user's behalf.
                 EquivalenceConfirmed = e.EquivalenceConfirmed
                                        && !string.IsNullOrWhiteSpace(e.GermanEquivalent),
+                ZabAssessmentPending = e.ZabAssessmentPending,
             });
         }
         await db.SaveChangesAsync();

@@ -262,9 +262,10 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
             "ausbildung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_education)) }
-                // Same again for anabin: each qualification offers the lookup, the name is
-                // explained once above them.
+                // Same again for anabin and for the ZAB: each qualification offers the lookup and
+                // carries the assessment switch, so both names are explained once above them.
                 item { TermNote(germanTerm("anabin")) }
+                item { TermNote(germanTerm("zab")) }
                 profile?.education?.forEachIndexed { index, entry ->
                     item { EducationCard(entry, index, profile.education, state, viewModel) }
                 }
@@ -652,19 +653,58 @@ private fun EducationCard(
             Modifier.padding(top = Space.s),
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            if (entry.equivalenceConfirmed && !entry.germanEquivalent.isNullOrBlank()) {
+            // Three states, not two: an entry whose assessment is under way used to be drawn
+            // exactly like one where nothing had been done, so the one thing the user was waiting
+            // for was the one thing the card did not say.
+            val confirmed = entry.equivalenceConfirmed && !entry.germanEquivalent.isNullOrBlank()
+            val (recognition, tone) = when {
+                confirmed ->
+                    stringResource(R.string.profile_anabin_rating, entry.anabinAssessment.orEmpty()) to
+                        PillTone.Success
+                entry.zabAssessmentPending ->
+                    stringResource(R.string.profile_zab_pending) to PillTone.Attention
+                else -> stringResource(R.string.profile_anabin_open) to PillTone.Attention
+            }
+            StatusPill(recognition, tone, Modifier.testTag("profile_recognition_state_$index"))
+
+            // A confirmed equivalence does not close an assessment that is still running, and the
+            // green pill on its own would read as though it had. Both are shown, the way a position
+            // carries its Pensum beside its Zeugnis.
+            if (confirmed && entry.zabAssessmentPending) {
                 StatusPill(
-                    stringResource(R.string.profile_anabin_rating, entry.anabinAssessment.orEmpty()),
-                    PillTone.Success,
-                    Modifier.testTag("profile_recognition_state_$index"),
-                )
-            } else {
-                StatusPill(
-                    stringResource(R.string.profile_anabin_open),
+                    stringResource(R.string.profile_zab_pending),
                     PillTone.Attention,
-                    Modifier.testTag("profile_recognition_state_$index"),
+                    Modifier.testTag("profile_recognition_zab_state_$index"),
                 )
             }
+        }
+
+        // The ZAB switch, the same shape as the Zeugnis switch on a position: whether an assessment
+        // has been applied for is something only the user knows, and it is what decides whether the
+        // Lebenslauf names the degree as outstanding or leaves it unframed.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.s),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                stringResource(R.string.profile_zab_toggle),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+            )
+            Switch(
+                checked = entry.zabAssessmentPending,
+                onCheckedChange = { on ->
+                    viewModel.saveEducation(
+                        all.mapIndexed { i, other ->
+                            if (i == index) other.copy(zabAssessmentPending = on) else other
+                        },
+                    )
+                },
+                modifier = Modifier.testTag("profile_recognition_zab_$index"),
+            )
         }
 
         if (entry.equivalenceConfirmed && !entry.germanEquivalent.isNullOrBlank()) {

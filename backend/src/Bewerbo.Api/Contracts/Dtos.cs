@@ -17,7 +17,7 @@ public record ExperienceDto(
 public record EducationDto(
     Guid? Id, string Degree, string Institution, string Location, string Country,
     string From, string? To, string? AnabinAssessment, string? GermanEquivalent,
-    bool EquivalenceConfirmed);
+    bool EquivalenceConfirmed, bool ZabAssessmentPending);
 
 public record LanguageDto(Guid? Id, string Language, string Level, bool CertificateOnFile);
 
@@ -224,7 +224,7 @@ public static class DtoMapping
     public static EducationDto ToDto(this EducationEntry e) => new(
         e.Id, e.Degree, e.Institution, e.Location, e.Country, Iso(e.From),
         e.To is null ? null : Iso(e.To.Value), e.AnabinAssessment, e.GermanEquivalent,
-        e.EquivalenceConfirmed);
+        e.EquivalenceConfirmed, e.ZabAssessmentPending);
 
     public static LanguageDto ToDto(this LanguageSkill l) => new(l.Id, l.Language, l.Level, l.CertificateOnFile);
 
