@@ -30,8 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
+import de.bewerbo.app.data.AtsFinding
 import de.bewerbo.app.data.Gap
+import de.bewerbo.app.data.NextStep
 import de.bewerbo.app.data.Requirement
+import de.bewerbo.app.data.ReviewCheck
 import de.bewerbo.app.data.TimelinePeriod
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -127,8 +130,9 @@ fun Timeline(
         Row(Modifier.padding(top = Space.s)) {
             // These three were Kotlin string literals, which put them outside strings.xml
             // altogether: not translatable, and invisible to EmojiFreeStringsTest, which only
-            // scans values*/strings.xml. They stay German — they are the words the Zeitstrahl
-            // labels in the document — but they are now declared where every other string is.
+            // scans values*/strings.xml. They are declared where every other string is now, and
+            // translated with them: "Ausbildung", "Beruf" and "Lücke" are words for a timeline,
+            // not words a posting uses, so the rule in ui/GermanTerms.kt does not keep them.
             LegendDot(education, stringResource(R.string.timeline_legend_education))
             Box(Modifier.size(Space.m))
             LegendDot(work, stringResource(R.string.timeline_legend_work))
@@ -221,7 +225,8 @@ fun RequirementRow(
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
             Column(Modifier.padding(start = Space.s)) {
                 Text(requirement.text, style = MaterialTheme.typography.titleMedium)
-                val detail = requirement.evidence.ifBlank { requirement.action }
+                val detail = requirementEvidence(requirement)
+                    .ifBlank { requirementAction(requirement) }
                 if (detail.isNotBlank()) {
                     Text(
                         detail,
@@ -245,7 +250,7 @@ fun RequirementRow(
                                 tint = colors.attention, modifier = Modifier.size(16.dp),
                             )
                             Text(
-                                requirement.action,
+                                requirementAction(requirement),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.attention,
                                 modifier = Modifier.padding(start = Space.xs),
@@ -304,3 +309,180 @@ fun DinOverlay(modifier: Modifier = Modifier) {
         )
     }
 }
+
+/// What an application's state is called on screen. The value keeps the backend's spelling — it is
+/// what the status endpoint takes — so the Übersicht and the Bewerbung screen both have to look
+/// the name up rather than print it. Same shape as `partLabel` on the Bewerbung screen; shared
+/// because two screens draw the same four states.
+fun applicationStatusLabel(status: String) = when (status) {
+    "Entwurf" -> R.string.status_entwurf
+    "Versendet" -> R.string.status_versendet
+    "Einladung" -> R.string.status_einladung
+    else -> R.string.status_absage
+}
+
+// ---------------------------------------------------------------------------------------------
+// The outstanding steps. The server composes WHICH steps there are; it cannot compose the words,
+// because it never learns the interface language — so it sends a kind and its arguments, and the
+// sentence is written here. A kind this build does not know falls back to the German the server
+// still carries, which is what the Übersicht showed for all of them until now.
+// ---------------------------------------------------------------------------------------------
+
+@Composable
+fun nextStepTitle(step: NextStep): String = when (step.kind) {
+    "person" -> stringResource(R.string.step_person_title)
+    "gap" -> stringResource(R.string.step_gap_title, step.arg(0), step.arg(1))
+    "anerkennung" -> stringResource(R.string.step_anerkennung_title)
+    "sprachnachweis" -> stringResource(R.string.step_sprachnachweis_title, step.arg(1))
+    "beruf" -> stringResource(R.string.step_beruf_title)
+    "versand" -> stringResource(R.string.step_versand_title)
+    "beleg" -> stringResource(R.string.step_beleg_title, step.arg(0))
+    else -> step.title
+}
+
+@Composable
+fun nextStepDetail(step: NextStep): String = when (step.kind) {
+    "person" -> stringResource(R.string.step_person_detail, personItems(step.args))
+    "gap" -> stringResource(R.string.step_gap_detail)
+    "anerkennung" -> stringResource(R.string.step_anerkennung_detail, step.arg(0))
+    "sprachnachweis" ->
+        stringResource(R.string.step_sprachnachweis_detail, step.arg(0), step.arg(1))
+    "beruf" -> stringResource(R.string.step_beruf_detail)
+    "versand" -> stringResource(R.string.step_versand_detail)
+    // The evidence of a requirement is quoted from the posting, so it is the one detail that is
+    // German in every language on purpose.
+    else -> step.detail
+}
+
+/// The missing parts of the Briefkopf, named in the user's language and joined as a list. The
+/// server sends the keys rather than the words for exactly this reason.
+@Composable
+private fun personItems(args: List<String>): String {
+    // A plain loop rather than joinToString: the lambda it takes is not composable, so the lookup
+    // cannot happen inside one.
+    val named = mutableListOf<String>()
+    args.forEach { key ->
+        named += when (key) {
+            "name" -> stringResource(R.string.step_person_item_name)
+            "anschrift" -> stringResource(R.string.step_person_item_anschrift)
+            else -> stringResource(R.string.step_person_item_kontakt)
+        }
+    }
+    return named.joinToString(", ")
+}
+
+/// The argument at [index], or an empty string — a step from an older server carries none, and a
+/// missing one must not take the Übersicht down with it.
+private fun NextStep.arg(index: Int): String = args.getOrElse(index) { "" }
+
+// ---------------------------------------------------------------------------------------------
+// The Abgleich, the Textprüfung and the Maschinenlesbarkeit. Same division as the steps above: the
+// server finds WHAT is the case, the screen says it in the user's language. The requirement text
+// itself, the Floskel list and the profile entries named as evidence are quoted rather than
+// written, so they stay as they come.
+// ---------------------------------------------------------------------------------------------
+
+@Composable
+fun requirementEvidence(requirement: Requirement): String = when (requirement.evidenceKind) {
+    "beruf" -> {
+        val period = if (requirement.arg(3).isBlank()) {
+            stringResource(R.string.evidence_period_since, requirement.arg(2))
+        } else {
+            stringResource(R.string.evidence_period, requirement.arg(2), requirement.arg(3))
+        }
+        stringResource(R.string.evidence_beruf, requirement.arg(0), requirement.arg(1), period)
+    }
+    "ausbildung" -> stringResource(
+        R.string.evidence_ausbildung, requirement.arg(0), requirement.arg(1),
+    )
+    "sprache_belegt" -> stringResource(
+        R.string.evidence_sprache_belegt, requirement.arg(0), requirement.arg(1),
+    )
+    "sprache_offen" -> stringResource(R.string.evidence_sprache_offen)
+    else -> requirement.evidence
+}
+
+@Composable
+fun requirementAction(requirement: Requirement): String = when (requirement.actionKind) {
+    "nachweis_ablegen" -> stringResource(R.string.action_file_nachweis)
+    "niveau" -> stringResource(R.string.evidence_sprache_niveau, requirement.actionArg(0))
+    else -> requirement.action
+}
+
+@Composable
+fun reviewCheckTitle(check: ReviewCheck): String = when (check.key) {
+    "floskeln" -> stringResource(
+        if (check.detailKind == "floskeln_ok") R.string.review_floskeln_none
+        else R.string.review_floskeln_found,
+    )
+    "maschinell" -> stringResource(R.string.review_maschinell)
+    "form" -> stringResource(R.string.review_form)
+    "perspektive" -> stringResource(R.string.review_perspektive)
+    "anschreiben" -> stringResource(R.string.review_anschreiben)
+    else -> check.title
+}
+
+@Composable
+fun reviewCheckDetail(check: ReviewCheck): String = when (check.detailKind) {
+    "floskeln_ok" -> stringResource(R.string.review_floskeln_ok_detail)
+    "floskeln_gefunden" -> stringResource(R.string.review_floskeln_found_detail)
+    "maschinell_niedrig" -> stringResource(R.string.review_maschinell_low)
+    "maschinell_erhoeht" -> stringResource(R.string.review_maschinell_high, check.arg(0))
+    "form_ok" -> stringResource(R.string.review_form_ok, check.arg(0), check.arg(1))
+    "form_fehler" -> formFaults(check.detailArgs)
+    "perspektive" -> stringResource(R.string.review_perspektive_detail, check.arg(0), check.arg(1))
+    "anschreiben_ok" -> stringResource(R.string.review_anschreiben_ok)
+    "anschreiben_fehler" -> stringResource(R.string.review_anschreiben_failed)
+    else -> check.detail
+}
+
+@Composable
+fun atsFindingLabel(finding: AtsFinding): String = when (finding.key) {
+    "lesbar" -> stringResource(R.string.ats_lesbar)
+    "name" -> stringResource(R.string.ats_name)
+    "arbeitgeber" -> stringResource(R.string.ats_arbeitgeber)
+    "zeitraeume" -> stringResource(R.string.ats_zeitraeume)
+    "text" -> stringResource(R.string.ats_text)
+    else -> finding.label
+}
+
+@Composable
+fun atsFindingDetail(finding: AtsFinding): String = when (finding.detailKind) {
+    // What WAS found is the user's own data: the name, the employers, the dates. It reads the
+    // same in every language, so the kind says only that it was found.
+    "gefunden" -> finding.arg(0)
+    "fehlt" -> stringResource(R.string.ats_missing, finding.arg(0))
+    "lesbar_fehler" -> stringResource(R.string.ats_lesbar_failed, finding.arg(0))
+    "name_fehlt" -> stringResource(R.string.ats_name_missing)
+    "arbeitgeber_keine" -> stringResource(R.string.ats_arbeitgeber_none)
+    "zeitraeume_keine" -> stringResource(R.string.ats_zeitraeume_none)
+    "zeitraeume_fehlt" -> stringResource(R.string.ats_zeitraeume_missing)
+    "text_ok" -> stringResource(R.string.ats_text_ok, finding.arg(0))
+    "text_fehlt" -> stringResource(R.string.ats_text_missing)
+    else -> finding.detail
+}
+
+/// The faults of the form check, named in the user's language and joined the way the German
+/// sentence joined them. A plain loop for the same reason [personItems] uses one.
+@Composable
+private fun formFaults(keys: List<String>): String {
+    val named = mutableListOf<String>()
+    keys.forEach { key ->
+        named += when (key) {
+            "anrede" -> stringResource(R.string.review_form_anrede)
+            "referenz" -> stringResource(R.string.review_form_referenz)
+            "betreff" -> stringResource(R.string.review_form_betreff)
+            "kurz" -> stringResource(R.string.review_form_short)
+            else -> stringResource(R.string.review_form_long)
+        }
+    }
+    return named.joinToString("  ·  ")
+}
+
+private fun Requirement.arg(index: Int): String = evidenceArgs.getOrElse(index) { "" }
+
+private fun Requirement.actionArg(index: Int): String = actionArgs.getOrElse(index) { "" }
+
+private fun ReviewCheck.arg(index: Int): String = detailArgs.getOrElse(index) { "" }
+
+private fun AtsFinding.arg(index: Int): String = detailArgs.getOrElse(index) { "" }

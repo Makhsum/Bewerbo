@@ -124,7 +124,7 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
                         )
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        StatusPill(kindLabelText(document.kind), PillTone.Success)
+                        StatusPill(stringResource(documentKindLabel(document.kind)), PillTone.Success)
                         TextButton(
                             onClick = { document.id?.let { viewModel.deleteDocument(it) } },
                             modifier = Modifier.testTag("locker_item_delete_$index"),
@@ -191,7 +191,10 @@ private fun DemandRow(demand: DemandedDocument, index: Int) {
 
     IconRow(
         icon = kindIcon(demand.kind),
-        title = demand.title,
+        // The kind in the user's language, then what the server appended to it — the language and
+        // level of a Sprachnachweis, which read the same in every language.
+        title = (listOf(stringResource(documentKindLabel(demand.kind))) + demand.titleArgs)
+            .joinToString(" "),
         detail = if (demand.onFile) {
             listOfNotNull(onFile, demand.quote.ifBlank { null }).joinToString("  ·  ")
         } else {
@@ -238,6 +241,7 @@ private fun AddDocumentCard(viewModel: AppViewModel, onDone: () -> Unit) {
             onSelect = { kind = it },
             modifier = Modifier.testTag("locker_kind_selector"),
             tagPrefix = "locker_kind",
+            label = { stringResource(documentKindLabel(it)) },
         )
 
         Row(
@@ -275,6 +279,12 @@ private fun kindIcon(kind: String) = when (kind) {
     else -> BewerboIcons.Anlagen
 }
 
-/// The kinds keep their German names in every locale: they are the words that appear on the
-/// Anlagenverzeichnis the recruiter reads, so learning them is part of the point.
-private fun kindLabelText(kind: String) = kind
+/// What a kind is called on screen. The value keeps the backend's spelling. Two of the four are
+/// German on purpose — Arbeitszeugnis and Sprachnachweis are words a posting uses, and they are
+/// explained where the user first meets them; the other two are not, so they are translated.
+fun documentKindLabel(kind: String) = when (kind) {
+    "Arbeitszeugnis" -> R.string.kind_arbeitszeugnis
+    "Zertifikat" -> R.string.kind_zertifikat
+    "Sprachnachweis" -> R.string.kind_sprachnachweis
+    else -> R.string.kind_anabin_auszug
+}

@@ -29,6 +29,8 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.Requirement
 import de.bewerbo.app.data.StoredDocument
+import de.bewerbo.app.ui.TermNote
+import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.Callout
@@ -42,7 +44,15 @@ import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
+/// The tones the letter can be written in. Backend values, not words for the user — `toneLabel`
+/// says how each is written, the same way `partLabel` does on the Bewerbung screen.
 private val TONES = listOf("Klassisch", "Sachlich", "Modern")
+
+private fun toneLabel(tone: String) = when (tone) {
+    "Klassisch" -> R.string.tone_klassisch
+    "Sachlich" -> R.string.tone_sachlich
+    else -> R.string.tone_modern
+}
 
 /**
  * Abgleich — the posting's requirements against what the profile can prove, one row each.
@@ -150,6 +160,10 @@ fun MatchScreen(
                             onAction = { filing = requirement },
                         )
                     }
+                    // Said once for the group, like the note under the unproven one below: every
+                    // row here offers to file a Nachweis, and the dialog it opens is titled with
+                    // the word.
+                    TermNote(germanTerm("nachweis"))
                 }
             }
         }
@@ -202,8 +216,12 @@ fun MatchScreen(
                         onSelect = { tone = it },
                         modifier = Modifier.testTag("match_tone_selector"),
                         tagPrefix = "match_tone",
+                        label = { stringResource(toneLabel(it)) },
                     )
                 }
+                // The label above and the button below both name the Anschreiben, and this is the
+                // screen the user first meets it on.
+                TermNote(germanTerm("anschreiben"))
             }
         }
 

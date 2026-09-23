@@ -23,7 +23,17 @@ public record MatchedRequirement(
     /// file that document instead of sending the user off to look for the right one. Empty
     /// everywhere else — a requirement with no action has nothing for the action to act on.
     /// </summary>
-    string Language = "");
+    string Language = "",
+    /// <summary>
+    /// What the evidence SAYS, as a kind and its arguments, so the screen can write the sentence
+    /// in the user's language. <see cref="Evidence"/> keeps the German, because the letter writer
+    /// quotes it into the Anschreiben and that one is German whatever the interface is.
+    /// </summary>
+    string EvidenceKind = "",
+    IReadOnlyList<string>? EvidenceArgs = null,
+    /// <summary>The action, for the same reason: it is a button label, not letter text.</summary>
+    string ActionKind = "",
+    IReadOnlyList<string>? ActionArgs = null);
 
 public record MatchResult(
     IReadOnlyList<MatchedRequirement> Requirements,
@@ -86,7 +96,14 @@ public static class RequirementMatcher
                 ? $"seit {entry.From:MM\\/yyyy}"
                 : $"{entry.From:MM\\/yyyy} – {entry.To:MM\\/yyyy}";
             return new MatchedRequirement(requirement, RequirementState.Belegt,
-                $"{entry.Position}, {entry.Employer} · {period}", "");
+                $"{entry.Position}, {entry.Employer} · {period}", "", "",
+                // The position, the employer and the dates are the user's own data and read the
+                // same in every language; only the word joining them is written on the client.
+                "beruf",
+                [
+                    entry.Position, entry.Employer, $"{entry.From:MM\\/yyyy}",
+                    entry.To is null ? "" : $"{entry.To:MM\\/yyyy}",
+                ]);
         }
 
         foreach (var entry in profile.Education)
@@ -94,7 +111,8 @@ public static class RequirementMatcher
             var haystack = $"{entry.Degree} {entry.Institution} {entry.GermanEquivalent}";
             if (!Hits(haystack, keywords)) continue;
             return new MatchedRequirement(requirement, RequirementState.Belegt,
-                $"{entry.Degree}, {entry.Institution}", "");
+                $"{entry.Degree}, {entry.Institution}", "", "",
+                "ausbildung", [entry.Degree, entry.Institution]);
         }
 
         return new MatchedRequirement(requirement, RequirementState.NichtBelegt, "", "");
@@ -139,18 +157,19 @@ public static class RequirementMatcher
         if (!AtLeast(skill.Level, level))
         {
             return new MatchedRequirement(requirement, RequirementState.NichtBelegt,
-                "", $"Im Profil steht {skill.Level}");
+                "", $"Im Profil steht {skill.Level}", "", "", null, "niveau", [skill.Level]);
         }
 
         return skill.CertificateOnFile
             ? new MatchedRequirement(requirement, RequirementState.Belegt,
-                $"{skill.Language} {skill.Level} · Nachweis in der Mappe", "")
+                $"{skill.Language} {skill.Level} · Nachweis in der Mappe", "", "",
+                "sprache_belegt", [skill.Language, skill.Level])
             // Stated but not evidenced: the app can close this, so it asks rather than dropping it
             // — and names the language, because the asking is only worth anything if the Abgleich
             // can then file the right Nachweis without the user hunting for it.
             : new MatchedRequirement(requirement, RequirementState.Offen,
                 "Im Profil angegeben, Zertifikat fehlt in den Anlagen", "Nachweis hochladen",
-                skill.Language);
+                skill.Language, "sprache_offen", null, "nachweis_ablegen");
     }
 
     private static readonly string[] Levels = ["A1", "A2", "B1", "B2", "C1", "C2"];

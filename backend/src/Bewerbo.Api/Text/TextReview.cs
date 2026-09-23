@@ -3,7 +3,19 @@ using Bewerbo.Api.Llm;
 
 namespace Bewerbo.Api.Text;
 
-public record ReviewCheck(string Key, string Title, string Verdict, string Detail, IReadOnlyList<string> Items);
+/// <summary>
+/// One check of the Prüfung. <see cref="Key"/> names it and <see cref="DetailKind"/> says what it
+/// found, so the screen writes both in the user's language. <see cref="Items"/> stay as they are:
+/// they quote the German letter. <see cref="Title"/> and <see cref="Detail"/> are the fallback.
+/// </summary>
+public record ReviewCheck(
+    string Key,
+    string Title,
+    string Verdict,
+    string Detail,
+    IReadOnlyList<string> Items,
+    string DetailKind = "",
+    IReadOnlyList<string>? DetailArgs = null);
 
 public record ReviewResult(IReadOnlyList<ReviewCheck> Checks, int HintCount)
 {
@@ -26,9 +38,11 @@ public static class TextReview
         var floskeln = FloskelRules.Find(full);
         checks.Add(floskeln.Count == 0
             ? new ReviewCheck("floskeln", "Keine Floskeln gefunden", "ok",
-                "Die gesperrten Wendungen kommen im Brief nicht vor.", FloskelRules.Banned.Take(4).ToList())
+                "Die gesperrten Wendungen kommen im Brief nicht vor.",
+                FloskelRules.Banned.Take(4).ToList(), "floskeln_ok")
             : new ReviewCheck("floskeln", "Floskeln gefunden", "fehler",
-                "Diese Wendungen stehen im Brief und sollten ersetzt werden.", floskeln));
+                "Diese Wendungen stehen im Brief und sollten ersetzt werden.",
+                floskeln, "floskeln_gefunden"));
 
         // 2. "Wirkt der Text maschinell?" — concrete numbers lower it, lists of virtues raise it.
         var sentences = SplitSentences(body);
@@ -41,7 +55,9 @@ public static class TextReview
             machineScore <= 1
                 ? "Niedrig — konkrete Zahlen, keine Aufzählung von Tugenden."
                 : $"Erhöht — {virtueRun} Tugendwörter, wenig konkrete Angaben.",
-            []));
+            [],
+            machineScore <= 1 ? "maschinell_niedrig" : "maschinell_erhoeht",
+            machineScore <= 1 ? [] : [$"{virtueRun}"]));
 
         // 3. Anrede, Betreff und Länge.
         var words = body.Split(' ', '\n').Count(w => w.Trim().Length > 0);
@@ -50,17 +66,47 @@ public static class TextReview
             || letter.Subject.Contains(expectedReference, StringComparison.OrdinalIgnoreCase);
         var subjectClean = !letter.Subject.StartsWith("Betreff", StringComparison.OrdinalIgnoreCase);
         var formOk = addressesPerson && referenceInSubject && subjectClean && words is >= 120 and <= 450;
+        // Each fault travels as its own key as well as its German sentence: the screen joins the
+        // translated ones, and the German list stays for a client that does not know the keys.
         var formDetail = new List<string>();
-        if (!addressesPerson) formDetail.Add("Keine persönliche Anrede");
-        if (!referenceInSubject) formDetail.Add("Referenznummer fehlt in der Betreffzeile");
-        if (!subjectClean) formDetail.Add("Betreffzeile beginnt mit dem Wort »Betreff«");
-        if (words < 120) formDetail.Add("Kürzer als eine Seite");
-        if (words > 450) formDetail.Add("Länger als eine Seite");
+        var formFaults = new List<string>();
+        if (!addressesPerson)
+        {
+            formDetail.Add("Keine persönliche Anrede");
+            formFaults.Add("anrede");
+        }
+
+        if (!referenceInSubject)
+        {
+            formDetail.Add("Referenznummer fehlt in der Betreffzeile");
+            formFaults.Add("referenz");
+        }
+
+        if (!subjectClean)
+        {
+            formDetail.Add("Betreffzeile beginnt mit dem Wort »Betreff«");
+            formFaults.Add("betreff");
+        }
+
+        if (words < 120)
+        {
+            formDetail.Add("Kürzer als eine Seite");
+            formFaults.Add("kurz");
+        }
+
+        if (words > 450)
+        {
+            formDetail.Add("Länger als eine Seite");
+            formFaults.Add("lang");
+        }
+
         checks.Add(new ReviewCheck("form", "Anrede, Betreff und Länge", formOk ? "ok" : "hinweis",
             formOk
                 ? $"{expectedContact ?? letter.Salutation} · Referenznummer im Betreff · 1 Seite, {words} Wörter"
                 : string.Join(" · ", formDetail),
-            formDetail));
+            formDetail,
+            formOk ? "form_ok" : "form_fehler",
+            formOk ? [expectedContact ?? letter.Salutation, $"{words}"] : formFaults));
 
         // 4. Ich-/Sie-Perspektive: a letter that opens every sentence with "Ich" reads as a list of
         //    claims rather than an answer to the posting.
@@ -69,7 +115,8 @@ public static class TextReview
         checks.Add(new ReviewCheck("perspektive", "Sie-Perspektive überwiegt nicht",
             perspectiveOk ? "ok" : "hinweis",
             $"{ichOpens} von {sentences.Count} Sätzen beginnen mit »Ich«",
-            []));
+            [],
+            "perspektive", [$"{ichOpens}", $"{sentences.Count}"]));
 
         // 5. Anschreiben, not Motivationsschreiben.
         var isMotivation = full.Contains("Motivationsschreiben", StringComparison.OrdinalIgnoreCase)
@@ -80,7 +127,8 @@ public static class TextReview
             isMotivation
                 ? "Der Text liest sich wie ein Motivationsschreiben — das gehört zu Studium und Stipendium."
                 : "Der Text ist ein Anschreiben und antwortet auf die Anzeige.",
-            []));
+            [],
+            isMotivation ? "anschreiben_fehler" : "anschreiben_ok"));
 
         var hints = checks.Count(c => c.Verdict == "hinweis");
         return new ReviewResult(checks, hints);

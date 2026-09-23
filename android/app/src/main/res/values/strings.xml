@@ -2,30 +2,119 @@
 <!--
   The UI ships in the user's own language. The German is the OUTPUT, not the interface.
 
-  The product's German terms of art — Lebenslauf, Anschreiben, Anforderungsabgleich, DIN 5008,
-  Anlagen, anabin, Mappe — stay German in every locale on purpose. They are the words the user
-  will meet on the other side of the application, and swapping them for a translation would rob
-  them of the vocabulary they actually need.
+  THE RULE for the German that stays — one rule, and only one: a German word stays in the
+  interface only when the user will meet THAT WORD outside the app, in a job advert, in the
+  documents an employer asks for, or as the name of an institution, a law or a standard. Every
+  word the app is merely naming for itself stands in the user's language. The words that qualify
+  are listed once in ui/GermanTerms.kt, each with the one-line explanation shown where it first
+  appears, and GermanTermsTest fails the build if a locale carries a German word that is not on
+  that list.
+
+  So: Lebenslauf, Anschreiben, Bewerbungsmappe, Anlagenverzeichnis, Zeugnis, Nachweis,
+  Referenznummer, Motivationsschreiben, anabin, DIN 5008 and AGG stay. Zeitstrahl, Abgleich,
+  Maschinenlesbarkeit, Betreffzeile, Pensum, Ausbildung, Berufserfahrung and the rest are
+  translated — they were never vocabulary the user needed, only untranslated chrome.
 
   HARD RULE: no emoji in any string here. EmojiFreeStringsTest fails the build if one appears.
 -->
 <resources>
-    <string name="app_name">Bewerbo</string>
+    <!-- The product's name. Not translated in any locale, which is what marks it here. -->
+    <string name="app_name" translatable="false">Bewerbo</string>
 
     <string name="nav_overview">Overview</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_posting">Posting</string>
     <string name="nav_application">Application</string>
-    <string name="nav_locker">Mappe</string>
+    <string name="nav_locker">Documents</string>
 
-    <!-- The flow that produces one application: posting, Abgleich, Bewerbung. The steps are named
-         by the nav_* strings above, which is what they were when they were still tabs. -->
+    <!-- The flow that produces one application: posting, requirement check, application. The steps
+         are named by the nav_* strings above, which is what they were when they were still tabs. -->
     <string name="flow_step_of">Step %1$d of %2$d</string>
 
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_delete">Delete</string>
     <string name="action_correct">Correct</string>
+
+    <!-- The kept German terms, each explained once by TermNote where it first appears. The
+         explanation is the user's language; only the term itself is German. -->
+    <string name="term_bewerbungsmappe">the complete set of documents an employer asks for: letter, CV and enclosures</string>
+    <string name="term_lebenslauf">the German CV, named in the documents a posting asks for</string>
+    <string name="term_anschreiben">the covering letter that goes with the application</string>
+    <string name="term_motivationsschreiben">the letter written for a course of study or a scholarship, not for a job</string>
+    <string name="term_anlagenverzeichnis">the page that lists the documents sent with the application</string>
+    <string name="term_zeugnis">the written reference an employer hands over at the end of a job</string>
+    <string name="term_nachweis">the document that proves a requirement: a certificate, a diploma, a reference</string>
+    <string name="term_referenznummer">the number a posting carries so the employer can tell applications apart</string>
+    <string name="term_anabin">the German database that says what a foreign qualification counts for here</string>
+    <string name="term_din_5008">the German standard for how a business letter is laid out</string>
+    <string name="term_agg">the equal-treatment law: no employer may demand a photo or personal details</string>
+
+    <!-- The outstanding steps. The server says WHICH step it is and what goes into it; the
+         sentence is written here, because the server never learns the interface language. -->
+    <string name="step_person_title">Complete your personal details</string>
+    <string name="step_person_detail">The letterhead to DIN 5008 still needs: %1$s</string>
+    <string name="step_person_item_name">name</string>
+    <string name="step_person_item_anschrift">address</string>
+    <string name="step_person_item_kontakt">contact</string>
+    <string name="step_gap_title">Explain the gap %1$s – %2$s</string>
+    <string name="step_gap_detail">Without a reason a German reader takes a gap as a warning sign</string>
+    <string name="step_anerkennung_title">Confirm the recognition</string>
+    <string name="step_anerkennung_detail">Check the anabin entry for %1$s and quote it</string>
+    <string name="step_sprachnachweis_title">No Nachweis for %1$s yet</string>
+    <string name="step_sprachnachweis_detail">%1$s %2$s is in the profile but not proven</string>
+    <string name="step_beruf_title">Add a position</string>
+    <string name="step_beruf_detail">Without one entry there is no Lebenslauf to write</string>
+    <string name="step_versand_title">Not sent yet</string>
+    <string name="step_versand_detail">Export the Bewerbungsmappe and set the status to sent</string>
+    <string name="step_beleg_title">Nachweis missing: %1$s</string>
+
+    <!-- The Abgleich's own words about a requirement. The requirement text and the profile
+         entries named here are quoted, not written, so they come from the server as they stand. -->
+    <string name="evidence_beruf">%1$s, %2$s · %3$s</string>
+    <string name="evidence_period">%1$s – %2$s</string>
+    <string name="evidence_period_since">since %1$s</string>
+    <string name="evidence_ausbildung">%1$s, %2$s</string>
+    <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis on file</string>
+    <string name="evidence_sprache_offen">Stated in the profile, no certificate on file</string>
+    <string name="evidence_sprache_niveau">The profile says %1$s</string>
+    <string name="action_file_nachweis">File the Nachweis</string>
+
+    <!-- The text check. The items it lists quote the German letter and are not translated. -->
+    <string name="review_floskeln_none">No stock phrases found</string>
+    <string name="review_floskeln_found">Stock phrases found</string>
+    <string name="review_floskeln_ok_detail">None of the blocked turns of phrase appears in the letter.</string>
+    <string name="review_floskeln_found_detail">These turns of phrase are in the letter and should be replaced.</string>
+    <string name="review_maschinell">Does the text read as machine-written?</string>
+    <string name="review_maschinell_low">Low — concrete figures, no list of virtues.</string>
+    <string name="review_maschinell_high">Raised — %1$s virtue words, few concrete statements.</string>
+    <string name="review_form">Salutation, subject and length</string>
+    <string name="review_form_ok">%1$s · Referenznummer in the subject · one page, %2$s words</string>
+    <string name="review_form_anrede">No named salutation</string>
+    <string name="review_form_referenz">The Referenznummer is missing from the subject line</string>
+    <string name="review_form_betreff">The subject line starts with the word »Betreff«</string>
+    <string name="review_form_short">Shorter than one page</string>
+    <string name="review_form_long">Longer than one page</string>
+    <string name="review_perspektive">The letter does not talk only about itself</string>
+    <string name="review_perspektive_detail">%1$s of %2$s sentences open with »Ich«</string>
+    <string name="review_anschreiben">Anschreiben, not Motivationsschreiben</string>
+    <string name="review_anschreiben_ok">The text is an Anschreiben and answers the posting.</string>
+    <string name="review_anschreiben_failed">The text reads like a Motivationsschreiben — that belongs to a course of study or a scholarship.</string>
+
+    <!-- The machine-readability check, read back out of the finished PDF. -->
+    <string name="ats_lesbar">PDF read back</string>
+    <string name="ats_name">Name found again as text</string>
+    <string name="ats_arbeitgeber">Employers found again as text</string>
+    <string name="ats_zeitraeume">Dates found again as text</string>
+    <string name="ats_text">Fonts embedded, text extractable</string>
+    <string name="ats_missing">Missing: %1$s</string>
+    <string name="ats_lesbar_failed">The file could not be opened as text: %1$s</string>
+    <string name="ats_name_missing">The name cannot be found in the text</string>
+    <string name="ats_arbeitgeber_none">No employer in the profile</string>
+    <string name="ats_zeitraeume_none">No dates in the profile</string>
+    <string name="ats_zeitraeume_missing">At least one date does not extract</string>
+    <string name="ats_text_ok">%1$s characters extracted</string>
+    <string name="ats_text_missing">Almost no text extractable — the page is probably an image</string>
 
     <!-- Overview -->
     <string name="overview_mappe">Bewerbungsmappe</string>
@@ -41,7 +130,7 @@
     <string name="overview_next_steps_empty_title">Nothing outstanding</string>
     <string name="overview_next_steps_empty_body">The profile carries everything a Lebenslauf needs. What a single application still needs is written below in its own row.</string>
     <string name="overview_mappe_empty_title">Nothing to measure yet</string>
-    <string name="overview_mappe_empty_body">Once a Berufserfahrung or an Ausbildung is in the profile, this is where Bewerbo counts how complete it is, which Lücke is still unexplained and which Nachweis is missing.</string>
+    <string name="overview_mappe_empty_body">Once a position or a qualification is in the profile, this is where Bewerbo counts how complete it is, which gap is still unexplained and which Nachweis is missing.</string>
     <string name="overview_loading_title">One moment</string>
     <string name="overview_loading_body">Bewerbo is reading what your Bewerbungsmappe still needs.</string>
     <string name="overview_unreachable_title">Bewerbo could not be reached</string>
@@ -49,7 +138,7 @@
     <string name="overview_retry">Try again</string>
     <string name="overview_applications_empty_title">No application started yet</string>
     <string name="overview_applications_empty_body">Start one above and paste a posting. Every application you start is listed here with its employer, its Referenznummer and where it stands, and you get back into an unfinished one from here.</string>
-    <string name="overview_your_locker">Your Mappe</string>
+    <string name="overview_your_locker">Your documents</string>
     <string name="overview_eu_title">Your data stays in the EU</string>
     <string name="overview_eu_body">Profile data is held encrypted on EU servers and deleted after export whenever you ask for it.</string>
 
@@ -63,28 +152,28 @@
     <string name="profile_languages_hint">The app language is the language of these screens. The input language is the one you write your profile in — the application itself is always German.</string>
     <string name="profile_complete">%1$d %% complete</string>
     <string name="profile_section_person">Person</string>
-    <string name="profile_section_experience">Berufserfahrung</string>
-    <string name="profile_section_education">Ausbildung</string>
-    <string name="profile_section_languages">Sprachen</string>
-    <string name="profile_section_attachments">Anlagen</string>
-    <string name="profile_timeline">Zeitstrahl %1$d – %2$d</string>
-    <string name="profile_timeline_empty_title">The Zeitstrahl is still empty</string>
-    <string name="profile_timeline_empty_body">Add your first Berufserfahrung or Ausbildung. Bewerbo then draws the Zeitstrahl from it and names every Lücke a German recruiter would ask about.</string>
+    <string name="profile_section_experience">Work experience</string>
+    <string name="profile_section_education">Education</string>
+    <string name="profile_section_languages">Languages</string>
+    <string name="profile_section_attachments">Documents</string>
+    <string name="profile_timeline">Timeline %1$d – %2$d</string>
+    <string name="profile_timeline_empty_title">The timeline is still empty</string>
+    <string name="profile_timeline_empty_body">Add your first position or qualification. Bewerbo then draws the timeline from it and names every gap a German recruiter would ask about.</string>
     <string name="profile_gap_headline">Gap %1$s – %2$s (%3$d months)</string>
-    <string name="profile_gap_explainer">Name it — Umzug, Sprachkurs or Anerkennungsverfahren — and it stops being a warning sign.</string>
+    <string name="profile_gap_explainer">Name it — a move, a language course, a recognition procedure — and it stops being a warning sign.</string>
     <string name="profile_gap_reason_label">Reason for the gap</string>
     <string name="profile_gap_save">Save reason</string>
     <string name="profile_gap_in_cv">In the Lebenslauf: »%1$s«</string>
     <string name="profile_reference_on_file">Zeugnis on file</string>
     <string name="profile_reference_missing">Zeugnis missing</string>
-    <string name="profile_certificate_on_file">Certificate is in the Mappe</string>
+    <string name="profile_certificate_on_file">Certificate is on file</string>
     <string name="profile_certificate_missing">No certificate on file yet</string>
     <string name="profile_rephrase_duties">Rewrite duties as results</string>
     <string name="profile_anabin_rating">anabin %1$s</string>
-    <string name="profile_anabin_open">Anerkennung open</string>
+    <string name="profile_anabin_open">Recognition not confirmed</string>
     <string name="profile_anabin_lookup">Look up in anabin</string>
     <string name="profile_equivalent_to">Equivalent in Germany to: %1$s</string>
-    <string name="profile_generate_cv">Lebenslauf erzeugen</string>
+    <string name="profile_generate_cv">Write the Lebenslauf</string>
     <string name="profile_add_experience">Add a position</string>
 
     <string name="person_first_name">First name</string>
@@ -100,7 +189,7 @@
     <string name="experience_location">Place</string>
     <string name="experience_from">From (MM/YYYY)</string>
     <string name="experience_to">To (blank = today)</string>
-    <string name="experience_workload">Pensum</string>
+    <string name="experience_workload">Working hours</string>
     <string name="experience_duties">Duties, one per line</string>
     <string name="experience_missing">Still needed: %1$s</string>
 
@@ -112,53 +201,64 @@
     <string name="posting_new">Paste a different posting</string>
     <string name="posting_source">Source text · %1$d characters</string>
     <string name="posting_read_from">Read from the posting</string>
-    <string name="posting_field_contact">Kontakt</string>
-    <string name="posting_field_contact_email">E-Mail</string>
-    <string name="posting_field_company">Unternehmen</string>
-    <string name="posting_field_reference">Referenz</string>
-    <string name="posting_field_title">Stelle</string>
-    <string name="posting_field_start">Eintritt</string>
+    <string name="posting_field_contact">Contact</string>
+    <string name="posting_field_contact_email">E-mail</string>
+    <string name="posting_field_company">Company</string>
+    <string name="posting_field_reference">Reference</string>
+    <string name="posting_field_title">Position</string>
+    <string name="posting_field_start">Starting date</string>
     <string name="posting_field_missing">Not named in the posting</string>
     <string name="posting_field_add">Add</string>
     <string name="posting_confidence_check">Check</string>
     <string name="posting_correct_fields">Correct the fields</string>
     <string name="posting_no_span">Shown without a highlight: the quoted words were not found in the text as they stand.</string>
-    <string name="posting_reference_note">Goes into the Betreffzeile</string>
-    <string name="posting_employer_type">Arbeitgebertyp</string>
+    <string name="posting_reference_note">This is the Referenznummer, and it goes into the subject line of the letter</string>
+    <string name="posting_employer_type">Type of employer</string>
     <string name="posting_employer_type_note">drives photo and register</string>
-    <string name="posting_photo_expected">A photo is usual here, and personal data is expected. Neither is legally required — the AGG means no employer may demand them.</string>
+    <string name="posting_photo_expected">A photo is usual here, and personal data is expected. Neither is legally required — under the AGG no employer may demand them.</string>
     <string name="posting_photo_public">In the public service the form matters more than the photo. Include personal data, leave the photo out.</string>
     <string name="posting_photo_unusual">A photo would look out of place here. Leave it out and keep the register plain.</string>
-    <string name="posting_match">Anforderungen abgleichen</string>
+    <string name="posting_match">Compare the requirements</string>
+
+    <!-- The kinds of employer. The value keeps the backend's spelling; this is what the user reads. -->
+    <string name="employer_type_konzern">Large company</string>
+    <string name="employer_type_mittelstand">Mid-sized company</string>
+    <string name="employer_type_startup">Start-up</string>
+    <string name="employer_type_oeffentlicher_dienst">Public service</string>
 
     <!-- Match -->
-    <string name="match_title">Abgleich</string>
+    <string name="match_title">Requirement check</string>
     <string name="match_none_title">No posting read yet</string>
-    <string name="match_none_body">Paste a posting on the Posting screen first. The Abgleich compares its requirements against your profile.</string>
+    <string name="match_none_body">Paste a posting on the Posting screen first. The check compares its requirements against your profile.</string>
     <string name="match_none_read_title">No requirements read from this posting</string>
-    <string name="match_none_read_body">Bewerbo found no list of requirements in the text. That says nothing about your profile. Correct the posting text on the Posting screen, or write the Anschreiben without an Abgleich.</string>
+    <string name="match_none_read_body">Bewerbo found no list of requirements in the text. That says nothing about your profile. Correct the posting text on the Posting screen, or write the Anschreiben without a requirement check.</string>
     <string name="match_covered">%1$d of %2$d requirements proven</string>
     <string name="match_proven">Proven by your profile · %1$d</string>
     <string name="match_open">Still open · %1$d</string>
     <string name="match_not_proven">Not proven · %1$d</string>
     <string name="match_not_proven_note">None of these is claimed in the Anschreiben.</string>
     <string name="match_file_title">File the Nachweis</string>
-    <string name="match_file_body">The document goes into your Mappe and this requirement counts as proven.</string>
+    <string name="match_file_body">The document goes into your documents and this requirement counts as proven.</string>
     <string name="match_guard_title">Anschreiben, not Motivationsschreiben</string>
-    <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to Studium and Stipendium — sent here, it marks you out as foreign.</string>
-    <string name="match_tone">Ton des Anschreibens</string>
-    <string name="match_generate_letter">Anschreiben erzeugen</string>
+    <string name="match_guard_body">What you pasted is a job posting, so Bewerbo writes an Anschreiben. A Motivationsschreiben belongs to a course of study or a scholarship — sent here, it marks you out as foreign.</string>
+    <string name="match_tone">Tone of the Anschreiben</string>
+    <string name="match_generate_letter">Write the Anschreiben</string>
+
+    <!-- The tone of the letter. The value keeps the backend's spelling. -->
+    <string name="tone_klassisch">Classic</string>
+    <string name="tone_sachlich">Plain</string>
+    <string name="tone_modern">Modern</string>
 
     <!-- Application -->
     <string name="application_subtitle">What a German reader and an applicant tracking system see.</string>
     <string name="application_none_title">No letter yet</string>
-    <string name="application_none_body">Run the Abgleich first. The letter is written against the requirements it finds.</string>
-    <string name="application_din_show">Show the DIN grid</string>
-    <string name="application_din_hide">Hide the DIN grid</string>
+    <string name="application_none_body">Run the requirement check first. The letter is written against the requirements it finds.</string>
+    <string name="application_din_show">Show the DIN 5008 grid</string>
+    <string name="application_din_hide">Hide the DIN 5008 grid</string>
     <string name="application_regenerate">Write it again</string>
-    <string name="application_review">Textprüfung</string>
+    <string name="application_review">Text check</string>
     <string name="application_review_clean">No hints</string>
-    <string name="application_ats">Maschinenlesbarkeit</string>
+    <string name="application_ats">Machine readability</string>
     <string name="application_ats_passed">Passed</string>
     <string name="application_ats_failed">Failed</string>
     <string name="application_export">Export</string>
@@ -167,7 +267,7 @@
     <string name="application_preview_page">Page %1$d of %2$d</string>
     <string name="application_preview_pending">The pages are being rendered.</string>
     <string name="application_preview_failed_title">The pages could not be fetched</string>
-    <string name="application_preview_failed_body">The Mappe is put together on the server, so the preview cannot show what this selection would produce until it answers. Nothing about the application itself is lost.</string>
+    <string name="application_preview_failed_body">The Bewerbungsmappe is put together on the server, so the preview cannot show what this selection would produce until it answers. Nothing about the application itself is lost.</string>
     <string name="application_preview_retry">Show the pages again</string>
     <string name="application_send_email">Send by e-mail</string>
     <!-- The covering note of the e-mail. It goes to a German employer whatever language the
@@ -175,7 +275,7 @@
          The salutation and the closing around it come from the backend. -->
     <string name="application_email_body" translatable="false">anbei sende ich Ihnen meine vollständigen Bewerbungsunterlagen als PDF.</string>
     <string name="application_why_german_title">Why it reads as German</string>
-    <string name="application_why_german_body">A named salutation, the Referenznummer in the Betreffzeile, no »Hiermit bewerbe ich mich« and no »Teamplayer« — and the letter answers the words of the posting instead of listing virtues.</string>
+    <string name="application_why_german_body">A named salutation, the Referenznummer in the subject line, no »Hiermit bewerbe ich mich« and no »Teamplayer« — and the letter answers the words of the posting instead of listing virtues.</string>
     <string name="application_source_model">This letter was written by the language model and checked against the same rules.</string>
     <string name="application_source_rules">This letter was written by the rule-based writer — no language model is configured for this installation.</string>
 
@@ -183,9 +283,20 @@
     <string name="part_lebenslauf">Lebenslauf</string>
     <string name="part_anlagen">Anlagenverzeichnis</string>
 
+    <!-- What happened to an application. The value keeps the backend's spelling. -->
+    <string name="status_entwurf">Draft</string>
+    <string name="status_versendet">Sent</string>
+    <string name="status_einladung">Invitation</string>
+    <string name="status_absage">Rejection</string>
+
+    <!-- How the Lebenslauf is laid out. The value keeps the backend's spelling. -->
+    <string name="template_klassisch">Classic</string>
+    <string name="template_modern">Modern</string>
+    <string name="template_fachlich">Specialist</string>
+
     <!-- Locker -->
-    <string name="locker_subtitle">Zeugnisse, Zertifikate and the anabin extract the Anlagenverzeichnis refers to.</string>
-    <string name="locker_empty_title">The Mappe is empty</string>
+    <string name="locker_subtitle">Zeugnisse, certificates and the anabin extract the Anlagenverzeichnis refers to.</string>
+    <string name="locker_empty_title">There are no documents yet</string>
     <string name="locker_empty_body">Add the documents your application refers to. Bewerbo keeps the record here; the scan itself stays on your device.</string>
     <string name="locker_add">Add a document</string>
     <string name="locker_field_title">Title</string>
@@ -195,7 +306,14 @@
     <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The file itself is not uploaded.</string>
     <string name="locker_demand_title">This posting asks for · %1$d</string>
     <string name="locker_demand_outstanding">Outstanding</string>
-    <string name="locker_demand_on_file">In the Mappe</string>
+    <string name="locker_demand_on_file">On file</string>
+
+    <!-- The kinds of document. The value keeps the backend's spelling. -->
+    <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>
+    <string name="kind_zertifikat">Certificate</string>
+    <string name="kind_sprachnachweis">Sprachnachweis</string>
+    <string name="kind_anabin_auszug">anabin extract</string>
+
     <string name="profile_add_education">Add a qualification</string>
     <string name="education_degree">Degree or qualification</string>
     <string name="education_institution">Institution</string>
@@ -206,15 +324,15 @@
     <string name="profile_add_language">Add a language</string>
     <string name="language_name">Language</string>
     <string name="language_level">Level</string>
-    <string name="profile_certificate_toggle">Certificate is in the Mappe</string>
-    <string name="profile_reference_toggle">Zeugnis is in the Mappe</string>
+    <string name="profile_certificate_toggle">Certificate is on file</string>
+    <string name="profile_reference_toggle">Zeugnis is on file</string>
     <string name="profile_anabin_confirm">Use this equivalence</string>
     <string name="profile_anabin_confirm_hint">Nothing is written into the Lebenslauf until you confirm it.</string>
     <string name="profile_anabin_withdraw">Withdraw</string>
     <string name="application_status">Status of this application</string>
     <string name="application_export_choose">What goes into the file</string>
-    <string name="timeline_legend_education">Ausbildung</string>
-    <string name="timeline_legend_work">Beruf</string>
-    <string name="timeline_legend_gap">Lücke</string>
+    <string name="timeline_legend_education">Education</string>
+    <string name="timeline_legend_work">Work</string>
+    <string name="timeline_legend_gap">Gap</string>
     <string name="application_template">How the Lebenslauf is laid out</string>
 </resources>

@@ -34,6 +34,8 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EvidenceField
 import de.bewerbo.app.data.PostingView
+import de.bewerbo.app.ui.TermNote
+import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.EvidenceText
@@ -186,7 +188,7 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                             onSelect = { viewModel.setEmployerType(EMPLOYER_TYPES[it]) },
                             modifier = Modifier.testTag("posting_employer_type_selector"),
                             tagPrefix = "posting_employer_type",
-                            label = ::employerTypeLabel,
+                            label = { stringResource(employerTypeLabel(it)) },
                         )
                     }
                     // Photo advice follows from the type. It is never a requirement: the AGG means
@@ -299,6 +301,9 @@ private fun PostingFieldRow(key: String, field: EvidenceField?) {
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.muted,
                 )
+                // The note above names the Referenznummer, and the posting is where the user
+                // first meets it — the Übersicht row only repeats it later.
+                TermNote(germanTerm("referenznummer"))
             }
         }
         fieldMarker(key, field)?.let { (label, tone) ->
@@ -413,11 +418,13 @@ private fun fieldLabel(key: String) = when (key) {
     else -> R.string.posting_field_start
 }
 
-/// The employer types keep the backend's spelling as their value, but "OeffentlicherDienst" is not
-/// a word anybody reads. The German name stays German — it is the term of art for the sector.
+/// The employer types keep the backend's spelling as their value; none of the four is a word a
+/// posting puts in front of the user, so all four are written in the user's language.
 private fun employerTypeLabel(type: String) = when (type) {
-    "OeffentlicherDienst" -> "Öffentlicher Dienst"
-    else -> type
+    "Konzern" -> R.string.employer_type_konzern
+    "Mittelstand" -> R.string.employer_type_mittelstand
+    "Startup" -> R.string.employer_type_startup
+    else -> R.string.employer_type_oeffentlicher_dienst
 }
 
 private fun photoAdvice(type: String) = when (type) {

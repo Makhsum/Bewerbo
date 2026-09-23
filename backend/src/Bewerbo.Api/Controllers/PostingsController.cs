@@ -105,9 +105,10 @@ public class PostingsController(BewerboDbContext db) : BewerboController
             posting.Id, posting.Company, posting.Reference,
             match.Covered, match.Total, match.Percent,
             match.Requirements.Select(r => new RequirementDto(
-                r.Text, StateName(r.State), r.Evidence, r.Action, r.Language)).ToList(),
+                r.Text, StateName(r.State), r.Evidence, r.Action, r.Language,
+                r.EvidenceKind, r.EvidenceArgs, r.ActionKind, r.ActionArgs)).ToList(),
             demands.Select(d => new DemandedDocumentDto(
-                d.Kind.ToString(), d.Title, d.Quote, d.OnFile)).ToList()));
+                d.Kind.ToString(), d.Title, d.Quote, d.OnFile, d.TitleArgs)).ToList()));
     }
 
     internal const string PostingMissing = "Es gibt keine Stellenanzeige mit dieser Id.";

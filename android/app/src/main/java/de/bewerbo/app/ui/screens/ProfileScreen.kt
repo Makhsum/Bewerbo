@@ -43,7 +43,9 @@ import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.components.Timeline
+import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.UI_LANGUAGES
+import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -249,6 +251,9 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             "person" -> item { PersonSection(state, viewModel) }
             "berufserfahrung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_experience)) }
+                // Every position below carries a Zeugnis switch, so the word is explained once
+                // here rather than on each card.
+                item { TermNote(germanTerm("zeugnis")) }
                 profile?.experience?.forEachIndexed { index, entry ->
                     item { ExperienceCard(entry, index, profile.experience, viewModel) }
                 }
@@ -256,6 +261,9 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
             }
             "ausbildung" -> {
                 item { SectionLabel(stringResource(R.string.profile_section_education)) }
+                // Same again for anabin: each qualification offers the lookup, the name is
+                // explained once above them.
+                item { TermNote(germanTerm("anabin")) }
                 profile?.education?.forEachIndexed { index, entry ->
                     item { EducationCard(entry, index, profile.education, state, viewModel) }
                 }
@@ -275,7 +283,9 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
                         BewerboCard(Modifier.testTag("profile_entry_document_$index")) {
                             Text(document.title, style = MaterialTheme.typography.titleMedium)
                             Text(
-                                document.note.ifBlank { document.kind },
+                                document.note.ifBlank {
+                                    stringResource(documentKindLabel(document.kind))
+                                },
                                 style = MaterialTheme.typography.bodySmall, color = colors.muted,
                             )
                         }
@@ -291,17 +301,26 @@ fun ProfileScreen(state: AppState, viewModel: AppViewModel) {
         // button that had already produced the file. It is chosen on the Bewerbung screen now,
         // beside the document it changes.
         item {
-            Button(
-                onClick = { viewModel.generateCv() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("profile_btn_generate_cv"),
-            ) {
-                Icon(BewerboIcons.Document, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(
-                    stringResource(R.string.profile_generate_cv),
-                    modifier = Modifier.padding(start = Space.s),
-                )
+            Column {
+                Button(
+                    onClick = { viewModel.generateCv() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("profile_btn_generate_cv"),
+                ) {
+                    Icon(
+                        BewerboIcons.Document,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        stringResource(R.string.profile_generate_cv),
+                        modifier = Modifier.padding(start = Space.s),
+                    )
+                }
+                // The button names the Lebenslauf, and the Profil screen is where the user reaches
+                // it first — the Übersicht only mentions it once the profile is filled.
+                TermNote(germanTerm("lebenslauf"))
             }
         }
     }

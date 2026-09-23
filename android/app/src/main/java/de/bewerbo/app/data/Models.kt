@@ -154,6 +154,12 @@ data class Requirement(
     val action: String = "",
     /// For offen: the language entry whose Nachweis closes this requirement.
     val language: String = "",
+    /// What [evidence] and [action] SAY, so the screen writes them in the user's language.
+    /// The two strings above keep the German the letter writer quotes.
+    val evidenceKind: String = "",
+    val evidenceArgs: List<String> = emptyList(),
+    val actionKind: String = "",
+    val actionArgs: List<String> = emptyList(),
 )
 
 @Serializable
@@ -165,6 +171,9 @@ data class DemandedDocument(
     val quote: String = "",
     /// False means outstanding: the posting wants it and the Mappe has nothing for it.
     val onFile: Boolean = false,
+    /// What follows the kind name in [title]: the language and level of a Sprachnachweis, nothing
+    /// for the other kinds. The screen writes the kind in the user's language and appends these.
+    val titleArgs: List<String> = emptyList(),
 )
 
 @Serializable
@@ -214,6 +223,10 @@ data class ReviewCheck(
     val verdict: String,
     val detail: String = "",
     val items: List<String> = emptyList(),
+    /// What the check found, for the screen to write in the user's language; [items] quote the
+    /// German letter and stay as they are.
+    val detailKind: String = "",
+    val detailArgs: List<String> = emptyList(),
 )
 
 @Serializable
@@ -224,7 +237,14 @@ data class Review(
 )
 
 @Serializable
-data class AtsFinding(val key: String, val label: String, val found: Boolean, val detail: String = "")
+data class AtsFinding(
+    val key: String,
+    val label: String,
+    val found: Boolean,
+    val detail: String = "",
+    val detailKind: String = "",
+    val detailArgs: List<String> = emptyList(),
+)
 
 @Serializable
 data class AtsResult(
@@ -244,6 +264,11 @@ data class NextStep(
     val severity: String = "info",
     /// The destination this step deep-links to.
     val target: String = "profil",
+    /// Which step this is, and what to put into its sentence. [title] and [detail] carry the
+    /// server's German wording; it cannot know the interface language, so the screen renders from
+    /// these two instead and falls back to the German only for a kind it does not know.
+    val kind: String = "",
+    val args: List<String> = emptyList(),
 )
 
 @Serializable

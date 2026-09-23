@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Ukrainian UI. The German terms of art stay German: Lebenslauf, Anschreiben, Anforderungsabgleich,
-  DIN 5008, Anlagen, Mappe, anabin. Those are the words the user will meet on the German side, and
-  translating them away would take the vocabulary with them.
+  Український інтерфейс. Німецькою тут лишаються тільки ті слова, які користувач зустріне
+  в самій вакансії або в документах, що їх просить роботодавець — їхній перелік один на весь
+  застосунок і лежить в ui/GermanTerms.kt, кожне пояснене один раз там, де трапляється вперше.
+  Усе інше перекладено. GermanTermsTest не дасть зібрати збірку, якщо в цьому файлі з’явиться
+  німецьке слово не з переліку.
 -->
 <resources>
     <string name="nav_overview">Огляд</string>
     <string name="nav_profile">Профіль</string>
     <string name="nav_posting">Вакансія</string>
     <string name="nav_application">Заявка</string>
-    <string name="nav_locker">Mappe</string>
+    <string name="nav_locker">Документи</string>
 
     <!-- «із» rather than the shorter «з»: the caption is set in capitals, and a lone
          uppercase З between two figures is read as another digit — «КРОК 2 З 3» looks like «2 3 3». -->
@@ -20,6 +22,86 @@
     <string name="action_delete">Видалити</string>
     <string name="action_correct">Виправити</string>
 
+    <!-- Пояснення німецьких слів, які лишаються. Сам термін німецький, пояснення — ні. -->
+    <string name="term_bewerbungsmappe">повний комплект документів, який просить роботодавець: лист, резюме та додатки</string>
+    <string name="term_lebenslauf">німецьке резюме; вакансія називає його в переліку потрібних документів</string>
+    <string name="term_anschreiben">супровідний лист до заявки</string>
+    <string name="term_motivationsschreiben">лист для навчання чи стипендії, а не для роботи</string>
+    <string name="term_anlagenverzeichnis">сторінка з переліком усіх доданих документів</string>
+    <string name="term_zeugnis">письмова характеристика, яку роботодавець видає при звільненні</string>
+    <string name="term_nachweis">документ, що підтверджує вимогу: сертифікат, диплом, характеристика</string>
+    <string name="term_referenznummer">номер вакансії, за яким роботодавець розрізняє заявки</string>
+    <string name="term_anabin">німецька база даних: чому тут відповідає іноземний диплом</string>
+    <string name="term_din_5008">німецький стандарт оформлення ділового листа</string>
+    <string name="term_agg">закон про рівне ставлення: роботодавець не має права вимагати фото й особисті дані</string>
+
+    <!-- Відкриті кроки. Сервер каже, ЯКИЙ це крок і що в нього підставити; сама фраза
+         пишеться тут, бо мова інтерфейсу серверу невідома. -->
+    <string name="step_person_title">Заповніть особисті дані</string>
+    <string name="step_person_detail">Шапці листа за DIN 5008 ще бракує: %1$s</string>
+    <string name="step_person_item_name">імені</string>
+    <string name="step_person_item_anschrift">адреси</string>
+    <string name="step_person_item_kontakt">контакту</string>
+    <string name="step_gap_title">Поясніть прогалину %1$s – %2$s</string>
+    <string name="step_gap_detail">Без причини німецький читач сприйме прогалину як тривожний сигнал</string>
+    <string name="step_anerkennung_title">Підтвердіть визнання диплома</string>
+    <string name="step_anerkennung_detail">Перевірте запис у anabin для %1$s і пошліться на нього</string>
+    <string name="step_sprachnachweis_title">Немає Nachweis для рівня %1$s</string>
+    <string name="step_sprachnachweis_detail">%1$s %2$s указано в профілі, але не підтверджено</string>
+    <string name="step_beruf_title">Додайте посаду</string>
+    <string name="step_beruf_detail">Без жодного запису Lebenslauf не скласти</string>
+    <string name="step_versand_title">Ще не надіслана</string>
+    <string name="step_versand_detail">Вивантажте Bewerbungsmappe і переведіть статус у «Надіслана»</string>
+    <string name="step_beleg_title">Бракує Nachweis: %1$s</string>
+
+    <!-- Що сама звірка каже про вимогу. Текст вимоги та записи профілю тут
+         процитовані, а не написані, і приходять із сервера як є. -->
+    <string name="evidence_beruf">%1$s, %2$s · %3$s</string>
+    <string name="evidence_period">%1$s – %2$s</string>
+    <string name="evidence_period_since">з %1$s</string>
+    <string name="evidence_ausbildung">%1$s, %2$s</string>
+    <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis додано</string>
+    <string name="evidence_sprache_offen">Указано в профілі, сертифікат не додано</string>
+    <string name="evidence_sprache_niveau">У профілі вказано %1$s</string>
+    <string name="action_file_nachweis">Додати Nachweis</string>
+
+    <!-- Перевірка тексту. Те, що вона перелічує, цитує німецький лист і не перекладається. -->
+    <string name="review_floskeln_none">Штампів не знайдено</string>
+    <string name="review_floskeln_found">Знайдено штампи</string>
+    <string name="review_floskeln_ok_detail">Заборонених зворотів у листі немає.</string>
+    <string name="review_floskeln_found_detail">Ці звороти є в листі, їх варто замінити.</string>
+    <string name="review_maschinell">Чи схожий текст на машинний?</string>
+    <string name="review_maschinell_low">Низько — конкретні цифри, без переліку чеснот.</string>
+    <string name="review_maschinell_high">Підвищено — %1$s слів про чесноти, мало конкретики.</string>
+    <string name="review_form">Звертання, тема та обсяг</string>
+    <string name="review_form_ok">%1$s · Referenznummer у темі · одна сторінка, слів: %2$s</string>
+    <string name="review_form_anrede">Немає іменного звертання</string>
+    <string name="review_form_referenz">У рядку теми бракує Referenznummer</string>
+    <string name="review_form_betreff">Рядок теми починається зі слова »Betreff«</string>
+    <string name="review_form_short">Коротше за одну сторінку</string>
+    <string name="review_form_long">Довше за одну сторінку</string>
+    <string name="review_perspektive">Лист говорить не лише про себе</string>
+    <string name="review_perspektive_detail">Речень, що починаються з »Ich«: %1$s із %2$s</string>
+    <string name="review_anschreiben">Anschreiben, а не Motivationsschreiben</string>
+    <string name="review_anschreiben_ok">Це Anschreiben, і він відповідає на вакансію.</string>
+    <string name="review_anschreiben_failed">Текст читається як Motivationsschreiben — таке пишуть для навчання і стипендії.</string>
+
+    <!-- Машиночитаність, прочитана назад із готового PDF. -->
+    <string name="ats_lesbar">PDF прочитано назад</string>
+    <string name="ats_name">Ім\'я знайдено в тексті</string>
+    <string name="ats_arbeitgeber">Роботодавців знайдено в тексті</string>
+    <string name="ats_zeitraeume">Дати знайдено в тексті</string>
+    <string name="ats_text">Шрифти вбудовано, текст видобувається</string>
+    <string name="ats_missing">Бракує: %1$s</string>
+    <string name="ats_lesbar_failed">Файл не вдалося відкрити як текст: %1$s</string>
+    <string name="ats_name_missing">Ім\'я в тексті не знайдено</string>
+    <string name="ats_arbeitgeber_none">У профілі немає роботодавців</string>
+    <string name="ats_zeitraeume_none">У профілі немає дат</string>
+    <string name="ats_zeitraeume_missing">Принаймні одна дата не видобувається</string>
+    <string name="ats_text_ok">Видобуто символів: %1$s</string>
+    <string name="ats_text_missing">Текст майже не видобувається — сторінка, найімовірніше, картинка</string>
+
+    <string name="overview_mappe">Bewerbungsmappe</string>
     <string name="overview_profile_complete">Профіль заповнено</string>
     <string name="overview_gaps_explained">Прогалини пояснено</string>
     <string name="overview_evidence">Підтверджень додано</string>
@@ -32,15 +114,15 @@
     <string name="overview_next_steps_empty_title">Нічого не залишилося</string>
     <string name="overview_next_steps_empty_body">У профілі є все, що потрібно для Lebenslauf. Що залишилося за окремою заявкою, написано нижче в її рядку.</string>
     <string name="overview_mappe_empty_title">Поки нема чого вимірювати</string>
-    <string name="overview_mappe_empty_body">Щойно в профілі з’явиться Berufserfahrung або Ausbildung, Bewerbo рахуватиме тут, наскільки він повний, який Lücke ще не пояснено і якого Nachweis бракує.</string>
+    <string name="overview_mappe_empty_body">Щойно в профілі з’явиться посада або освіта, Bewerbo рахуватиме тут, наскільки він повний, яку прогалину ще не пояснено і якого Nachweis бракує.</string>
     <string name="overview_loading_title">Одну хвилину</string>
     <string name="overview_loading_body">Bewerbo читає, чого ще бракує вашій Bewerbungsmappe.</string>
     <string name="overview_unreachable_title">Bewerbo недоступний</string>
     <string name="overview_unreachable_body">Ваша Bewerbungsmappe зберігається на сервері, тому показати нічого, доки він не відповість. Перевірте з’єднання та спробуйте ще раз.</string>
     <string name="overview_retry">Спробувати ще раз</string>
     <string name="overview_applications_empty_title">Жодної заявки ще не почато</string>
-    <string name="overview_applications_empty_body">Почніть її вище та вставте вакансію. Кожна почата заявка з’явиться тут із роботодавцем, Referenznummer і поточним станом, і звідси ж ви повернетесь до незавершеної.</string>
-    <string name="overview_your_locker">Ваша Mappe</string>
+    <string name="overview_applications_empty_body">Почніть її вище та вставте вакансію. Кожна почата заявка з’явиться тут із роботодавцем, номером Referenznummer і поточним станом, і звідси ж ви повернетесь до незавершеної.</string>
+    <string name="overview_your_locker">Ваші документи</string>
     <string name="overview_eu_title">Ваші дані залишаються в ЄС</string>
     <string name="overview_eu_body">Дані профілю зберігаються зашифровано на серверах у ЄС і видаляються після експорту, щойно ви цього попросите.</string>
 
@@ -52,21 +134,29 @@
     <string name="profile_app_language">Мова застосунку: %1$s</string>
     <string name="profile_languages_hint">Мова застосунку — це мова самих екранів. Мова введення — та, якою ви пишете профіль; сама заявка завжди німецькою.</string>
     <string name="profile_complete">Заповнено на %1$d %%</string>
-    <string name="profile_timeline_empty_title">Zeitstrahl ще порожній</string>
-    <string name="profile_timeline_empty_body">Додайте першу Berufserfahrung або Ausbildung. Тоді Bewerbo побудує за ними Zeitstrahl і назве кожен Lücke, про який запитає німецький рекрутер.</string>
+    <string name="profile_section_person">Особисті дані</string>
+    <string name="profile_section_experience">Досвід роботи</string>
+    <string name="profile_section_education">Освіта</string>
+    <string name="profile_section_languages">Мови</string>
+    <string name="profile_section_attachments">Документи</string>
+    <string name="profile_timeline">Хронологія: %1$d – %2$d</string>
+    <string name="profile_timeline_empty_title">Хронологія ще порожня</string>
+    <string name="profile_timeline_empty_body">Додайте першу посаду або освіту. Тоді Bewerbo побудує за ними хронологію і назве кожну прогалину, про яку запитає німецький рекрутер.</string>
     <string name="profile_gap_headline">Прогалина %1$s – %2$s (%3$d міс.)</string>
-    <string name="profile_gap_explainer">Назвіть причину — Umzug, Sprachkurs або Anerkennungsverfahren — і вона перестане бути тривожним сигналом.</string>
+    <string name="profile_gap_explainer">Назвіть причину — переїзд, мовні курси, визнання диплома — і вона перестане бути тривожним сигналом.</string>
     <string name="profile_gap_reason_label">Причина прогалини</string>
     <string name="profile_gap_save">Зберегти причину</string>
     <string name="profile_gap_in_cv">У Lebenslauf: »%1$s«</string>
     <string name="profile_reference_on_file">Zeugnis додано</string>
     <string name="profile_reference_missing">Zeugnis відсутній</string>
-    <string name="profile_certificate_on_file">Сертифікат у Mappe</string>
+    <string name="profile_certificate_on_file">Сертифікат додано</string>
     <string name="profile_certificate_missing">Сертифікат ще не додано</string>
     <string name="profile_rephrase_duties">Переписати обов\'язки як результати</string>
-    <string name="profile_anabin_open">Anerkennung не підтверджено</string>
+    <string name="profile_anabin_rating">anabin %1$s</string>
+    <string name="profile_anabin_open">Визнання не підтверджено</string>
     <string name="profile_anabin_lookup">Знайти в anabin</string>
     <string name="profile_equivalent_to">Еквівалент у Німеччині: %1$s</string>
+    <string name="profile_generate_cv">Написати Lebenslauf</string>
     <string name="profile_add_experience">Додати посаду</string>
 
     <string name="person_first_name">Ім\'я</string>
@@ -82,7 +172,7 @@
     <string name="experience_location">Місто</string>
     <string name="experience_from">З (ММ/РРРР)</string>
     <string name="experience_to">До (порожньо = дотепер)</string>
-    <string name="experience_workload">Pensum</string>
+    <string name="experience_workload">Зайнятість</string>
     <string name="experience_duties">Обов\'язки, по одному в рядку</string>
     <string name="experience_missing">Ще потрібно: %1$s</string>
 
@@ -93,57 +183,91 @@
     <string name="posting_new">Вставити іншу вакансію</string>
     <string name="posting_source">Текст оригіналу · %1$d символів</string>
     <string name="posting_read_from">Прочитано з вакансії</string>
+    <string name="posting_field_contact">Контакт</string>
+    <string name="posting_field_contact_email">Ел. пошта</string>
+    <string name="posting_field_company">Компанія</string>
+    <string name="posting_field_reference">Номер вакансії</string>
+    <string name="posting_field_title">Посада</string>
+    <string name="posting_field_start">Початок роботи</string>
     <string name="posting_field_missing">У вакансії не вказано</string>
     <string name="posting_field_add">Впишіть</string>
     <string name="posting_confidence_check">Перевірте</string>
     <string name="posting_correct_fields">Виправити поля</string>
     <string name="posting_no_span">Показано без підсвічування: процитованих слів у тексті в такому вигляді немає.</string>
-    <string name="posting_reference_note">Потрапляє в Betreffzeile</string>
+    <string name="posting_reference_note">Це і є Referenznummer — вона потрапить у рядок теми листа</string>
+    <string name="posting_employer_type">Тип роботодавця</string>
     <string name="posting_employer_type_note">визначає фото і тон</string>
     <string name="posting_photo_expected">Тут фото звичне, і особисті дані очікують. Жодне з цього не є обов\'язковим за законом — AGG забороняє роботодавцю їх вимагати.</string>
     <string name="posting_photo_public">На державній службі важливіша форма, ніж фото. Додайте особисті дані, фото залиште.</string>
     <string name="posting_photo_unusual">Фото тут виглядало б недоречно. Не додавайте його і тримайте простий тон.</string>
     <string name="posting_match">Порівняти вимоги</string>
 
+    <string name="employer_type_konzern">Велика компанія</string>
+    <string name="employer_type_mittelstand">Середній бізнес</string>
+    <string name="employer_type_startup">Стартап</string>
+    <string name="employer_type_oeffentlicher_dienst">Державна служба</string>
+
+    <string name="match_title">Звірка вимог</string>
     <string name="match_none_title">Вакансію ще не прочитано</string>
-    <string name="match_none_body">Спочатку вставте вакансію на екрані «Вакансія». Abgleich порівняє її вимоги з вашим профілем.</string>
+    <string name="match_none_body">Спочатку вставте вакансію на екрані «Вакансія». Звірка порівняє її вимоги з вашим профілем.</string>
     <string name="match_none_read_title">З цієї вакансії не зчитано жодної вимоги</string>
-    <string name="match_none_read_body">Bewerbo не знайшов у тексті списку вимог. Про ваш профіль це нічого не каже. Виправте текст вакансії на екрані «Вакансія» або напишіть Anschreiben без Abgleich.</string>
-    <string name="match_covered">Підтверджено %1$d з %2$d вимог</string>
+    <string name="match_none_read_body">Bewerbo не знайшов у тексті списку вимог. Про ваш профіль це нічого не каже. Виправте текст вакансії на екрані «Вакансія» або напишіть Anschreiben без звірки.</string>
+    <string name="match_covered">Підтверджено %1$d із %2$d вимог</string>
     <string name="match_proven">Підтверджено профілем · %1$d</string>
     <string name="match_open">Ще відкрито · %1$d</string>
     <string name="match_not_proven">Не підтверджено · %1$d</string>
     <string name="match_not_proven_note">Нічого з цього в Anschreiben не стверджується.</string>
     <string name="match_file_title">Додати Nachweis</string>
-    <string name="match_file_body">Документ потрапить до вашої Mappe, і ця вимога зарахується як підтверджена.</string>
+    <string name="match_file_body">Документ потрапить до ваших документів, і ця вимога зарахується як підтверджена.</string>
+    <string name="match_guard_title">Anschreiben, а не Motivationsschreiben</string>
     <string name="match_guard_body">Ви вставили оголошення про вакансію, тож Bewerbo пише Anschreiben. Motivationsschreiben пишуть для навчання і стипендії — надісланий сюди, він одразу видає у вас іноземця.</string>
-    <string name="match_generate_letter">Створити Anschreiben</string>
+    <string name="match_tone">Тон листа Anschreiben</string>
+    <string name="match_generate_letter">Написати Anschreiben</string>
+
+    <string name="tone_klassisch">Класичний</string>
+    <string name="tone_sachlich">Діловий</string>
+    <string name="tone_modern">Сучасний</string>
 
     <string name="application_subtitle">Те, що бачить німецький читач і система відбору кандидатів.</string>
     <string name="application_none_title">Листа ще немає</string>
-    <string name="application_none_body">Спочатку виконайте Abgleich. Лист пишеться під знайдені вимоги.</string>
-    <string name="application_din_show">Показати сітку DIN</string>
-    <string name="application_din_hide">Сховати сітку DIN</string>
+    <string name="application_none_body">Спочатку виконайте звірку вимог. Лист пишеться під знайдені вимоги.</string>
+    <string name="application_din_show">Показати сітку DIN 5008</string>
+    <string name="application_din_hide">Сховати сітку DIN 5008</string>
     <string name="application_regenerate">Написати ще раз</string>
+    <string name="application_review">Перевірка тексту</string>
     <string name="application_review_clean">Без зауважень</string>
+    <string name="application_ats">Машиночитаність</string>
     <string name="application_ats_passed">Пройдено</string>
     <string name="application_ats_failed">Не пройдено</string>
     <string name="application_export">Експорт</string>
     <string name="application_file_detail">Сторінок: %1$d · %2$d КБ</string>
     <string name="application_save_pdf">Зберегти одним PDF</string>
-    <string name="application_preview_page">Сторінка %1$d з %2$d</string>
+    <string name="application_preview_page">Сторінка %1$d із %2$d</string>
     <string name="application_preview_pending">Сторінки формуються.</string>
     <string name="application_preview_failed_title">Не вдалося завантажити сторінки</string>
-    <string name="application_preview_failed_body">Mappe збирається на сервері. Поки він не відповідає, попередній перегляд не може показати, що дасть цей вибір. Сама заявка при цьому не втрачається.</string>
+    <string name="application_preview_failed_body">Bewerbungsmappe збирається на сервері. Поки він не відповідає, попередній перегляд не може показати, що дасть цей вибір. Сама заявка при цьому не втрачається.</string>
     <string name="application_preview_retry">Завантажити сторінки знову</string>
     <string name="application_send_email">Надіслати електронною поштою</string>
     <string name="application_why_german_title">Чому це звучить по-німецьки</string>
-    <string name="application_why_german_body">Іменне звертання, Referenznummer у Betreffzeile, жодного »Hiermit bewerbe ich mich« і жодного »Teamplayer« — і лист відповідає на слова вакансії, а не перелічує чесноти.</string>
+    <string name="application_why_german_body">Іменне звертання, Referenznummer у рядку теми, жодного »Hiermit bewerbe ich mich« і жодного »Teamplayer« — і лист відповідає на слова вакансії, а не перелічує чесноти.</string>
     <string name="application_source_model">Цей лист написала мовна модель і перевірено тими самими правилами.</string>
     <string name="application_source_rules">Цей лист написано за правилами — мовну модель для цієї інсталяції не налаштовано.</string>
 
-    <string name="locker_subtitle">Zeugnisse, Zertifikate та витяг з anabin, на які посилається Anlagenverzeichnis.</string>
-    <string name="locker_empty_title">Mappe порожня</string>
+    <string name="part_anschreiben">Anschreiben</string>
+    <string name="part_lebenslauf">Lebenslauf</string>
+    <string name="part_anlagen">Anlagenverzeichnis</string>
+
+    <string name="status_entwurf">Чернетка</string>
+    <string name="status_versendet">Надіслана</string>
+    <string name="status_einladung">Запрошення</string>
+    <string name="status_absage">Відмова</string>
+
+    <string name="template_klassisch">Класичний</string>
+    <string name="template_modern">Сучасний</string>
+    <string name="template_fachlich">Профільний</string>
+
+    <string name="locker_subtitle">Zeugnisse, сертифікати та витяг з anabin, на які посилається Anlagenverzeichnis.</string>
+    <string name="locker_empty_title">Документів поки немає</string>
     <string name="locker_empty_body">Додайте документи, на які посилається ваша заявка. Bewerbo зберігає тут лише запис; сам скан залишається на вашому пристрої.</string>
     <string name="locker_add">Додати документ</string>
     <string name="locker_field_title">Назва</string>
@@ -153,7 +277,13 @@
     <string name="locker_storage_body">Bewerbo зберігає запис про документ — назву, вид і кількість сторінок — щоб Anlagenverzeichnis міг його назвати. Сам файл не завантажується.</string>
     <string name="locker_demand_title">Ця вакансія просить · %1$d</string>
     <string name="locker_demand_outstanding">Не вистачає</string>
-    <string name="locker_demand_on_file">У Mappe</string>
+    <string name="locker_demand_on_file">Додано</string>
+
+    <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>
+    <string name="kind_zertifikat">Сертифікат</string>
+    <string name="kind_sprachnachweis">Sprachnachweis</string>
+    <string name="kind_anabin_auszug">Витяг з anabin</string>
+
     <string name="profile_add_education">Додати освіту</string>
     <string name="education_degree">Кваліфікація або ступінь</string>
     <string name="education_institution">Навчальний заклад</string>
@@ -164,15 +294,15 @@
     <string name="profile_add_language">Додати мову</string>
     <string name="language_name">Мова</string>
     <string name="language_level">Рівень</string>
-    <string name="profile_certificate_toggle">Сертифікат у Mappe</string>
-    <string name="profile_reference_toggle">Zeugnis у Mappe</string>
+    <string name="profile_certificate_toggle">Сертифікат додано</string>
+    <string name="profile_reference_toggle">Zeugnis додано</string>
     <string name="profile_anabin_confirm">Використати цю відповідність</string>
     <string name="profile_anabin_confirm_hint">Ніщо не потрапить до Lebenslauf, доки ви це не підтвердите.</string>
     <string name="profile_anabin_withdraw">Відкликати</string>
     <string name="application_status">Статус цієї заявки</string>
     <string name="application_export_choose">Що увійде у файл</string>
-    <string name="timeline_legend_education">Ausbildung</string>
-    <string name="timeline_legend_work">Beruf</string>
-    <string name="timeline_legend_gap">Lücke</string>
+    <string name="timeline_legend_education">Освіта</string>
+    <string name="timeline_legend_work">Робота</string>
+    <string name="timeline_legend_gap">Прогалина</string>
     <string name="application_template">Як оформлено Lebenslauf</string>
 </resources>

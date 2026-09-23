@@ -56,10 +56,27 @@ public record PostingDto(
 
 public record CorrectFieldRequest(string Key, string Value);
 
-public record RequirementDto(string Text, string State, string Evidence, string Action, string Language = "");
+/// <summary>
+/// One requirement of the posting against the profile. <paramref name="Text"/> is quoted from the
+/// advert and stays as it stands; <paramref name="Evidence"/> and <paramref name="Action"/> are
+/// the app's own words about it, so they also travel as a kind and its arguments for the screen
+/// to write in the user's language. See <see cref="NextStepDto"/> — same reason, same shape.
+/// </summary>
+public record RequirementDto(
+    string Text,
+    string State,
+    string Evidence,
+    string Action,
+    string Language = "",
+    string EvidenceKind = "",
+    IReadOnlyList<string>? EvidenceArgs = null,
+    string ActionKind = "",
+    IReadOnlyList<string>? ActionArgs = null);
 
 /// <summary>One document the posting asks to see. onFile false means outstanding.</summary>
-public record DemandedDocumentDto(string Kind, string Title, string Quote, bool OnFile);
+public record DemandedDocumentDto(
+    string Kind, string Title, string Quote, bool OnFile,
+    IReadOnlyList<string>? TitleArgs = null);
 
 public record MatchDto(
     Guid PostingId, string Company, string Reference,
@@ -77,17 +94,44 @@ public record ApplicationDto(
     Guid Id, Guid ProfileId, Guid PostingId, string Tone, string Status, string Source,
     LetterDto Letter, string FileName, IReadOnlyList<RequirementDto> Requirements);
 
-public record ReviewCheckDto(string Key, string Title, string Verdict, string Detail, IReadOnlyList<string> Items);
+public record ReviewCheckDto(
+    string Key,
+    string Title,
+    string Verdict,
+    string Detail,
+    IReadOnlyList<string> Items,
+    string DetailKind = "",
+    IReadOnlyList<string>? DetailArgs = null);
 
 public record ReviewDto(bool Passed, int HintCount, IReadOnlyList<ReviewCheckDto> Checks);
 
-public record AtsFindingDto(string Key, string Label, bool Found, string Detail);
+public record AtsFindingDto(
+    string Key,
+    string Label,
+    bool Found,
+    string Detail,
+    string DetailKind = "",
+    IReadOnlyList<string>? DetailArgs = null);
 
 public record AtsDto(bool Passed, int PageCount, int SizeBytes, string FileName, IReadOnlyList<AtsFindingDto> Findings);
 
 public record StatusRequest(string Status);
 
-public record NextStepDto(string Key, string Title, string Detail, string Severity, string Target);
+/// <summary>
+/// One outstanding step. <paramref name="Kind"/> and <paramref name="Args"/> are what the client
+/// renders: the server does not know the interface language, so a finished German sentence is the
+/// one thing it must not send as a label. <paramref name="Title"/> and <paramref name="Detail"/>
+/// stay as the German wording, both as the fallback for a client that does not know a kind and
+/// because they are what the API answered before.
+/// </summary>
+public record NextStepDto(
+    string Key,
+    string Title,
+    string Detail,
+    string Severity,
+    string Target,
+    string Kind = "",
+    IReadOnlyList<string>? Args = null);
 
 /// <summary>
 /// One application in the Übersicht's list. <paramref name="OpenSteps"/> is what THIS application

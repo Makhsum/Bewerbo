@@ -34,7 +34,8 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
             Tone = tone,
             LetterJson = JsonSerializer.Serialize(letter),
             MatchJson = JsonSerializer.Serialize(match.Requirements.Select(r =>
-                new RequirementDto(r.Text, StateName(r.State), r.Evidence, r.Action, r.Language))),
+                new RequirementDto(r.Text, StateName(r.State), r.Evidence, r.Action, r.Language,
+                    r.EvidenceKind, r.EvidenceArgs, r.ActionKind, r.ActionArgs))),
         };
         db.Applications.Add(application);
         await db.SaveChangesAsync();
@@ -81,7 +82,8 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
 
         var review = TextReview.Run(letter, posting.ContactName, posting.Reference);
         return Ok(new ReviewDto(review.Passed, review.HintCount,
-            review.Checks.Select(c => new ReviewCheckDto(c.Key, c.Title, c.Verdict, c.Detail, c.Items)).ToList()));
+            review.Checks.Select(c => new ReviewCheckDto(c.Key, c.Title, c.Verdict, c.Detail, c.Items,
+                c.DetailKind, c.DetailArgs)).ToList()));
     }
 
     // Maschinenlesbarkeit: render the real file and read it back.
@@ -101,7 +103,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var result = AtsTextCheck.Run(pdf, profile);
         return Ok(new AtsDto(result.Passed, result.PageCount, result.SizeBytes,
             MergedApplicationDocument.FileName(profile, posting),
-            result.Findings.Select(f => new AtsFindingDto(f.Key, f.Label, f.Found, f.Detail)).ToList()));
+            result.Findings.Select(f => new AtsFindingDto(f.Key, f.Label, f.Found, f.Detail, f.DetailKind, f.DetailArgs)).ToList()));
     }
 
     // The export: ONE file, named as the card requires.

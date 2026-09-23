@@ -12,6 +12,12 @@ public record DemandedDocument(
     /// <summary>What to file, in the words the Anlagenverzeichnis will use for it.</summary>
     string Title,
     /// <summary>
+    /// What follows the kind's name in <paramref name="Title"/> — the language and level of a
+    /// Sprachnachweis, and nothing for the other kinds. The screen writes the kind in the user's
+    /// language and appends these, because two of the four kinds are not German terms.
+    /// </summary>
+    IReadOnlyList<string> TitleArgs,
+    /// <summary>
     /// The posting's own sentence that asks for it. The demand is only worth showing if the user
     /// can check where it comes from — the same discipline the extracted fields are held to.
     /// </summary>
@@ -51,7 +57,7 @@ public static class DocumentDemandService
             if (!match.Success) continue;
 
             demands.Add(new DemandedDocument(
-                kind, KindTitle(kind), Sentence(haystack, match.Index),
+                kind, KindTitle(kind), [], Sentence(haystack, match.Index),
                 profile.Documents.Any(d => d.Kind == kind)));
         }
 
@@ -104,6 +110,7 @@ public static class DocumentDemandService
                 // The title run 102 files a Nachweis under, so the row names the document that
                 // would close it rather than a category.
                 $"Sprachnachweis {wanted.Value.Language} {wanted.Value.Level}",
+                [wanted.Value.Language, wanted.Value.Level],
                 requirement,
                 skill?.CertificateOnFile ?? false);
         }

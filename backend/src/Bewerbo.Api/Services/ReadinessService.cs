@@ -128,24 +128,29 @@ public static class ReadinessService
         // The person's own details went uncounted here while they were half of Completeness, so the
         // Übersicht could say nothing was outstanding over a profile with no name and no Anschrift —
         // and the Briefkopf of every Anschreiben is made of exactly these.
+        // The item names go out as the keys the client looks up, not as the words: "Anschrift"
+        // read as "Anschrift" on an English screen, which is the whole of what this DTO's Kind
+        // and Args exist to stop.
         var personMissing = new[]
         {
             (Missing: string.IsNullOrWhiteSpace(profile.FirstName)
-                      || string.IsNullOrWhiteSpace(profile.LastName), Label: "Name"),
+                      || string.IsNullOrWhiteSpace(profile.LastName), Key: "name", Label: "Name"),
             (Missing: string.IsNullOrWhiteSpace(profile.Street)
-                      || string.IsNullOrWhiteSpace(profile.City), Label: "Anschrift"),
+                      || string.IsNullOrWhiteSpace(profile.City), Key: "anschrift", Label: "Anschrift"),
             (Missing: string.IsNullOrWhiteSpace(profile.Phone)
-                      && string.IsNullOrWhiteSpace(profile.Email), Label: "Kontakt"),
-        }.Where(p => p.Missing).Select(p => p.Label).ToList();
+                      && string.IsNullOrWhiteSpace(profile.Email), Key: "kontakt", Label: "Kontakt"),
+        }.Where(p => p.Missing).ToList();
 
         if (personMissing.Count > 0)
         {
             steps.Add(new NextStepDto(
                 "person",
                 "Angaben zur Person vervollständigen",
-                $"Der Briefkopf nach DIN 5008 braucht noch: {string.Join(", ", personMissing)}",
+                $"Der Briefkopf nach DIN 5008 braucht noch: {string.Join(", ", personMissing.Select(p => p.Label))}",
                 "attention",
-                "profil"));
+                "profil",
+                "person",
+                personMissing.Select(p => p.Key).ToList()));
         }
 
         foreach (var gap in timeline.Gaps.Where(g => !g.Explained))
@@ -155,7 +160,9 @@ public static class ReadinessService
                 $"Lücke {gap.From:MM\\/yyyy} – {gap.To:MM\\/yyyy} benennen",
                 "Ohne Grund liest ein deutscher Leser die Lücke als Warnsignal",
                 "attention",
-                "profil"));
+                "profil",
+                "gap",
+                [$"{gap.From:MM\\/yyyy}", $"{gap.To:MM\\/yyyy}"]));
         }
 
         foreach (var degree in profile.Education.Where(e =>
@@ -167,7 +174,9 @@ public static class ReadinessService
                 "Anerkennung bestätigen",
                 $"anabin-Eintrag für {degree.Institution} prüfen und zitieren",
                 "info",
-                "profil"));
+                "profil",
+                "anerkennung",
+                [degree.Institution]));
         }
 
         foreach (var language in profile.Languages.Where(l =>
@@ -178,13 +187,16 @@ public static class ReadinessService
                 $"Sprachzertifikat {language.Level} fehlt",
                 $"{language.Language} {language.Level} ist im Profil angegeben, aber nicht belegt",
                 "attention",
-                "mappe"));
+                "mappe",
+                "sprachnachweis",
+                [language.Language, language.Level]));
         }
 
         if (profile.Experience.Count == 0)
         {
             steps.Add(new NextStepDto("beruf", "Berufserfahrung eintragen",
-                "Ohne einen Eintrag lässt sich kein Lebenslauf erzeugen", "attention", "profil"));
+                "Ohne einen Eintrag lässt sich kein Lebenslauf erzeugen", "attention", "profil",
+                "beruf", []));
         }
 
         return steps;
@@ -206,7 +218,8 @@ public static class ReadinessService
         if (application.Status == ApplicationStatus.Entwurf)
         {
             steps.Add(new NextStepDto($"versand_{application.Id}", "Noch nicht versendet",
-                "Mappe exportieren und den Status auf Versendet setzen", "info", "bewerbung"));
+                "Mappe exportieren und den Status auf Versendet setzen", "info", "bewerbung",
+                "versand", []));
         }
 
         // MatchJson defaults to "{}", which would throw here as a list and take the whole
@@ -224,7 +237,11 @@ public static class ReadinessService
                 // Mappe is where a Nachweis is added, which is where the Abgleich sends it too.
                 requirement.Evidence,
                 "attention",
-                "mappe"));
+                "mappe",
+                // The requirement and its evidence are quoted from the posting, so they stay as
+                // they are in every language — only the sentence around them is translated.
+                "beleg",
+                [requirement.Text]));
         }
 
         return steps.Take(3).ToList();

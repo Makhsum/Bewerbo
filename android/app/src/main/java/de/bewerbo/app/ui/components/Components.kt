@@ -224,7 +224,9 @@ fun SegmentedControl(
     tagPrefix: String? = null,
     /// How an option is written on screen. The option itself stays the value the server knows, so
     /// a name the backend spells as one word — "OeffentlicherDienst" — is not shown that way.
-    label: (String) -> String = { it },
+    /// Composable, because every caller now resolves the label out of the string resources: the
+    /// backend's vocabulary is German and the control it is drawn in is not.
+    label: @Composable (String) -> String = { it },
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,

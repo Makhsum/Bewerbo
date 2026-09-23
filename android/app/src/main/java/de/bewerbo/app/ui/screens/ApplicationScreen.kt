@@ -46,6 +46,8 @@ import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EmailDraft
+import de.bewerbo.app.ui.TermNote
+import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.DinOverlay
@@ -53,6 +55,11 @@ import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
 import de.bewerbo.app.ui.components.StatusPill
+import de.bewerbo.app.ui.components.applicationStatusLabel
+import de.bewerbo.app.ui.components.atsFindingDetail
+import de.bewerbo.app.ui.components.atsFindingLabel
+import de.bewerbo.app.ui.components.reviewCheckDetail
+import de.bewerbo.app.ui.components.reviewCheckTitle
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -61,8 +68,8 @@ import de.bewerbo.app.ui.theme.Space
 /// because that is the value the status endpoint takes.
 private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
 
-/// The Lebenslauf layouts, in the order the SegmentedControl shows them. They keep their German
-/// names for the same reason the parts of the Mappe do — they are what the document is called.
+/// The Lebenslauf layouts, in the order the SegmentedControl shows them. Like the statuses, these
+/// are backend values, not words for the user — `templateLabel` says how they are written.
 private val TEMPLATES = listOf("Klassisch", "Modern", "Fachlich")
 
 /**
@@ -276,6 +283,9 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
             }
         }
 
+        // DIN 5008 is named on the button above, and this is the screen it first appears on.
+        item { TermNote(germanTerm("din_5008")) }
+
         // What happened to this application. The Übersicht already colours these four states —
         // Einladung green, Absage red — and until this control existed none of them could be
         // reached: setStatus had no caller anywhere, so every application stayed "Entwurf" and
@@ -288,6 +298,7 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                         options = STATUSES,
                         selectedIndex = STATUSES.indexOf(application.status).coerceAtLeast(0),
                         onSelect = { viewModel.setStatus(STATUSES[it]) },
+                        label = { stringResource(applicationStatusLabel(it)) },
                         modifier = Modifier.testTag("application_status_selector"),
                         tagPrefix = "application_status",
                     )
@@ -336,9 +347,9 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                                 modifier = Modifier.size(20.dp),
                             )
                             Column(Modifier.padding(start = Space.s)) {
-                                Text(check.title, style = MaterialTheme.typography.titleMedium)
+                                Text(reviewCheckTitle(check), style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    check.detail,
+                                    reviewCheckDetail(check),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.muted,
                                 )
@@ -388,9 +399,9 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                                 modifier = Modifier.size(18.dp),
                             )
                             Column(Modifier.padding(start = Space.s)) {
-                                Text(finding.label, style = MaterialTheme.typography.bodyMedium)
+                                Text(atsFindingLabel(finding), style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    finding.detail,
+                                    atsFindingDetail(finding),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.muted,
                                 )
@@ -470,6 +481,10 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                     }
                 }
 
+                // The parts are named in German above — Anschreiben and Lebenslauf are explained
+                // where the user first meets them, the Anlagenverzeichnis only appears here.
+                TermNote(germanTerm("anlagenverzeichnis"))
+
                 // The Vorlage of the Lebenslauf, next to the file it lays out. It used to sit on
                 // the Profil screen one row BELOW the button that produces the Lebenslauf: a
                 // decision about the document, asked after the action it belongs to and of a user
@@ -495,6 +510,7 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel) {
                         },
                         modifier = Modifier.testTag("application_template_selector"),
                         tagPrefix = "application_template",
+                        label = { stringResource(templateLabel(it)) },
                     )
                 }
             }
@@ -664,4 +680,10 @@ private fun partLabel(part: String) = when (part) {
     "anschreiben" -> R.string.part_anschreiben
     "lebenslauf" -> R.string.part_lebenslauf
     else -> R.string.part_anlagen
+}
+
+private fun templateLabel(template: String) = when (template) {
+    "Klassisch" -> R.string.template_klassisch
+    "Modern" -> R.string.template_modern
+    else -> R.string.template_fachlich
 }

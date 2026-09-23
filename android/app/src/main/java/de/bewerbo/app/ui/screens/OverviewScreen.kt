@@ -26,6 +26,8 @@ import de.bewerbo.app.Destination
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.ui.TermNote
+import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.IconRow
@@ -33,6 +35,9 @@ import de.bewerbo.app.ui.components.Meter
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
+import de.bewerbo.app.ui.components.applicationStatusLabel
+import de.bewerbo.app.ui.components.nextStepDetail
+import de.bewerbo.app.ui.components.nextStepTitle
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -239,8 +244,8 @@ fun OverviewScreen(
                             icon = if (step.severity == "attention") {
                                 BewerboIcons.Attention
                             } else BewerboIcons.Anabin,
-                            title = step.title,
-                            detail = step.detail,
+                            title = nextStepTitle(step),
+                            detail = nextStepDetail(step),
                             tone = if (step.severity == "attention") PillTone.Attention else PillTone.Accent,
                             trailing = {
                                 Icon(
@@ -270,6 +275,9 @@ fun OverviewScreen(
                 )
             } else BewerboCard(Modifier.testTag("overview_readiness_card")) {
                 SectionLabel(stringResource(R.string.overview_mappe))
+                // The Übersicht is the first screen, and this card's own label is the first
+                // German word the user meets anywhere in the app.
+                TermNote(germanTerm("bewerbungsmappe"))
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -345,7 +353,7 @@ fun OverviewScreen(
                         )
                     }
                     StatusPill(
-                        application.status,
+                        stringResource(applicationStatusLabel(application.status)),
                         when (application.status) {
                             "Einladung" -> PillTone.Success
                             "Absage" -> PillTone.Danger
@@ -372,8 +380,8 @@ fun OverviewScreen(
                         icon = if (step.severity == "attention") {
                             BewerboIcons.Attention
                         } else BewerboIcons.Document,
-                        title = step.title,
-                        detail = step.detail,
+                        title = nextStepTitle(step),
+                        detail = nextStepDetail(step),
                         tone = if (step.severity == "attention") PillTone.Attention else PillTone.Accent,
                         trailing = {
                             Icon(

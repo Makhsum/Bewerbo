@@ -4,7 +4,18 @@ using UglyToad.PdfPig;
 
 namespace Bewerbo.Api.Rendering;
 
-public record AtsFinding(string Key, string Label, bool Found, string Detail);
+/// <summary>
+/// One thing a Bewerbermanagementsystem indexes on. <see cref="Key"/> names the check and
+/// <see cref="DetailKind"/> what was found, so the screen writes both in the user's language;
+/// <see cref="Label"/> and <see cref="Detail"/> keep the German as the fallback.
+/// </summary>
+public record AtsFinding(
+    string Key,
+    string Label,
+    bool Found,
+    string Detail,
+    string DetailKind = "",
+    IReadOnlyList<string>? DetailArgs = null);
 
 public record AtsResult(bool Passed, int PageCount, int SizeBytes, IReadOnlyList<AtsFinding> Findings);
 
@@ -34,7 +45,8 @@ public static class AtsTextCheck
             return new AtsResult(false, 0, pdf.Length,
             [
                 new AtsFinding("lesbar", "PDF zurückgelesen", false,
-                    $"Die Datei ließ sich nicht als Text öffnen: {ex.Message}"),
+                    $"Die Datei ließ sich nicht als Text öffnen: {ex.Message}",
+                    "lesbar_fehler", [ex.Message]),
             ]);
         }
 
@@ -51,7 +63,9 @@ public static class AtsTextCheck
 
         var nameFound = Contains($"{profile.FirstName}{profile.LastName}");
         findings.Add(new AtsFinding("name", "Name als Text wiedergefunden", nameFound,
-            nameFound ? $"{profile.FirstName} {profile.LastName}" : "Der Name ist im Text nicht auffindbar"));
+            nameFound ? $"{profile.FirstName} {profile.LastName}" : "Der Name ist im Text nicht auffindbar",
+            nameFound ? "gefunden" : "name_fehlt",
+            nameFound ? [$"{profile.FirstName} {profile.LastName}"] : []));
 
         var employers = profile.Experience.Select(e => e.Employer).Where(e => !string.IsNullOrWhiteSpace(e)).ToList();
         var employersFound = employers.Count > 0 && employers.All(Contains);
@@ -60,7 +74,13 @@ public static class AtsTextCheck
                 ? "Keine Arbeitgeber im Profil"
                 : employersFound
                     ? string.Join(", ", employers)
-                    : "Fehlt: " + string.Join(", ", employers.Where(e => !Contains(e)))));
+                    : "Fehlt: " + string.Join(", ", employers.Where(e => !Contains(e))),
+            employers.Count == 0 ? "arbeitgeber_keine" : employersFound ? "gefunden" : "fehlt",
+            employers.Count == 0
+                ? []
+                : employersFound
+                    ? [string.Join(", ", employers)]
+                    : [string.Join(", ", employers.Where(e => !Contains(e)))]));
 
         // Dates are what an ATS builds the career timeline from; a CV whose periods do not extract
         // reads as a career with no dates at all.
@@ -69,13 +89,17 @@ public static class AtsTextCheck
         findings.Add(new AtsFinding("zeitraeume", "Zeiträume als Text wiedergefunden", datesFound,
             periods.Count == 0
                 ? "Keine Zeiträume im Profil"
-                : datesFound ? string.Join(", ", periods) : "Mindestens ein Zeitraum extrahiert nicht"));
+                : datesFound ? string.Join(", ", periods) : "Mindestens ein Zeitraum extrahiert nicht",
+            periods.Count == 0 ? "zeitraeume_keine" : datesFound ? "gefunden" : "zeitraeume_fehlt",
+            periods.Count == 0 || !datesFound ? [] : [string.Join(", ", periods)]));
 
         var hasText = compact.Length > 200;
         findings.Add(new AtsFinding("text", "Schriften eingebettet, Text extrahierbar", hasText,
             hasText
                 ? $"{compact.Length} Zeichen extrahiert"
-                : "Fast kein Text extrahierbar — die Seite liegt vermutlich als Bild vor"));
+                : "Fast kein Text extrahierbar — die Seite liegt vermutlich als Bild vor",
+            hasText ? "text_ok" : "text_fehlt",
+            hasText ? [$"{compact.Length}"] : []));
 
         return new AtsResult(findings.All(f => f.Found), pageCount, pdf.Length, findings);
     }
