@@ -382,7 +382,8 @@
     <string name="settings_data">What is held about you</string>
     <string name="settings_data_hint">A Lebenslauf is personal data, and the law gives you three things because of it: to see what is held, to take a copy with you, and to have it deleted. All three are here.</string>
     <string name="settings_data_export">Save a copy</string>
-    <string name="settings_data_export_hint">Written into the documents of the app as one file, exactly as the server holds it.</string>
+    <string name="settings_data_export_hint">Written into the documents of the app exactly as the server holds it, and then handed on, so you can keep it where you like.</string>
+    <string name="settings_data_export_share">Take your copy with you</string>
     <string name="settings_data_delete">Delete the account and everything in it</string>
     <string name="settings_delete_title">Delete everything?</string>
     <string name="settings_delete_body">What you entered about yourself, the documents on file, the postings you pasted and every application are deleted from the server. This cannot be undone. Bewerbo then opens an empty account, so you can begin again.</string>

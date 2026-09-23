@@ -1,5 +1,7 @@
 package de.bewerbo.app.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
@@ -46,6 +50,7 @@ import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
+import java.io.File
 
 /**
  * Einstellungen — the account, the language of the interface, what is held about the user, and the
@@ -70,6 +75,18 @@ fun SettingsScreen(
     // an account and taking over another one both leave a new id behind, and the categories on
     // screen would otherwise still count the account that is gone.
     LaunchedEffect(state.profile?.id) { viewModel.loadSettings() }
+
+    // The chooser is started from here and not from the view model: an Intent needs a context that
+    // can start an activity, and the view model only holds the Application. The Bewerbung screen
+    // hands the Mappe to a mail app the same way.
+    val context = LocalContext.current
+    val chooserTitle = stringResource(R.string.settings_data_export_share)
+    LaunchedEffect(state.pendingExport) {
+        state.pendingExport?.let { file ->
+            context.startActivity(exportChooser(context, file, chooserTitle))
+            viewModel.exportHandled()
+        }
+    }
 
     var switching by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
@@ -104,6 +121,35 @@ fun SettingsScreen(
     if (deleting) {
         DeleteAccountDialog(viewModel) { deleting = false }
     }
+}
+
+/**
+ * The copy, on its way out of the app.
+ *
+ * Saving it was only half of what the right to a copy means. The file lands in the app’s own files
+ * directory through [de.bewerbo.app.data.documentFile], which is PRIVATE storage — mode 0600 under
+ * the app’s own uid, where no file app, no mail app and no cloud app can open it. A user who tapped
+ * "save a copy" was shown the name of a file they had no way to reach. This hands the same file out
+ * as a content:// URI from the FileProvider the Mappe already goes out through; file_paths.xml
+ * already covers the folder it is written to.
+ *
+ * A GENERAL chooser, deliberately not the mail-app one the Bewerbung screen builds: a
+ * Bewerbungsmappe goes to an employer and e-mail is how, but a copy of your own data goes wherever
+ * you keep things — a cloud folder, a message to yourself, a mail. Narrowing that would be guessing
+ * on the user’s behalf.
+ *
+ * FLAG_ACTIVITY_NEW_TASK is not optional: every screen runs under the configuration context
+ * [de.bewerbo.app.ui.UiLanguageProvider] provides, so LocalContext.current is never the Activity.
+ */
+private fun exportChooser(context: Context, file: File, title: String): Intent {
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "application/json"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, file.name)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    return Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 /**

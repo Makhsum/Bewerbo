@@ -347,7 +347,8 @@
     <string name="settings_data">Was über Sie gespeichert ist</string>
     <string name="settings_data_hint">Ein Lebenslauf sind personenbezogene Daten, und deshalb gibt das Gesetz Ihnen drei Dinge: zu sehen, was gespeichert ist, eine Kopie mitzunehmen und alles löschen zu lassen. Alle drei stehen hier.</string>
     <string name="settings_data_export">Kopie speichern</string>
-    <string name="settings_data_export_hint">Wird als eine Datei in die Dokumente der App geschrieben, genau so, wie der Server sie hält.</string>
+    <string name="settings_data_export_hint">Wird genau so, wie der Server sie hält, in die Dokumente der App geschrieben und danach weitergereicht, damit Sie sie aufbewahren können, wo Sie möchten.</string>
+    <string name="settings_data_export_share">Ihre Kopie mitnehmen</string>
     <string name="settings_data_delete">Konto und alles darin löschen</string>
     <string name="settings_delete_title">Alles löschen?</string>
     <string name="settings_delete_body">Was Sie über sich eingetragen haben, die abgelegten Dokumente, die eingefügten Stellenanzeigen und jede Bewerbung werden vom Server gelöscht. Das lässt sich nicht zurücknehmen. Bewerbo öffnet danach ein leeres Konto, damit Sie neu beginnen können.</string>

@@ -346,7 +346,8 @@
     <string name="settings_data">Що про вас зберігається</string>
     <string name="settings_data_hint">Lebenslauf — це персональні дані, і саме тому закон дає вам три речі: бачити, що зберігається, забрати копію та вимагати видалення. Усі три — тут.</string>
     <string name="settings_data_export">Зберегти копію</string>
-    <string name="settings_data_export_hint">Записується одним файлом до документів застосунку — точно так, як це тримає сервер.</string>
+    <string name="settings_data_export_hint">Записується до документів застосунку точно так, як це тримає сервер, і одразу передається далі — щоб ви тримали її там, де вам зручно.</string>
+    <string name="settings_data_export_share">Забрати копію із собою</string>
     <string name="settings_data_delete">Видалити обліковий запис і все в ньому</string>
     <string name="settings_delete_title">Видалити все?</string>
     <string name="settings_delete_body">Те, що ви про себе внесли, відкладені документи, вставлені оголошення та кожна заявка видаляються з сервера. Це не можна скасувати. Після цього Bewerbo відкриє порожній обліковий запис, щоб ви могли почати заново.</string>

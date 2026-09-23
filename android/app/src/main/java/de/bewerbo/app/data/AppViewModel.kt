@@ -47,6 +47,10 @@ data class AppState(
     val previewFailed: Boolean = false,
     /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
     val pendingEmail: EmailDraft? = null,
+    /// Set when the user asked for the copy of what is held about them. The settings screen hands
+    /// it to a chooser and clears it — the same handover [pendingEmail] gets, for the same reason:
+    /// a file in the app’s own storage is reachable from nowhere else.
+    val pendingExport: File? = null,
     /// What the server holds about the account, for the settings screen to list. Null until the
     /// settings have been opened — no other screen reads it, so nothing fetches it before then.
     val accountData: DataExport? = null,
@@ -201,16 +205,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Writes the copy of everything held about the account — Art. 15 and Art. 20 DSGVO.
      *
-     * It lands where a produced Lebenslauf lands, through the same helper, so it is a file the user
-     * can reach with the phone's own file app and hand on. The bytes are the server's answer as it
-     * arrived rather than anything rebuilt here: a copy that has been through this app twice is not
-     * evidence of what the server holds.
+     * It lands where a produced Lebenslauf lands, through the same helper, and is then handed on
+     * through [pendingExport]. Saving alone was not a copy the user HAS: that folder is the app's
+     * own private storage, mode 0600 under its uid, so the message naming the file was the last
+     * they could ever see of it. The bytes are the server's answer as it arrived rather than
+     * anything rebuilt here: a copy that has been through this app twice is not evidence of what
+     * the server holds.
      */
     fun exportAccountData() = launch("export") {
         val id = profileId() ?: return@launch
         val file = api.accountDataFile(id, getApplication<Application>().documentFile(ACCOUNT_DATA_FILE))
-        _state.update { it.copy(lastSavedFile = describe(file)) }
+        _state.update { it.copy(lastSavedFile = describe(file), pendingExport = file) }
     }
+
+    /// Cleared once the screen has handed the copy to a chooser, so coming back to the settings
+    /// does not open it a second time. Same reason as [emailHandled].
+    fun exportHandled() = _state.update { it.copy(pendingExport = null) }
 
     /**
      * Erases the account and everything held under it — Art. 17 DSGVO — and opens an empty one.
