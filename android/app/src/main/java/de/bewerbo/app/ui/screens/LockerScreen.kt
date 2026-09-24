@@ -487,6 +487,24 @@ private fun AddDocumentCard(
             label = { stringResource(documentKindLabel(it)) },
         )
 
+        // The title is what the document IS — the server refuses a record without one, and the
+        // Anlagenverzeichnis would otherwise print a numbered Anlage with nothing beside it. Saying
+        // what is missing here is the same contract the Berufserfahrung form keeps, instead of
+        // sending the save and closing the card on the answer that comes back.
+        val missing = buildList {
+            if (title.isBlank()) add(stringResource(R.string.locker_field_title))
+        }
+        if (missing.isNotEmpty()) {
+            Text(
+                stringResource(R.string.experience_missing, missing.joinToString(", ")),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.attention,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("locker_missing_hint"),
+            )
+        }
+
         Row(
             Modifier
                 .fillMaxWidth()
@@ -504,6 +522,7 @@ private fun AddDocumentCard(
                     )
                     onDone()
                 },
+                enabled = missing.isEmpty(),
                 modifier = Modifier.testTag("locker_btn_save"),
             ) {
                 Text(stringResource(R.string.action_save))

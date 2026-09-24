@@ -322,6 +322,13 @@ private fun FileCertificateDialog(
     // later — and without this the upload replaces the number the user typed here.
     var pagesStated by remember(language) { mutableStateOf(false) }
 
+    // The same rule the Mappe's add card keeps: a document without a title is refused by the
+    // server, so the field is asked for here rather than after the save. The title is prefilled,
+    // but a prefilled field is one the user can empty.
+    val missing = buildList {
+        if (title.isBlank()) add(stringResource(R.string.locker_field_title))
+    }
+
     BewerboDialog(
         onDismissRequest = onDismiss,
         testTag = "match_file_dialog",
@@ -351,10 +358,19 @@ private fun FileCertificateDialog(
                     onValueChange = { pages = it; pagesStated = it.isNotBlank() },
                     testTag = "match_file_input_pages",
                 )
+                if (missing.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.experience_missing, missing.joinToString(", ")),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalSemanticColors.current.attention,
+                        modifier = Modifier.testTag("match_file_missing_hint"),
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
+                enabled = missing.isEmpty(),
                 onClick = {
                     onSave(
                         StoredDocument(
