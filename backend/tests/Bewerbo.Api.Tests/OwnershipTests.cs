@@ -1,9 +1,12 @@
 using System.Reflection;
+using System.Security.Claims;
+using Bewerbo.Api.Contracts;
 using Bewerbo.Api.Controllers;
 using Bewerbo.Api.Data;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -173,4 +176,115 @@ public class AuthorisedRouteTests
     private static IEnumerable<Type> Controllers() =>
         typeof(BewerboController).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsClass: true } && typeof(ControllerBase).IsAssignableFrom(t));
+}
+
+/// <summary>
+/// The one write route that CREATES a profile instead of naming one, and the hole a rule keyed on
+/// "is the id in this address yours" cannot see: a POST carries no id, so nothing above the action
+/// has anything to decide ownership of. It used to decide nobody — the record came back with a 201
+/// and then answered 404 to its own creator, while <see cref="ProfileAdoption.IsAdoptableAsync"/>
+/// offered what was in it to the next registration.
+///
+/// The action is driven directly rather than over HTTP, because what is being asked is which rows
+/// it leaves behind, and a real SQLite database answers that the way
+/// <see cref="ResourceOwnershipTests"/> does. Whether the caller may then NAME the id it got back
+/// is <see cref="OwnershipFilter"/>'s question, and it reduces to the first test here: the filter
+/// lets a profile id through exactly when it is the signed-in caller's own.
+/// </summary>
+public class ProfileCreationTests
+{
+    [Fact]
+    public async Task The_profile_it_writes_onto_is_the_callers_own()
+    {
+        await using var db = NewDatabase();
+        var theirs = AccountWithProfile(db, "kateryna@example.de");
+        var mine = AccountWithProfile(db, "olena@example.de");
+
+        var created = Assert.IsType<CreatedResult>(await Routes(db, mine).Create(Olena));
+
+        Assert.Equal($"/api/profile/{mine}", created.Location);
+        Assert.Equal("Olena", db.Profiles.Single(p => p.Id == mine).FirstName);
+        Assert.Equal("", db.Profiles.Single(p => p.Id == theirs).FirstName);
+    }
+
+    /// <summary>
+    /// Nothing ownerless is left behind — the half of the defect its creator never sees. An
+    /// adoptable profile is one the next person to register may ask for by id and keep.
+    /// </summary>
+    [Fact]
+    public async Task It_leaves_behind_no_profile_that_no_account_owns()
+    {
+        await using var db = NewDatabase();
+        var mine = AccountWithProfile(db, "olena@example.de");
+
+        await Routes(db, mine).Create(Olena);
+
+        Assert.Equal(1, db.Profiles.Count());
+        Assert.False(await ProfileAdoption.IsAdoptableAsync(db, mine));
+    }
+
+    /// <summary>
+    /// The acceptance criterion in one test: the address that comes back is one its creator can
+    /// use. All three of these answered 404 on the id the API had just handed out.
+    /// </summary>
+    [Fact]
+    public async Task The_creator_can_read_change_and_delete_what_came_back()
+    {
+        await using var db = NewDatabase();
+        var mine = AccountWithProfile(db, "olena@example.de");
+        var routes = Routes(db, mine);
+
+        var created = Assert.IsType<CreatedResult>(await routes.Create(Olena));
+        var id = Assert.IsType<ProfileDto>(created.Value).Id;
+
+        Assert.IsType<OkObjectResult>(await routes.Get(id));
+        Assert.IsType<OkObjectResult>(await routes.PatchPerson(id, Olena with { City = "Fürth" }));
+        Assert.IsType<NoContentResult>(await routes.Delete(id));
+    }
+
+    private static readonly PersonDto Olena = new(
+        "uk", "Olena", "Kovalchuk", "Hauptstraße 3", "90402", "Nürnberg",
+        "0911 123456", "olena@example.de", "1989-04-17", "Klassisch");
+
+    /// <summary>
+    /// The controller as a request reaches it: the database it writes to, and the session claim
+    /// that says whose profile this is — the claim
+    /// <see cref="SessionAuthenticationHandler"/> puts there for every signed-in call. The model is
+    /// never asked anything on this route; see <see cref="NoModel"/>.
+    /// </summary>
+    private static ProfileController Routes(BewerboDbContext db, Guid profileId)
+    {
+        var identity = new ClaimsIdentity(
+            [new Claim(SessionAuthentication.ProfileIdClaim, profileId.ToString())],
+            SessionAuthentication.Scheme);
+
+        return new ProfileController(db, new NoModel())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) },
+            },
+        };
+    }
+
+    /// <summary>An account and the one profile it owns, as <c>POST /api/auth/register</c> leaves them.</summary>
+    private static Guid AccountWithProfile(BewerboDbContext db, string email)
+    {
+        var profile = new Domain.Profile();
+        db.Profiles.Add(profile);
+        db.Accounts.Add(new Account { Email = email, ProfileId = profile.Id });
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+        return profile.Id;
+    }
+
+    private static BewerboDbContext NewDatabase()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+        var db = new BewerboDbContext(
+            new DbContextOptionsBuilder<BewerboDbContext>().UseSqlite(connection).Options);
+        db.Database.EnsureCreated();
+        return db;
+    }
 }

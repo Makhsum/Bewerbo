@@ -16,12 +16,34 @@ namespace Bewerbo.Api.Controllers;
 [IdNames(OwnedResource.Profile)]
 public class ProfileController(BewerboDbContext db, ILanguageModel model) : BewerboController
 {
+    /// <summary>
+    /// The person a profile is about, written in one request, onto the profile the caller owns.
+    ///
+    /// It used to write onto a <c>new Profile()</c>, which was right while a profile WAS the
+    /// account and one phone's first run was where it came from. Since the door exists it made a
+    /// record nobody could reach: <see cref="OwnershipFilter"/> refuses every later address of a
+    /// profile that is not the caller's to the very caller who had just made it, and a profile no
+    /// account owns is by definition adoptable, so <see cref="Services.ProfileAdoption"/> then
+    /// offered what was in it to the next person who registered.
+    ///
+    /// An account owns exactly one profile — <see cref="Domain.Account.ProfileId"/> — and
+    /// <see cref="AuthController.Register"/> is the one place it comes into being. There is no
+    /// second one for this route to create, so it writes onto the first: the same profile every
+    /// other route of this controller is addressed by, and one the caller can read, change and
+    /// erase the moment this answer comes back.
+    ///
+    /// Still a 201 at that address, and still nothing in the request naming an owner. Who the
+    /// profile belongs to is the server's answer and never the client's claim — the reason
+    /// <see cref="BewerboController.SignedInProfileId"/> exists — and a client that sent this
+    /// before sends exactly the same thing now.
+    /// </summary>
     [HttpPost("")]
     public async Task<IActionResult> Create([FromBody] PersonDto person)
     {
-        var profile = new Profile();
+        var profile = await db.Profiles.FindAsync(SignedInProfileId);
+        if (profile is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
+
         Apply(profile, person);
-        db.Profiles.Add(profile);
         await db.SaveChangesAsync();
         return Created($"/api/profile/{profile.Id}", await Load(profile.Id));
     }
