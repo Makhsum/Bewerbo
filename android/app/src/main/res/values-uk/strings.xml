@@ -388,7 +388,7 @@
     <string name="signin_leave_title">Залишити цей Lebenslauf тут?</string>
     <string name="signin_leave_body">Lebenslauf на цьому телефоні не належить жодному обліковому запису. Якщо увійти до іншого, він залишиться тут, і повернути його не буде чим. Щоб зберегти його, створіть обліковий запис.</string>
     <string name="signin_leave_confirm">Усе одно увійти</string>
-    <string name="signin_forgot">Я забув пароль</string>
+    <string name="signin_forgot">Не пам\'ятаю пароль</string>
 
     <string name="reset_title">Новий пароль</string>
     <string name="reset_body">Уведіть адресу електронної пошти вашого облікового запису. Якщо такий обліковий запис є, код надійде на цю адресу.</string>

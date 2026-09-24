@@ -386,7 +386,7 @@
     <string name="signin_leave_title">Оставить этот Lebenslauf здесь?</string>
     <string name="signin_leave_body">Lebenslauf на этом телефоне не принадлежит ни одному аккаунту. Если войти в другой, он останется здесь, и вернуть его будет нечем. Чтобы сохранить его, создайте аккаунт.</string>
     <string name="signin_leave_confirm">Всё равно войти</string>
-    <string name="signin_forgot">Я забыл пароль</string>
+    <string name="signin_forgot">Не помню пароль</string>
 
     <string name="reset_title">Новый пароль</string>
     <string name="reset_body">Введите адрес электронной почты вашего аккаунта. Если такой аккаунт есть, код придёт на этот адрес.</string>
