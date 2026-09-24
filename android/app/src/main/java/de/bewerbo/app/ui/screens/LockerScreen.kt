@@ -411,11 +411,12 @@ private fun AddDocumentCard(
     // and it used to be overwritten here without a word. An emptied field is not an entry, so it
     // gives the number back to the file — at the next pick and not while it is being typed in.
     //
-    // A file chosen for a row in the LIST travels through the same two fields of the state and is
-    // not this card's. It used to fill this field with the page count of ANOTHER document — with
-    // nothing on the form saying where the number came from — and the record saved here carried
-    // that count into the Anlagenverzeichnis. A pick that names no document was made in this card.
-    val picked = state.pickedScan?.takeIf { state.pickedScanFor == null }
+    // A file chosen for a row in the LIST is on its way to that row and never reaches this card.
+    // It travels through the state's other slot, where this card's file used to sit as well and be
+    // overwritten by it — first in the number above, then in the file row itself, which simply
+    // vanished and left the Save filing a document with no copy. This card's file waits in a slot
+    // of its own until the Save below.
+    val picked = state.addFormScan
     LaunchedEffect(picked) {
         if (picked != null && !pagesStated) pages = picked.pageCount.toString()
     }

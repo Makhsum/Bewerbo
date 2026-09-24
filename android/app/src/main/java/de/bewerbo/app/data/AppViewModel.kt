@@ -93,11 +93,23 @@ data class AppState(
     /// sent while this is set: it is held here while the disclosure is read, and dropped if the
     /// user decides against it. State and not the screen's own `remember`, for the reason
     /// [postingDraft] is — choosing a file opens the system picker and leaves the app.
+    ///
+    /// The pick that is on its way somewhere, and no more than that: once the disclosure has been
+    /// answered it is either uploaded to [pickedScanFor] or handed to [addFormScan], and this
+    /// field is let go either way. See [AppViewModel.deliverPickedScan].
     val pickedScan: PickedScan? = null,
     /// Which document the picked scan belongs to, or null when it is for the document currently
     /// being added and there is no id yet. That is the difference between "upload it now" and
     /// "hold it until Save".
     val pickedScanFor: String? = null,
+    /// The file chosen in the add card, waiting there for its Save — the only place it can wait,
+    /// because the record it belongs to does not exist yet.
+    ///
+    /// A slot of its own and not [pickedScan], because the list above the open form stays usable:
+    /// a scan added to a row in it travels through [pickedScan] and used to overwrite the file the
+    /// form was holding, so the form's file row disappeared and the Save filed a document with no
+    /// copy at all. Two places that hold a file at the same time need two fields.
+    val addFormScan: PickedScan? = null,
     /// Whether the disclosure is up. Set the moment a scan is picked by an account that has not
     /// agreed yet, cleared by agreeing or declining — see [AppViewModel.pickScan].
     val scanNoticeOpen: Boolean = false,
@@ -1207,13 +1219,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun addDocument(document: StoredDocument) = launch("document") {
         val id = profileId() ?: return@launch
         val created = fileDocument(id, document)
-        // Only the file chosen IN the add card belongs to this record. One picked for a row in the
-        // list names that document, and attaching it here would file another document's scan under
-        // this one — and with it, for a record that states no count, the page count the server
-        // reads off those bytes. The same rule the card's own Pages field follows.
-        val picked = _state.value.pickedScan?.takeIf { _state.value.pickedScanFor == null }
+        // Only the file chosen IN the add card belongs to this record, and that is the whole of
+        // what [AppState.addFormScan] holds. A scan added to a row in the list while this form
+        // stood open is not here to be picked up by mistake — and a scan on its way to one right
+        // now is not let go by this save either.
+        val picked = _state.value.addFormScan
 
-        _state.update { it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null) }
+        _state.update { it.copy(profile = api.profile(id), addFormScan = null) }
         rematch()
         refreshDerived()
 
@@ -1283,16 +1295,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun declineScans() =
         _state.update { it.copy(scanNoticeOpen = false, pickedScan = null, pickedScanFor = null) }
 
-    /// Drops a file chosen in the add card before it was saved.
-    fun discardPickedScan() = _state.update { it.copy(pickedScan = null, pickedScanFor = null) }
+    /// Drops a file chosen in the add card before it was saved. Only that one: a scan on its way
+    /// to a row in the list is not the add card's to cancel.
+    fun discardPickedScan() = _state.update { it.copy(addFormScan = null) }
 
     private fun openScanNotice() = _state.update { it.copy(scanNoticeOpen = true) }
 
     /**
-     * Sends the held file to the document it was picked for, where there is one.
+     * Sends the held file to the document it was picked for, or hands it to the add card when it
+     * names none. Either way [AppState.pickedScan] is empty afterwards: it carries a pick only
+     * while it is on its way.
      *
-     * A pick made in the add card has no document yet and is left where it is: [addDocument]
-     * stores it once the record exists.
+     * A pick made in the add card has no document yet, so it waits in [AppState.addFormScan] until
+     * [addDocument] has a record to hang it on. It waits THERE and not where it arrived, because
+     * the list above the open form keeps working: the next scan added to a row in it comes through
+     * [AppState.pickedScan] and would take the form's file with it.
      *
      * The file is let go whichever way the upload ends, for the same reason [addDocument] refreshes
      * early: a refused one that stayed held was still the pick when the user next opened the add
@@ -1301,8 +1318,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     private suspend fun deliverPickedScan() {
         val state = _state.value
-        val documentId = state.pickedScanFor ?: return
         val picked = state.pickedScan ?: return
+        val documentId = state.pickedScanFor
+        if (documentId == null) {
+            _state.update { it.copy(addFormScan = picked, pickedScan = null, pickedScanFor = null) }
+            return
+        }
         val id = profileId() ?: return
 
         try {

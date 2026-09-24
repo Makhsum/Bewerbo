@@ -6,26 +6,29 @@ import org.junit.Test
 import java.io.File
 
 /**
- * What the add card may read of a picked file: the one that was picked in IT.
+ * Which file the add card holds, and that nothing else in the Documents screen can take it away.
  *
- * A pick lives in two fields of the state — the file and the document it belongs to — because
- * choosing a file leaves the app and a screen's own `remember` does not survive that. Both halves
- * of the Documents screen pick through them: a row's "Add the scan", which names its document, and
- * the add card, which has no id yet and names none.
+ * Choosing a file leaves the app and a screen's own `remember` does not survive that, so a pick
+ * lives in the state. Both halves of the screen pick through it: a row's "Add the scan", which
+ * names its document and uploads at once, and the add card, which has no id yet and holds its file
+ * until the Save.
  *
- * The add card was reading the FILE alone. A scan added to a row while the card stood open filed
- * its page count into the card's Pages field, and the record saved there went to the server with a
- * count belonging to another document, which the Anlagenverzeichnis prints. It read as the card's
- * own number: nothing on the form said where it came from.
+ * They used to share ONE slot. A scan added to a row while the card stood open first filed its page
+ * count into the card's Pages field, and then — once that was guarded — still overwrote the card's
+ * file itself: the form's file row disappeared and the Save filed a document with no copy at all,
+ * with nothing said about the file the user had chosen there. Two places that hold a file at the
+ * same time need two fields, and that is `addFormScan` beside `pickedScan`.
  *
- * The discriminator the state already carries is the gate — a pick that names no document was made
- * in the add card — and it is checked here rather than only written in a comment, the way
- * [NoCopyWordingTest] checks its one reader and [NavigationShapeTest] its bar.
+ * The split is checked here rather than only written in a comment, the way [NoCopyWordingTest]
+ * checks its one reader and [NavigationShapeTest] its bar.
  */
 class AddDocumentPickTest {
 
-    // The test runs with the module directory as the working directory.
-    private fun source(path: String): String = File("src/main/java/de/bewerbo/app/$path").readText()
+    // The test runs with the module directory as the working directory. The line endings are
+    // levelled because core.autocrlf is on for this repository on Windows: a checkout writes the
+    // very same source with \r\n, and the searches below are for lines.
+    private fun source(path: String): String =
+        File("src/main/java/de/bewerbo/app/$path").readText().replace("\r\n", "\n")
 
     /// A declaration and what follows it up to the line that closes it — `indent` is the closing
     /// brace's own, four spaces for a member function and none for a top-level one.
@@ -37,35 +40,65 @@ class AddDocumentPickTest {
         return source.substring(start, end)
     }
 
-    /// Every way the state's picked file is read, as it stands in the text. The guard is part of the
-    /// expression, so a read without one is a read this rule forbids.
-    private fun reads(body: String): List<String> =
+    /// Every mention of the state's travelling pick, as it stands in the text — the field a row's
+    /// scan passes through on its way to the server.
+    private fun travelling(body: String): List<String> =
         Regex("""(?:state|it|_state\.value)\.pickedScan[^\n]*""").findAll(body).map { it.value }.toList()
 
     @Test
-    fun `the add card reads only a pick that names no document`() {
+    fun `the add card shows the file chosen in it, and no other`() {
         val card = body(source("ui/screens/LockerScreen.kt"), "private fun AddDocumentCard(", "")
-        val reads = reads(card)
 
-        assertEquals("The add card reads the picked file once, through one guarded expression", 1, reads.size)
         assertTrue(
-            "The add card must read the picked file through pickedScanFor == null. Without that " +
-                "guard a scan added to a row in the list fills this form's Pages field with " +
-                "another document's page count:\n" + reads.joinToString("\n"),
-            reads.single().contains("pickedScanFor == null"),
+            "The add card must not read the travelling pick. A scan added to a row in the list " +
+                "goes through it, and the card would show a file that is not its own:\n" +
+                travelling(card).joinToString("\n"),
+            travelling(card).isEmpty(),
+        )
+        assertEquals(
+            "The add card reads its own file once, through state.addFormScan — the Pages field, " +
+                "the file row and the caption under the field all follow that one expression",
+            1,
+            Regex("""state\.addFormScan""").findAll(card).count(),
         )
     }
 
     @Test
-    fun `saving the add card attaches only a pick that names no document`() {
+    fun `saving the add card attaches the file that card was holding`() {
         val add = body(source("data/AppViewModel.kt"), "fun addDocument(", "    ")
-        val upload = reads(add).filterNot { it.contains("pickedScan = null") }
 
         assertTrue(
-            "addDocument() must take the same pick the add card shows — one picked for a row in " +
-                "the list would be filed under the new record, and its page count with it:\n" +
-                upload.joinToString("\n"),
-            upload.isNotEmpty() && upload.all { it.contains("pickedScanFor == null") },
+            "addDocument() must attach the file the add card holds — the record saved there is " +
+                "the one the user chose it for:\n$add",
+            add.contains("_state.value.addFormScan"),
+        )
+        assertTrue(
+            "addDocument() must leave the travelling pick alone: one picked for a row in the list " +
+                "would be filed under this record, and its page count with it:\n" +
+                travelling(add).joinToString("\n"),
+            travelling(add).isEmpty(),
+        )
+    }
+
+    @Test
+    fun `a scan added to a row never touches the file the add card holds`() {
+        val source = source("data/AppViewModel.kt")
+
+        val pick = body(source, "fun pickScan(", "    ")
+        assertTrue(
+            "pickScan() must leave addFormScan alone. It is the one thing every pick in the " +
+                "screen passes through, so writing there drops the file the open add form is " +
+                "holding:\n$pick",
+            !pick.contains("addFormScan"),
+        )
+
+        val deliver = body(source, "private suspend fun deliverPickedScan(", "    ")
+        val upload = deliver.indexOf("api.storeScan")
+        assertTrue("deliverPickedScan() no longer uploads anything", upload >= 0)
+        assertTrue(
+            "The upload of a row's scan must not write addFormScan — the file the add form is " +
+                "holding is no part of what that upload finishes:\n" + deliver.substring(upload),
+            !deliver.substring(upload).contains("addFormScan"),
         )
     }
 }
