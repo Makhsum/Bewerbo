@@ -486,6 +486,12 @@ fun nextStepDetail(step: NextStep): String = when (step.kind) {
         stringResource(R.string.step_sprachnachweis_detail, step.arg(0), step.arg(1))
     "beruf" -> stringResource(R.string.step_beruf_detail)
     "versand" -> stringResource(R.string.step_versand_detail)
+    // A beleg step is raised for an "offen" requirement and only for that one — the requirement
+    // stands in the profile and only the Nachweis is missing. The Abgleich says that once over the
+    // group; on the Übersicht the row stands alone under an employer, so it says it for itself.
+    // It used to fall through to step.detail, which carries the requirement's evidence — and for an
+    // offen requirement that is empty by definition, so every one of these rows drew a blank line.
+    "beleg" -> stringResource(R.string.step_beleg_detail)
     // The evidence of a requirement is quoted from the posting, so it is the one detail that is
     // German in every language on purpose.
     else -> step.detail

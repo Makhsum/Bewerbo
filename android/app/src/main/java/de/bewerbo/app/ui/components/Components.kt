@@ -177,7 +177,9 @@ fun IconRow(
                 .padding(start = Space.s),
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium)
-            if (detail != null) {
+            // Empty counts as absent: a caller that composes its detail hands over a String rather
+            // than null, and an empty one drew a blank line the height of the text under the title.
+            if (!detail.isNullOrEmpty()) {
                 Text(detail, style = MaterialTheme.typography.bodySmall, color = colors.muted)
             }
         }

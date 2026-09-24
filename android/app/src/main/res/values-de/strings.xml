@@ -71,6 +71,7 @@
     <string name="step_versand_title">Noch nicht versendet</string>
     <string name="step_versand_detail">Bewerbungsmappe exportieren und den Stand auf Versendet setzen</string>
     <string name="step_beleg_title">Nachweis fehlt: %1$s</string>
+    <string name="step_beleg_detail">Steht in Ihrem Profil; den Nachweis in der Bewerbungsmappe ablegen</string>
 
     <!-- Was der Abgleich selbst über eine Anforderung sagt. Der Anforderungstext und die
          Profileinträge darin sind zitiert, nicht geschrieben, und kommen so vom Server. -->

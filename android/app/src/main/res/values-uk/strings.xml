@@ -70,6 +70,7 @@
     <string name="step_versand_title">Ще не надіслана</string>
     <string name="step_versand_detail">Вивантажте Bewerbungsmappe і переведіть статус у «Надіслана»</string>
     <string name="step_beleg_title">Бракує Nachweis: %1$s</string>
+    <string name="step_beleg_detail">Вказано у вашому профілі; додайте Nachweis до Bewerbungsmappe</string>
 
     <!-- Що сама звірка каже про вимогу. Текст вимоги та записи профілю тут
          процитовані, а не написані, і приходять із сервера як є. -->

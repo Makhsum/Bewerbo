@@ -85,6 +85,7 @@
     <string name="step_versand_title">Not sent yet</string>
     <string name="step_versand_detail">Export the Bewerbungsmappe and set the status to sent</string>
     <string name="step_beleg_title">Nachweis missing: %1$s</string>
+    <string name="step_beleg_detail">Stated in your profile; file the Nachweis in the Bewerbungsmappe</string>
 
     <!-- The Abgleich's own words about a requirement. The requirement text and the profile
          entries named here are quoted, not written, so they come from the server as they stand. -->

@@ -68,6 +68,7 @@
     <string name="step_versand_title">Ещё не отправлена</string>
     <string name="step_versand_detail">Выгрузите Bewerbungsmappe и переведите статус в «Отправлена»</string>
     <string name="step_beleg_title">Не хватает Nachweis: %1$s</string>
+    <string name="step_beleg_detail">Указано в вашем профиле; добавьте Nachweis в Bewerbungsmappe</string>
 
     <!-- Что сама сверка говорит о требовании. Текст требования и записи профиля здесь
          процитированы, а не написаны, и приходят с сервера как есть. -->
