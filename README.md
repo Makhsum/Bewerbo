@@ -93,6 +93,38 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 `backend/smoke.sh` walks the whole card end to end against a running API.
 
+### A build for a real phone
+
+```bash
+gradle -p android :app:assembleRelease -PbewerboApiUrl=https://your-backend
+# app/build/outputs/apk/release/app-arm64-v8a-release.apk   — any modern phone
+# app/build/outputs/apk/release/app-x86_64-release.apk      — the emulator
+```
+
+One APK per architecture, because the bundled text recogniser carries an 11 MB native library for
+each: all four in one file is 56 MB, of which a phone uses a quarter.
+
+`-PbewerboApiUrl` is not optional for a device. The default is `http://10.0.2.2:5099`, which means
+"the machine running the emulator" and nothing at all on a phone. It must be an **https** address:
+plain HTTP is permitted only to the three development addresses in
+`app/src/main/res/xml/network_security_config.xml`, and the payload here is somebody's CV.
+
+**Signing.** The release is signed from `android/keystore.properties`, which names a keystore and
+carries its passwords. Neither is in the repository and neither may be — whoever holds them can
+publish an update that every phone with Bewerbo installed accepts as ours. Without that file the
+release still builds, unsigned, and cannot be installed.
+
+```properties
+storeFile=bewerbo-release.jks
+storePassword=...
+keyAlias=bewerbo
+keyPassword=...
+```
+
+**Losing the keystore cannot be repaired.** Android identifies an app by its signature, so an update
+signed with a different key will not install over one already on a device — the only way out is a
+new `applicationId`. Keep a copy somewhere other than the machine that builds.
+
 ### The language model is optional, and the app says which one wrote the letter
 
 Set `ANTHROPIC_API_KEY` to have `claude-opus-5` write the German. Without it a **complete

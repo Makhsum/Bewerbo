@@ -18,6 +18,8 @@ local.properties
 *.aab
 *.keystore
 *.jks
+# Names the signing key and carries its passwords — never committed.
+keystore.properties
 captures/
 .cxx/
 
