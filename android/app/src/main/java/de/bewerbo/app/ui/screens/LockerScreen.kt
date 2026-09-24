@@ -404,13 +404,18 @@ private fun AddDocumentCard(
     var pagesStated by remember { mutableStateOf(false) }
     var kind by remember { mutableIntStateOf(0) }
 
-    // The Pages field follows the file the moment one is chosen, UNLESS the user has typed a
+    // The Pages field follows the file the moment one is chosen HERE, UNLESS the user has typed a
     // number of their own. The count goes into the Anlagenverzeichnis, so where nobody said
     // otherwise it is better read off the document than left at the "1" this field starts on — but
     // a scan of three sheets that belongs to a two-page document is the user's statement to make,
     // and it used to be overwritten here without a word. An emptied field is not an entry, so it
     // gives the number back to the file — at the next pick and not while it is being typed in.
-    val picked = state.pickedScan
+    //
+    // A file chosen for a row in the LIST travels through the same two fields of the state and is
+    // not this card's. It used to fill this field with the page count of ANOTHER document — with
+    // nothing on the form saying where the number came from — and the record saved here carried
+    // that count into the Anlagenverzeichnis. A pick that names no document was made in this card.
+    val picked = state.pickedScan?.takeIf { state.pickedScanFor == null }
     LaunchedEffect(picked) {
         if (picked != null && !pagesStated) pages = picked.pageCount.toString()
     }

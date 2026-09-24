@@ -1207,7 +1207,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun addDocument(document: StoredDocument) = launch("document") {
         val id = profileId() ?: return@launch
         val created = fileDocument(id, document)
-        val picked = _state.value.pickedScan
+        // Only the file chosen IN the add card belongs to this record. One picked for a row in the
+        // list names that document, and attaching it here would file another document's scan under
+        // this one — and with it, for a record that states no count, the page count the server
+        // reads off those bytes. The same rule the card's own Pages field follows.
+        val picked = _state.value.pickedScan?.takeIf { _state.value.pickedScanFor == null }
 
         _state.update { it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null) }
         rematch()
