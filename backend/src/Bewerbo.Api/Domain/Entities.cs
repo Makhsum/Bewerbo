@@ -133,6 +133,20 @@ public class StoredDocument
     public DocumentKind Kind { get; set; }
     public string Note { get; set; } = "";
     public int PageCount { get; set; }
+
+    /// <summary>
+    /// Whether <see cref="PageCount"/> is a number the USER typed rather than one read off the
+    /// scan. False is the normal state, and it is what every row written before this field existed
+    /// holds — those keep the behaviour they were written under.
+    ///
+    /// It exists because the two numbers may legitimately disagree: a scan of three sheets belongs
+    /// to a two-page Zeugnis often enough, and what the Anlagenverzeichnis prints is what the user
+    /// says they are sending. So a stored file only fills this count in while nobody has stated
+    /// one — see <see cref="Controllers.DocumentsController.StoreScan"/>, which used to overwrite
+    /// it either way and without a word about it.
+    /// </summary>
+    public bool PageCountStated { get; set; }
+
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>

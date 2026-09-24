@@ -1,8 +1,15 @@
 using System.Text.RegularExpressions;
+using Bewerbo.Api.Contracts;
+using Bewerbo.Api.Controllers;
+using Bewerbo.Api.Data;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Llm;
 using Bewerbo.Api.Rendering;
 using Bewerbo.Api.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -91,6 +98,54 @@ public class ScanTests
         Assert.Equal(ScanFile.TooManyPagesKind, ScanFile.Check(PdfOf(ScanFile.MaxPages + 1)).RefusedKind);
     }
 
+    // -- whose number the page count is -----------------------------------------------------------
+
+    /// <summary>
+    /// The case the card is about. The user filed a Zeugnis of two pages and then chose a scan of
+    /// three sheets for it — a cover sheet, a copy folded twice, a reprint of the same page. The
+    /// number they typed is a statement about what the employer is being sent, and the upload used
+    /// to replace it without a word.
+    /// </summary>
+    [Fact]
+    public async Task A_stated_page_count_survives_the_scan_that_is_uploaded_next()
+    {
+        await using var db = NewDatabase();
+        var document = DocumentWithConsent(db, pageCount: 2, stated: true);
+
+        var stored = await Routes(db, PdfOf(3)).StoreScan(document, "Zeugnis.pdf");
+
+        Assert.Equal(2, Assert.IsType<DocumentDto>(Assert.IsType<OkObjectResult>(stored).Value).PageCount);
+        Assert.Equal(2, db.Documents.Find(document)!.PageCount);
+    }
+
+    /// <summary>
+    /// The other half of the same rule, and the reason the count is read off the file at all: a
+    /// user who has stated nothing is better served by the file's number than by the "1" a field
+    /// defaults to, because the Anlagenverzeichnis prints it.
+    /// </summary>
+    [Fact]
+    public async Task A_page_count_nobody_stated_is_still_filled_in_from_the_file()
+    {
+        await using var db = NewDatabase();
+        var document = DocumentWithConsent(db, pageCount: 1, stated: false);
+
+        await Routes(db, PdfOf(3)).StoreScan(document, "Zeugnis.pdf");
+
+        Assert.Equal(3, db.Documents.Find(document)!.PageCount);
+    }
+
+    /// <summary>
+    /// What the record answers about itself, which is what lets the screen say where the number it
+    /// shows came from. Without this on the way out the two counts are indistinguishable to every
+    /// client, and the user is back to being told nothing.
+    /// </summary>
+    [Fact]
+    public void A_document_says_whether_its_page_count_is_the_users_own()
+    {
+        Assert.True(new StoredDocument { PageCount = 2, PageCountStated = true }.ToDto().PageCountStated);
+        Assert.False(new StoredDocument { PageCount = 3 }.ToDto().PageCountStated);
+    }
+
     // -- where the copies land in the Mappe -------------------------------------------------------
 
     [Fact]
@@ -165,6 +220,55 @@ public class ScanTests
     }
 
     // -- helpers ----------------------------------------------------------------------------------
+
+    /// <summary>
+    /// A document of an account that has agreed to scans being held, so the upload is not refused
+    /// before it reaches the rule these tests are about.
+    /// </summary>
+    private static Guid DocumentWithConsent(BewerboDbContext db, int pageCount, bool stated)
+    {
+        var profile = new Domain.Profile { FirstName = "Olena", LastName = "Kovalchuk" };
+        db.Profiles.Add(profile);
+        db.Accounts.Add(new Account
+        {
+            Email = "olena@example.de", ProfileId = profile.Id, ScansAgreedAt = DateTimeOffset.UtcNow,
+        });
+
+        var document = new StoredDocument
+        {
+            ProfileId = profile.Id, Title = "Klinikum Ost", Kind = DocumentKind.Arbeitszeugnis,
+            PageCount = pageCount, PageCountStated = stated,
+        };
+        db.Documents.Add(document);
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+        return document.Id;
+    }
+
+    /// <summary>
+    /// The controller as the upload reaches it: the database it writes to, and the bytes as the
+    /// request body — this route reads the body itself rather than taking a bound parameter, so a
+    /// test of it has to hand one over the same way. No session claim is needed; who may name this
+    /// document is <see cref="OwnershipFilter"/>'s question and not this method's.
+    /// </summary>
+    private static DocumentsController Routes(BewerboDbContext db, byte[] body) =>
+        new(db)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { Request = { Body = new MemoryStream(body) } },
+            },
+        };
+
+    private static BewerboDbContext NewDatabase()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+        var db = new BewerboDbContext(
+            new DbContextOptionsBuilder<BewerboDbContext>().UseSqlite(connection).Options);
+        db.Database.EnsureCreated();
+        return db;
+    }
 
     /// <summary>The Mappe as the export route renders it, with only the parts this test is about.</summary>
     private static byte[] Export(

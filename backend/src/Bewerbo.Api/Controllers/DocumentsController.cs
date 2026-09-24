@@ -38,6 +38,9 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
             Kind = ParseEnum(document.Kind, DocumentKind.Sonstiges),
             Note = document.Note,
             PageCount = document.PageCount <= 0 ? 1 : document.PageCount,
+            // Only a count that actually arrived counts as stated: a body that names no pages at
+            // all is not the user saying "one page", it is a client that left the field out.
+            PageCountStated = document.PageCountStated && document.PageCount > 0,
         };
         db.Documents.Add(stored);
         await db.SaveChangesAsync();
@@ -75,9 +78,11 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
     /// decides that from the bytes, because the type is what the viewer and the export later act
     /// on and a wrong one there is a Bewerbungsmappe that will not render.
     ///
-    /// The page count of the document is set from the file, because that is a fact the file knows
-    /// better than the user does — and the Anlagenverzeichnis prints it. It is only ever raised
-    /// from the file here, never asked of the user twice.
+    /// The page count of the document is filled in from the file, because a user who has not said
+    /// otherwise is better served by the number the file knows than by the "1" a field defaults to
+    /// — the Anlagenverzeichnis prints it. A count the user STATED is left alone: a scan of three
+    /// sheets belongs to a two-page Zeugnis often enough, and this route used to replace that
+    /// number without a word about it. See <see cref="StoredDocument.PageCountStated"/>.
     ///
     /// <c>[Consumes]</c> is not decoration, and it was put here by a request that went wrong. A
     /// body declared as a FORM type is read as a form by MVC's value providers before this method
@@ -119,7 +124,7 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
             Content = content,
             SizeBytes = content.Length,
         });
-        document.PageCount = check.PageCount;
+        if (!document.PageCountStated) document.PageCount = check.PageCount;
         await db.SaveChangesAsync();
 
         var scans = await db.ScanSummariesAsync(document.ProfileId);

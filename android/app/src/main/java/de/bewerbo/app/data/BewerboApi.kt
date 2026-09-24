@@ -235,8 +235,9 @@ class BewerboApi(
 
     /// Stores the scanned file for a document, replacing the one that was there. The bytes are the
     /// body and the name travels as a parameter — it is the name the file had on the device, kept
-    /// only so the user recognises it. What comes back is the document with its page count read
-    /// off the file, which is what the Anlagenverzeichnis then prints.
+    /// only so the user recognises it. What comes back is the document as it now stands — with its
+    /// page count read off the file where nobody had stated one, and with the stated one untouched
+    /// where they had. That count is what the Anlagenverzeichnis prints.
     suspend fun storeScan(documentId: String, scan: PickedScan): StoredDocument =
         client.post("$baseUrl/api/documents/$documentId/scan") {
             parameter("name", scan.fileName)

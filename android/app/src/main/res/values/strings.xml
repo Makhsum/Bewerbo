@@ -390,7 +390,11 @@
     <string name="locker_scan_photo">Take a photo</string>
     <string name="locker_scan_file">Choose a file</string>
     <string name="locker_scan_remove">Remove</string>
+    <!-- Where the page count shown came from. The two can differ on purpose — a scan of three
+         sheets may belong to a two-page document — so the number never changes without one of
+         these two saying which of them it is. -->
     <string name="locker_pages_from_file">read from the file</string>
+    <string name="locker_pages_from_you">entered by you</string>
     <string name="locker_copy_stored">Copy stored</string>
     <string name="locker_no_copy">No copy stored</string>
     <string name="locker_added_elsewhere">This document was added on another device. Add the scan and it travels with you.</string>

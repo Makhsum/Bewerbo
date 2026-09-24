@@ -52,9 +52,17 @@ public record DocumentScanDto(string ContentType, string FileName, int SizeBytes
 /// normal state of a document added on another device, and what the Documents screen draws its
 /// "No copy stored" row from. It is ignored on the way in: a scan is stored by its own route, not
 /// by naming it in the body that creates the record.
+///
+/// <paramref name="PageCountStated"/> says whether <paramref name="PageCount"/> is the user's own
+/// number. Only the screen can know that — the server sees two integers and cannot tell which of
+/// them somebody typed — so it travels with the record in both directions: in, so a stated count
+/// survives the scan that is uploaded next; out, so the screen can say where the number it shows
+/// came from. A caller that leaves it out says nothing, and a count that was not stated goes on
+/// being filled in from the file.
 /// </summary>
 public record DocumentDto(
-    Guid? Id, string Title, string Kind, string Note, int PageCount, DocumentScanDto? Scan = null);
+    Guid? Id, string Title, string Kind, string Note, int PageCount,
+    bool PageCountStated = false, DocumentScanDto? Scan = null);
 
 /// <summary>
 /// Whether this account has read what holding a scan means and agreed to it, and when.
@@ -265,7 +273,7 @@ public static class DtoMapping
     /// ones that do not, say nothing about scans rather than something false.
     /// </summary>
     public static DocumentDto ToDto(this StoredDocument d, ScanSummary? scan = null) => new(
-        d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount,
+        d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount, d.PageCountStated,
         scan is null ? null : new DocumentScanDto(
             scan.ContentType, scan.FileName, scan.SizeBytes, scan.AddedAt.ToString("o")));
 }

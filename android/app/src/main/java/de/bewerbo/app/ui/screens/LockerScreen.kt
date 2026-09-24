@@ -282,6 +282,10 @@ private fun DocumentRow(
                             document.pageCount,
                             document.pageCount,
                         ),
+                        // Where that count came from, once there is a file it could have come
+                        // off. The two may differ on purpose, so the row says which one is being
+                        // printed rather than leaving the user to guess.
+                        if (stored) stringResource(pagesSourceLabel(document)) else null,
                     ).joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.muted,
@@ -390,15 +394,20 @@ private fun AddDocumentCard(
     var title by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var pages by remember { mutableStateOf("1") }
+    // Whether the number in the field is the user's own. It is what decides the rule below, and it
+    // travels with the record so the server applies the same one to the upload that follows.
+    var pagesStated by remember { mutableStateOf(false) }
     var kind by remember { mutableIntStateOf(0) }
 
-    // The Pages field follows the file the moment one is chosen, and stays editable afterwards.
-    // The number goes into the Anlagenverzeichnis, so it is better read off the document than
-    // remembered — but a scan of three sheets that belongs to a two-page document is the user's
-    // statement to make, which is why this writes the field rather than replacing it.
+    // The Pages field follows the file the moment one is chosen, UNLESS the user has typed a
+    // number of their own. The count goes into the Anlagenverzeichnis, so where nobody said
+    // otherwise it is better read off the document than left at the "1" this field starts on — but
+    // a scan of three sheets that belongs to a two-page document is the user's statement to make,
+    // and it used to be overwritten here without a word. An emptied field is not an entry, so it
+    // gives the number back to the file — at the next pick and not while it is being typed in.
     val picked = state.pickedScan
     LaunchedEffect(picked) {
-        if (picked != null) pages = picked.pageCount.toString()
+        if (picked != null && !pagesStated) pages = picked.pageCount.toString()
     }
 
     BewerboCard(Modifier.testTag("locker_add_card")) {
@@ -439,11 +448,19 @@ private fun AddDocumentCard(
         if (picked != null) PickedScanRow(picked, viewModel::discardPickedScan)
 
         Box(Modifier.padding(top = Space.s))
-        LabelledField(stringResource(R.string.locker_field_pages), pages, { pages = it },
-            testTag = "locker_input_pages")
+        LabelledField(
+            stringResource(R.string.locker_field_pages), pages,
+            { pages = it; pagesStated = it.isNotBlank() },
+            testTag = "locker_input_pages",
+        )
+        // Which of the two numbers is standing in the field, said where the two can differ — with
+        // a file chosen there is the count it has and the count the user typed, and the row above
+        // names the file's. Without one there is nothing to tell apart.
         if (picked != null) {
             Text(
-                stringResource(R.string.locker_pages_from_file),
+                stringResource(
+                    if (pagesStated) R.string.locker_pages_from_you else R.string.locker_pages_from_file,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.muted,
                 modifier = Modifier.testTag("locker_pages_source"),
@@ -472,6 +489,7 @@ private fun AddDocumentCard(
                         StoredDocument(
                             title = title, kind = KINDS[kind], note = note,
                             pageCount = pages.toIntOrNull() ?: 1,
+                            pageCountStated = pagesStated,
                         ),
                     )
                     onDone()
@@ -656,6 +674,7 @@ private fun ScanViewerDialog(
                             pluralStringResource(
                                 R.plurals.locker_page_count, document.pageCount, document.pageCount,
                             ),
+                            stringResource(pagesSourceLabel(document)),
                             stringResource(R.string.locker_size_kb, (info.sizeBytes + 1023) / 1024),
                         ).joinToString("  ·  "),
                         style = MaterialTheme.typography.bodySmall,
@@ -780,6 +799,12 @@ private fun scanChooser(context: Context, file: File, contentType: String?, titl
     }
     return Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
+
+/// Where the page count shown for a document came from: the user's own entry, or the file behind
+/// it. Asked only where a copy is stored — without one the count can be nobody's but the user's,
+/// and a line saying so under every document would say nothing.
+private fun pagesSourceLabel(document: StoredDocument) =
+    if (document.pageCountStated) R.string.locker_pages_from_you else R.string.locker_pages_from_file
 
 /// What a scan's type is called on screen. Not translated and not meant to be: PDF, JPEG and PNG
 /// are the same three letters in every language the app is offered in.

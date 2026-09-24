@@ -66,6 +66,11 @@ data class StoredDocument(
     val kind: String = "Sonstiges",
     val note: String = "",
     val pageCount: Int = 1,
+    /// Whether [pageCount] is a number the user typed rather than one read off the scan. Only the
+    /// screen can know that, so it is sent WITH the record: the server leaves a stated count alone
+    /// when a file is uploaded for the document, and it is what lets the count be shown with its
+    /// source instead of silently changing.
+    val pageCountStated: Boolean = false,
     /// The copy the server holds, or null when only the record is there — which is what a document
     /// added on another device looks like until its scan is added. Its presence IS "Copy stored".
     val scan: DocumentScanInfo? = null,

@@ -357,6 +357,7 @@
     <string name="locker_scan_file">Вибрати файл</string>
     <string name="locker_scan_remove">Прибрати</string>
     <string name="locker_pages_from_file">зчитано з файлу</string>
+    <string name="locker_pages_from_you">введено вами</string>
     <string name="locker_copy_stored">Копія зберігається</string>
     <string name="locker_no_copy">Копії немає</string>
     <string name="locker_added_elsewhere">Цей документ додано на іншому пристрої. Додайте скан — і він буде з вами всюди.</string>

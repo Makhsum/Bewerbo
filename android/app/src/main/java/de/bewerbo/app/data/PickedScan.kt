@@ -68,10 +68,10 @@ fun scanContentTypeOf(bytes: ByteArray): String? = when {
 /**
  * How many pages the chosen file has — the PDF's own count, one for a picture.
  *
- * This is what pre-fills the Pages field, so that the number the Anlagenverzeichnis prints comes
- * off the document rather than off the user's memory of it. The field stays editable: a scan of
- * three sheets that belongs to a document of three pages is the normal case, and the exception is
- * the user's to state.
+ * This is what pre-fills the Pages field while the user has stated no count of their own, so that
+ * the number the Anlagenverzeichnis prints comes off the document rather than off their memory of
+ * it. A count they did type is left standing: a scan of three sheets that belongs to a two-page
+ * document is the exception, and it is theirs to state.
  *
  * [PdfRenderer] needs a seekable descriptor and a content:// URI is not reliably one, so the bytes
  * go through a file in the cache. Zero means the file could not be opened as a PDF; the screen
