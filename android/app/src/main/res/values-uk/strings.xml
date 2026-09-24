@@ -472,7 +472,7 @@
     <string name="settings_data_export_share">Забрати копію із собою</string>
     <string name="settings_data_delete">Видалити обліковий запис і все в ньому</string>
     <string name="settings_delete_title">Видалити все?</string>
-    <string name="settings_delete_body">Те, що ви про себе внесли, відкладені документи, вставлені оголошення та кожна заявка видаляються з сервера. Це не можна скасувати. Після цього Bewerbo відкриє порожній обліковий запис, щоб ви могли почати заново.</string>
+    <string name="settings_delete_body">Те, що ви про себе внесли, відкладені документи, вставлені оголошення та кожна заявка видаляються з сервера. Це не можна скасувати. Обліковий запис видаляється разом із ними: Bewerbo виконає вихід, і далі ви побачите екран входу.</string>
 
     <string name="data_category_person">Відомості про вас</string>
     <string name="data_category_berufserfahrung">Місця роботи</string>

@@ -470,7 +470,7 @@
     <string name="settings_data_export_share">Забрать копию с собой</string>
     <string name="settings_data_delete">Удалить аккаунт и всё в нём</string>
     <string name="settings_delete_title">Удалить всё?</string>
-    <string name="settings_delete_body">То, что вы о себе внесли, отложенные документы, вставленные объявления и каждая заявка удаляются с сервера. Это нельзя отменить. После этого Bewerbo откроет пустой аккаунт, чтобы вы могли начать заново.</string>
+    <string name="settings_delete_body">То, что вы о себе внесли, отложенные документы, вставленные объявления и каждая заявка удаляются с сервера. Это нельзя отменить. Аккаунт удаляется вместе с ними: Bewerbo выполнит выход, и дальше вы увидите экран входа.</string>
 
     <string name="data_category_person">Сведения о вас</string>
     <string name="data_category_berufserfahrung">Места работы</string>

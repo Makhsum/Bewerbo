@@ -473,7 +473,7 @@
     <string name="settings_data_export_share">Ihre Kopie mitnehmen</string>
     <string name="settings_data_delete">Konto und alles darin löschen</string>
     <string name="settings_delete_title">Alles löschen?</string>
-    <string name="settings_delete_body">Was Sie über sich eingetragen haben, die abgelegten Dokumente, die eingefügten Stellenanzeigen und jede Bewerbung werden vom Server gelöscht. Das lässt sich nicht zurücknehmen. Bewerbo öffnet danach ein leeres Konto, damit Sie neu beginnen können.</string>
+    <string name="settings_delete_body">Was Sie über sich eingetragen haben, die abgelegten Dokumente, die eingefügten Stellenanzeigen und jede Bewerbung werden vom Server gelöscht. Das lässt sich nicht zurücknehmen. Das Konto geht mit: Bewerbo meldet Sie ab, und danach sehen Sie den Anmeldebildschirm.</string>
 
     <string name="data_category_person">Angaben zu Ihnen</string>
     <string name="data_category_berufserfahrung">Berufserfahrung</string>

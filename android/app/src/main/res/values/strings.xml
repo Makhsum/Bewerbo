@@ -521,7 +521,7 @@
     <string name="settings_data_export_share">Take your copy with you</string>
     <string name="settings_data_delete">Delete the account and everything in it</string>
     <string name="settings_delete_title">Delete everything?</string>
-    <string name="settings_delete_body">What you entered about yourself, the documents on file, the postings you pasted and every application are deleted from the server. This cannot be undone. Bewerbo then opens an empty account, so you can begin again.</string>
+    <string name="settings_delete_body">What you entered about yourself, the documents on file, the postings you pasted and every application are deleted from the server. This cannot be undone. The account goes with them: Bewerbo signs you out, and what you see next is the sign-in screen.</string>
 
     <!-- What is held, by category. Counted rather than described: a zero is an answer to the
          question too, and a category left out reads as one being withheld. -->
