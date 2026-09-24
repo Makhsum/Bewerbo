@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -387,6 +388,7 @@ private fun DemandRow(demand: DemandedDocument, index: Int) {
     )
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AddDocumentCard(
     state: AppState,
@@ -436,9 +438,19 @@ private fun AddDocumentCard(
             style = MaterialTheme.typography.bodySmall,
             color = colors.muted,
         )
-        Row(
-            Modifier.padding(top = Space.xs),
+        // The two buttons WRAP, for the reason the Profil screen's section rail does: a fixed row
+        // measures the first button at the width it asks for and leaves the second whatever is
+        // over, and at the accessibility maximum of the system font size that remainder is a
+        // column too narrow for a word — "Datei auswählen" arrived as a vertical stack of single
+        // letters, in front of exactly the reader who raised the font size in order to read at
+        // all. Given a line of its own each label is a whole word in every interface language.
+        FlowRow(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Space.xs)
+                .testTag("locker_scan_actions"),
             horizontalArrangement = Arrangement.spacedBy(Space.s),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             OutlinedButton(
                 onClick = onTakePhoto,
