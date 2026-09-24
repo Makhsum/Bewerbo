@@ -421,6 +421,11 @@ data class RegisterRequest(
 @Serializable
 data class Credentials(val email: String, val password: String)
 
+/// Whether the profile this phone still names may be kept by a new account. False both for one
+/// that already has an owner and for one that is no longer there — neither is this phone's to give.
+@Serializable
+data class Adoptable(val adoptable: Boolean)
+
 /// A signed-in device, as the server issues it. [token] is what this device keeps and sends back;
 /// [profileId] is the account's profile, and what every other call of this API is addressed by —
 /// the account says which profile is the user's, and the rest of the app reads it as it always did.

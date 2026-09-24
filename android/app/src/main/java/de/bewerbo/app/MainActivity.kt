@@ -144,6 +144,21 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
     // bottom bar never stands behind it and the three places stay the three places.
     val door = !state.loading && state.accountEmail == null
 
+    // The back stack belongs to the account that built it, and the door does not clear it: the
+    // NavHost only leaves the composition while the door is up, so rememberNavController hands the
+    // next session the stack the last one left. That stack always ends on the settings, because
+    // that is where the sign-out button is — so the first thing a new account saw of Bewerbo was
+    // the previous user's last screen instead of the Übersicht. Popped while the door is up rather
+    // than on the way in, so the app is already at its start destination when it draws.
+    //
+    // currentBackStackEntry is null before the NavHost has ever composed — the first launch, where
+    // there is no graph to pop and reading graph.startDestinationId would throw.
+    LaunchedEffect(door) {
+        if (door && navController.currentBackStackEntry != null) {
+            navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+        }
+    }
+
     // The interface language is the app's own, not the phone's, and it wraps the whole tree for
     // the same reason testTagsAsResourceId does: every screen below reads strings through it.
     UiLanguageProvider(state.uiLanguage) {

@@ -196,12 +196,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * keep.
      *
      * Confirmed against the server rather than read out of the preferences and believed: that file
-     * outlives the profile it names, and offering to keep something that is no longer there is a
-     * promise the register call cannot hold.
+     * outlives the state it was written in, and offering to keep something this phone may not keep
+     * is a promise the register call cannot hold.
+     *
+     * Asking whether the profile EXISTS was not enough. The id lives in bewerbo.xml, which a Google
+     * backup takes, while the token beside it lives in bewerbo-session.xml, which backup_rules.xml
+     * deliberately excludes — so a restored or transferred phone holds the id of a profile that is
+     * still there and already has an owner. The door offered to keep it, the server silently
+     * refused, and the user landed on an empty Lebenslauf having read the opposite. Only the server
+     * knows whether a profile is spoken for, so only the server can answer this.
      */
     private suspend fun adoptableProfile(): String? {
         val stored = prefs().getString("profileId", null) ?: return null
-        return runCatching { api.profile(stored) }.getOrNull()?.id
+        val adoptable = runCatching { api.adoptable(stored) }.getOrNull()?.adoptable ?: false
+        return if (adoptable) stored else null
     }
 
     /**

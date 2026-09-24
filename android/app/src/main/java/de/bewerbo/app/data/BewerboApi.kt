@@ -84,6 +84,12 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
         client.post("$baseUrl/api/auth/sign-out") { bearer(token) }
     }
 
+    /// Whether the profile this phone is still naming may be kept by a new account — asked before
+    /// the door offers to keep it, because a stored id outlives the account state it was written
+    /// in. See [AppViewModel.adoptableProfile].
+    suspend fun adoptable(profileId: String): Adoptable =
+        client.get("$baseUrl/api/auth/adoptable/$profileId").body()
+
     // -- profile -----------------------------------------------------------------------------
 
     suspend fun profile(id: String): ProfileView = client.get("$baseUrl/api/profile/$id").body()

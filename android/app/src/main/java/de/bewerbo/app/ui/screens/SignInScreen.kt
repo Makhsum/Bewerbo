@@ -1,5 +1,6 @@
 package de.bewerbo.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,6 +80,13 @@ fun SignInScreen(state: AppState, viewModel: AppViewModel) {
         // The inset is applied HERE for the same reason. Inside the app the Scaffold hands every
         // screen its padding, and these pages have never had to ask; opened from the door there is
         // no Scaffold above them, and the header ran under the status bar.
+        //
+        // And the back gesture for the same reason again: the page is state rather than a NavHost
+        // destination, so nothing below answered the system back and it fell through to the
+        // Activity — reading the AGB from the door and pressing back LEFT Bewerbo. The arrow in
+        // the header and the gesture have to mean one thing.
+        BackHandler { legalPage = null }
+
         Box(
             Modifier
                 .fillMaxSize()

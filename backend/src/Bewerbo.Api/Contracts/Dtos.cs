@@ -317,6 +317,13 @@ public record RegisterRequest(string Email, string Password, Guid? AdoptProfileI
 public record CredentialsRequest(string Email, string Password);
 
 /// <summary>
+/// Whether the profile this phone still names may be kept by a new account — what the door asks
+/// before it offers to keep it. False both for a profile that already has an owner and for one
+/// that is no longer there; neither is this phone's to give.
+/// </summary>
+public record AdoptableDto(bool Adoptable);
+
+/// <summary>
 /// A signed-in device, as the server issues it.
 ///
 /// <paramref name="Token"/> is shown exactly once, here: the server keeps only its hash, so it

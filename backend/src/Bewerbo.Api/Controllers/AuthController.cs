@@ -112,6 +112,25 @@ public class AuthController(BewerboDbContext db) : BewerboController
     }
 
     /// <summary>
+    /// Whether the nameless profile this phone is still naming may be kept by a new account.
+    ///
+    /// The door writes "the Lebenslauf on this phone does not belong to an account yet — creating
+    /// an account keeps it" above the form, and that sentence has to be true at the moment it is
+    /// read. A stored profile id outlives the state it was written in: it rides into a Google
+    /// backup inside bewerbo.xml while the token beside it is deliberately excluded, so a restored
+    /// or transferred phone holds the id of a profile that already HAS an owner. Offering to keep
+    /// that one promised what <see cref="AdoptOrCreateProfileAsync"/> then silently refused, and
+    /// the user arrived at an empty Lebenslauf having been told the opposite a tap earlier.
+    ///
+    /// A profile that is gone and a profile that is spoken for get the same answer. Neither is
+    /// this phone's to give away, and telling the two apart would say whether an id somebody typed
+    /// names an account — the thing the refusal in <see cref="SignIn"/> exists to avoid saying.
+    /// </summary>
+    [HttpGet("adoptable/{profileId:guid}")]
+    public async Task<IActionResult> Adoptable(Guid profileId) =>
+        Ok(new AdoptableDto(await ProfileAdoption.IsAdoptableAsync(db, profileId)));
+
+    /// <summary>
     /// The profile the new account owns: the one this phone was already working on, or a fresh one.
     ///
     /// The adoption is refused silently rather than reported, and that is deliberate. An id that
@@ -121,12 +140,7 @@ public class AuthController(BewerboDbContext db) : BewerboController
     /// </summary>
     private async Task<Guid> AdoptOrCreateProfileAsync(Guid? adopt)
     {
-        if (adopt is { } id
-            && await db.Profiles.AnyAsync(p => p.Id == id)
-            && !await db.Accounts.AnyAsync(a => a.ProfileId == id))
-        {
-            return id;
-        }
+        if (adopt is { } id && await ProfileAdoption.IsAdoptableAsync(db, id)) return id;
 
         var profile = new Profile();
         db.Profiles.Add(profile);
