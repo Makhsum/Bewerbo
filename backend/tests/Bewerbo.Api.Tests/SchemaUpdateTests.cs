@@ -118,6 +118,26 @@ public class SchemaUpdateTests
     }
 
     [Fact]
+    public void What_a_row_gets_in_a_new_enum_column_is_the_name_of_the_member()
+    {
+        // What the test above cannot see, and what it missed for a whole run: Enum.Parse accepts a
+        // NUMBER, so a column filled with 0 comes back as Klassisch and every round trip through EF
+        // passes while the column holds something that is the name of nothing. Storing enums by name
+        // is what makes renumbering one carry no data — a row that carries the number instead means
+        // a different member the day a value is inserted in front of it. Ask the DATABASE what is in
+        // the column; the context would parse it back either way.
+        using var db = OldInstallation(out var connection);
+        using (connection)
+        {
+            db.BringSchemaUpToDate();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT \"Template\" FROM \"Profiles\"";
+            Assert.Equal(nameof(CvTemplate.Klassisch), command.ExecuteScalar() as string);
+        }
+    }
+
+    [Fact]
     public void The_start_after_the_one_that_caught_up_finds_nothing_left_to_do()
     {
         // Every start runs this, so the second one has to be a no-op — an addition that repeated

@@ -142,14 +142,20 @@ public static class SchemaUpdate
     /// </summary>
     private static object EmptyValueFor(IColumn column)
     {
-        var property = column.PropertyMappings.First().Property;
+        var mapping = column.PropertyMappings.First();
+        var property = mapping.Property;
         var clrType = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
 
         object empty = clrType == typeof(string) ? ""
             : clrType == typeof(byte[]) ? Array.Empty<byte>()
             : Activator.CreateInstance(clrType) ?? "";
 
-        return property.GetValueConverter()?.ConvertToProvider(empty) ?? empty;
+        // The converter of the COLUMN's mapping and not only the property's. HasConversion<string>()
+        // names the provider type and lets the type mapping build the converter, so
+        // GetValueConverter() answers null for every enum in this model — and the raw enum reached
+        // the generator, which wrote its NUMBER into a column that holds names.
+        var converter = property.GetValueConverter() ?? mapping.TypeMapping.Converter;
+        return converter?.ConvertToProvider(empty) ?? empty;
     }
 
     /// <summary>
