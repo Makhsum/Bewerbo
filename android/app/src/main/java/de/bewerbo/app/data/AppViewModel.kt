@@ -913,16 +913,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * that is the right way round: the Anlagenverzeichnis can already name the Zeugnis, and the row
      * says "No copy stored" with a button to try again — which is exactly the state a document
      * added on another device is in anyway.
+     *
+     * Which is why everything that follows from the RECORD is read back BETWEEN the two calls and
+     * not after both. A refused upload — too large, too many pages, a type that is not stored —
+     * throws, and the throw carries past every line after it: refreshing at the end left the user
+     * with the message about the file and no row at all for the document that had just been filed.
+     * That reads as "nothing was saved" while the record is on the server, is named in the exported
+     * Anlagenverzeichnis, and appears in the list only after the app is started again. The refusal
+     * still reaches the user; it is the only thing that is meant to be missing.
      */
     fun addDocument(document: StoredDocument) = launch("document") {
         val id = profileId() ?: return@launch
         val created = api.addDocument(id, document)
         val picked = _state.value.pickedScan
-        if (picked != null && created.id != null) api.storeScan(created.id, picked)
 
         _state.update { it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null) }
         rematch()
         refreshDerived()
+
+        // The profile alone afterwards: the Abgleich and the Übersicht read the document, not its
+        // copy, so a stored scan changes nothing either of them shows.
+        if (picked != null && created.id != null) {
+            api.storeScan(created.id, picked)
+            _state.update { it.copy(profile = api.profile(id)) }
+        }
     }
 
     fun deleteDocument(documentId: String) = launch("document") {
@@ -993,6 +1007,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *
      * A pick made in the add card has no document yet and is left where it is: [addDocument]
      * stores it once the record exists.
+     *
+     * The file is let go whichever way the upload ends, for the same reason [addDocument] refreshes
+     * early: a refused one that stayed held was still the pick when the user next opened the add
+     * card, so that card showed a file they had not chosen there and its Save offered the server
+     * the very file it had just refused. A second attempt starts from a fresh choice.
      */
     private suspend fun deliverPickedScan() {
         val state = _state.value
@@ -1000,10 +1019,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val picked = state.pickedScan ?: return
         val id = profileId() ?: return
 
-        api.storeScan(documentId, picked)
-        _state.update {
-            it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null)
+        try {
+            api.storeScan(documentId, picked)
+        } finally {
+            _state.update { it.copy(pickedScan = null, pickedScanFor = null) }
         }
+        _state.update { it.copy(profile = api.profile(id)) }
         rematch()
         refreshDerived()
     }
