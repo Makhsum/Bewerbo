@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Bewerbo.Api.Data;
 using Bewerbo.Api.Llm;
+using Bewerbo.Api.Mail;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,6 +78,28 @@ builder.Services.AddSingleton(new Bewerbo.Api.Legal.LegalOptions
     Represented = builder.Configuration["Legal:Represented"] ?? "",
     Register = builder.Configuration["Legal:Register"] ?? "",
 });
+// Where the one mail this product sends goes out. Two implementations rather than one that checks
+// whether it is configured, because they share nothing: with a host and a from-address it is SMTP,
+// and without them the mail is written to a file next to the binary so that a dev machine with
+// nothing installed can still finish a password reset. GET /api/health says which one is running,
+// for the reason it says which writer is.
+builder.Services.AddSingleton(new MailOptions
+{
+    Host = builder.Configuration["Mail:Host"],
+    Port = int.TryParse(builder.Configuration["Mail:Port"], out var mailPort) ? mailPort : 587,
+    User = builder.Configuration["Mail:User"],
+    Password = builder.Configuration["Mail:Password"],
+    From = builder.Configuration["Mail:From"],
+    UseSsl = !bool.TryParse(builder.Configuration["Mail:UseSsl"], out var mailSsl) || mailSsl,
+});
+builder.Services.AddSingleton<IMailSender>(services =>
+{
+    var options = services.GetRequiredService<MailOptions>();
+    return options.IsConfigured
+        ? new SmtpMailSender(options, services.GetRequiredService<ILogger<SmtpMailSender>>())
+        : new FileMailSender(services.GetRequiredService<ILogger<FileMailSender>>());
+});
+
 builder.Services.AddHttpClient<ILanguageModel, LlmClient>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(90);

@@ -63,6 +63,7 @@
     <string name="error_password_too_short">The password needs at least 8 characters.</string>
     <string name="error_email_taken">There is already an account for this e-mail address. Sign in instead.</string>
     <string name="error_credentials_rejected">E-mail or password is not right.</string>
+    <string name="error_reset_code_rejected">The code is not right, or it is no longer valid. Ask for a new one.</string>
     <string name="error_link_not_an_address">That is not a web address. Check it and try again.</string>
     <string name="error_link_unreachable">The page behind that link did not answer. Try again, or paste the text of the posting.</string>
     <string name="error_link_no_text">There is no posting text on that page. Paste the text instead.</string>
@@ -425,6 +426,20 @@
     <string name="signin_leave_title">Leave this Lebenslauf behind?</string>
     <string name="signin_leave_body">The Lebenslauf on this phone belongs to no account, so signing in to another one leaves it here and nothing brings it back. Create an account instead to keep it.</string>
     <string name="signin_leave_confirm">Sign in anyway</string>
+    <string name="signin_forgot">I have forgotten my password</string>
+
+    <!-- The way back in when the password is gone. The same screen the door is, in two steps: the
+         address, then the code that came to it and the password it buys. -->
+    <string name="reset_title">New password</string>
+    <string name="reset_body">Enter the e-mail address of your account. If there is an account for it, a code goes to that address.</string>
+    <string name="reset_action_request">Send the code</string>
+    <string name="reset_sent_title">Look in your mail</string>
+    <string name="reset_sent_body">If there is an account for %1$s, a code is on its way there. Enter it below together with your new password.</string>
+    <string name="reset_code">Code from the mail</string>
+    <string name="reset_new_password">New password</string>
+    <string name="reset_action">Save the new password</string>
+    <string name="reset_again">Ask for a new code</string>
+    <string name="reset_back">Back to signing in</string>
 
     <!-- Settings: the account, the language of the interface, what is held about the user, and the
          legal pages. Reached from the Overview, because it is not a place the user works in. -->

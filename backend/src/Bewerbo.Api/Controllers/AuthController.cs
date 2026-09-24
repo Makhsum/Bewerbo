@@ -1,6 +1,7 @@
 using Bewerbo.Api.Contracts;
 using Bewerbo.Api.Data;
 using Bewerbo.Api.Domain;
+using Bewerbo.Api.Mail;
 using Bewerbo.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,20 +9,23 @@ using Microsoft.EntityFrameworkCore;
 namespace Bewerbo.Api.Controllers;
 
 /// <summary>
-/// The door: creating an account, coming back to one, and leaving it.
+/// The door: creating an account, coming back to one, getting back in without the password, and
+/// leaving it.
 ///
-/// Four routes and no more. What a signed-in user then does is unchanged — every other controller
-/// is still addressed by the profile id, and <see cref="SessionDto.ProfileId"/> is what tells the
-/// client which one is theirs. The account is what makes that id something the user carries rather
-/// than something one phone happens to remember.
+/// What a signed-in user then does is unchanged — every other controller is still addressed by the
+/// profile id, and <see cref="SessionDto.ProfileId"/> is what tells the client which one is theirs.
+/// The account is what makes that id something the user carries rather than something one phone
+/// happens to remember.
 ///
 /// A refusal here says as little as it can get away with. "E-Mail-Adresse oder Passwort stimmt
 /// nicht" is one answer for both halves on purpose: telling a stranger that an address HAS an
 /// account here is telling them something about the person behind it, and the user who mistyped
-/// one of the two retypes both anyway.
+/// one of the two retypes both anyway. The reset follows the same line — it answers the same way
+/// whether or not the address is one this server knows.
 /// </summary>
 [Route("api/auth")]
-public class AuthController(BewerboDbContext db) : BewerboController
+public class AuthController(BewerboDbContext db, IMailSender mail, ILogger<AuthController> log)
+    : BewerboController
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -64,6 +68,114 @@ public class AuthController(BewerboDbContext db) : BewerboController
         {
             return RefusedProblem(CredentialsRejected, CredentialsRejectedKind);
         }
+
+        var session = Issue(account);
+        await db.SaveChangesAsync();
+        return Ok(session);
+    }
+
+    /// <summary>
+    /// A user who cannot remember their password asks for the one mail this product sends.
+    ///
+    /// The answer is 202 whatever happens next, and that is the whole reason this route is safe to
+    /// leave open: a 404 for an address nobody has registered would make this the fastest way to
+    /// find out who has an account here, which is exactly what <see cref="SignIn"/> refuses to say.
+    /// The user reads the same sentence either way — the code is in the mail if the account exists,
+    /// and there is no mail if it does not.
+    ///
+    /// The mail is sent inside the request rather than handed to a queue: there is no queue in this
+    /// backend, and a user staring at a screen that says "check your mail" would rather wait the
+    /// second it takes than be told it worked before it did. A send that FAILS is logged and
+    /// swallowed for the reason above — a route that answers 500 for a known address and 202 for an
+    /// unknown one has said which is which.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var email = Normalise(request.Email);
+        if (!LooksLikeEmail(email)) return RefusedProblem(EmailInvalid, EmailInvalidKind);
+
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
+        if (account is not null)
+        {
+            // One live code per account. Asking twice is what a user does when the first mail has
+            // not arrived yet, and two codes that both work would double what a single guess buys.
+            db.PasswordResets.RemoveRange(
+                await db.PasswordResets.Where(r => r.AccountId == account.Id).ToListAsync());
+
+            var code = ResetCode.Issue();
+            db.PasswordResets.Add(new PasswordReset
+            {
+                AccountId = account.Id,
+                CodeHash = PasswordHash.Create(code),
+                ExpiresAt = DateTimeOffset.UtcNow + ResetCode.Lifetime,
+            });
+            await db.SaveChangesAsync();
+
+            // account.Email and not the address as it was typed: the mail goes to the account's own
+            // record of it. The two differ only in capitalisation today, and this is the line that
+            // has to stay right if that ever stops being true.
+            try
+            {
+                await mail.SendAsync(PasswordResetMail.For(account.Email, request.Language, code));
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "The password reset mail could not be sent.");
+            }
+        }
+
+        return Accepted();
+    }
+
+    /// <summary>
+    /// The code out of that mail, spent on a new password, and the user is back inside.
+    ///
+    /// Three things end a reset and they share one refusal: a code that is wrong, a code that is
+    /// older than <see cref="ResetCode.Lifetime"/>, and a code that has already been spent. Telling
+    /// them apart would tell somebody working through six-digit numbers which of their guesses was
+    /// close to something, so the user is told the one thing they can act on — ask for a new one.
+    ///
+    /// Spending the reset deletes the row, the way signing out deletes a session: there is then
+    /// nothing for the same code to match a second time. The sessions of every OTHER device go with
+    /// it. Somebody resetting a password is somebody who may have lost the old one to another
+    /// person, and leaving that person's phone signed in would make the reset a gesture.
+    ///
+    /// What comes back is an ordinary <see cref="SessionDto"/>, so the app lands where a sign-in
+    /// lands: the account's own profile, with everything that was ever written into it.
+    /// </summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if ((request.Password ?? "").Length < MinimumPasswordLength)
+        {
+            return RefusedProblem(PasswordTooShort, PasswordTooShortKind);
+        }
+
+        var email = Normalise(request.Email);
+        var reset = await db.PasswordResets
+            .Include(r => r.Account)
+            .FirstOrDefaultAsync(r => r.Account!.Email == email);
+
+        if (reset is null || !ResetCode.IsLive(reset, DateTimeOffset.UtcNow))
+        {
+            return RefusedProblem(ResetCodeRejected, ResetCodeRejectedKind);
+        }
+
+        if (!PasswordHash.Verify((request.Code ?? "").Trim(), reset.CodeHash))
+        {
+            // Written down before the refusal goes out. What makes five guesses five is that the
+            // fifth one is still counted on the way to being refused.
+            reset.Attempts++;
+            await db.SaveChangesAsync();
+            return RefusedProblem(ResetCodeRejected, ResetCodeRejectedKind);
+        }
+
+        var account = reset.Account!;
+        account.Password = PasswordHash.Create(request.Password!);
+        db.PasswordResets.Remove(reset);
+        db.AuthTokens.RemoveRange(
+            await db.AuthTokens.Where(t => t.AccountId == account.Id).ToListAsync());
 
         var session = Issue(account);
         await db.SaveChangesAsync();
@@ -213,4 +325,8 @@ public class AuthController(BewerboDbContext db) : BewerboController
 
     internal const string SessionInvalid = "Diese Anmeldung gilt nicht mehr.";
     internal const string SessionInvalidKind = "session_invalid";
+
+    internal const string ResetCodeRejected =
+        "Der Code stimmt nicht oder gilt nicht mehr. Fordern Sie einen neuen an.";
+    internal const string ResetCodeRejectedKind = "reset_code_rejected";
 }

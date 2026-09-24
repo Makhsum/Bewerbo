@@ -49,6 +49,7 @@
     <string name="error_password_too_short">Das Passwort braucht mindestens 8 Zeichen.</string>
     <string name="error_email_taken">Zu dieser E-Mail-Adresse gibt es schon ein Konto. Melden Sie sich stattdessen an.</string>
     <string name="error_credentials_rejected">E-Mail-Adresse oder Passwort stimmt nicht.</string>
+    <string name="error_reset_code_rejected">Der Code stimmt nicht oder gilt nicht mehr. Fordern Sie einen neuen an.</string>
     <string name="error_link_not_an_address">Das ist keine Web-Adresse. Prüfen Sie sie und versuchen Sie es erneut.</string>
     <string name="error_link_unreachable">Die Seite hinter dem Link hat nicht geantwortet. Versuchen Sie es erneut oder fügen Sie den Text der Anzeige ein.</string>
     <string name="error_link_no_text">Auf dieser Seite steht kein Anzeigentext. Fügen Sie den Text stattdessen ein.</string>
@@ -388,6 +389,18 @@
     <string name="signin_leave_title">Diesen Lebenslauf zurücklassen?</string>
     <string name="signin_leave_body">Der Lebenslauf auf diesem Telefon gehört zu keinem Konto. Wenn Sie sich bei einem anderen anmelden, bleibt er hier, und nichts holt ihn zurück. Legen Sie stattdessen ein Konto an, um ihn zu behalten.</string>
     <string name="signin_leave_confirm">Trotzdem anmelden</string>
+    <string name="signin_forgot">Ich habe mein Passwort vergessen</string>
+
+    <string name="reset_title">Neues Passwort</string>
+    <string name="reset_body">Geben Sie die E-Mail-Adresse Ihres Kontos ein. Wenn es dazu ein Konto gibt, geht ein Code an diese Adresse.</string>
+    <string name="reset_action_request">Code senden</string>
+    <string name="reset_sent_title">Sehen Sie in Ihre E-Mails</string>
+    <string name="reset_sent_body">Wenn es zu %1$s ein Konto gibt, ist ein Code dorthin unterwegs. Geben Sie ihn unten zusammen mit Ihrem neuen Passwort ein.</string>
+    <string name="reset_code">Code aus der E-Mail</string>
+    <string name="reset_new_password">Neues Passwort</string>
+    <string name="reset_action">Neues Passwort speichern</string>
+    <string name="reset_again">Neuen Code anfordern</string>
+    <string name="reset_back">Zurück zur Anmeldung</string>
 
     <string name="settings_title">Einstellungen</string>
     <string name="settings_subtitle">Ihr Konto, die Sprache der App, Ihre Daten und die rechtlichen Seiten.</string>

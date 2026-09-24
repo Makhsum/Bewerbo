@@ -15,6 +15,7 @@ public class BewerboDbContext(DbContextOptions<BewerboDbContext> options) : DbCo
     public DbSet<Application> Applications => Set<Application>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<AuthToken> AuthTokens => Set<AuthToken>();
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -25,6 +26,11 @@ public class BewerboDbContext(DbContextOptions<BewerboDbContext> options) : DbCo
             // answer true when two registrations arrive at once.
             e.HasIndex(a => a.Email).IsUnique();
             e.HasMany(a => a.Tokens).WithOne(t => t.Account!).HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Down the same cascade as the sessions, and for the same reason: an erased account
+            // that left a live reset code behind would leave a way back into an account that no
+            // longer exists. See AccountErasure.
+            e.HasMany(a => a.PasswordResets).WithOne(r => r.Account!).HasForeignKey(r => r.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

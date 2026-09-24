@@ -48,6 +48,7 @@
     <string name="error_password_too_short">Пароль має бути не коротшим за 8 знаків.</string>
     <string name="error_email_taken">Для цієї адреси обліковий запис уже є. Увійдіть до нього.</string>
     <string name="error_credentials_rejected">Адреса або пароль неправильні.</string>
+    <string name="error_reset_code_rejected">Код неправильний або вже не діє. Запросіть новий.</string>
     <string name="error_link_not_an_address">Це не веб-адреса. Перевірте її та спробуйте ще раз.</string>
     <string name="error_link_unreachable">Сторінка за цим посиланням не відповіла. Спробуйте ще раз або вставте текст вакансії.</string>
     <string name="error_link_no_text">На цій сторінці немає тексту вакансії. Вставте текст вручну.</string>
@@ -387,6 +388,18 @@
     <string name="signin_leave_title">Залишити цей Lebenslauf тут?</string>
     <string name="signin_leave_body">Lebenslauf на цьому телефоні не належить жодному обліковому запису. Якщо увійти до іншого, він залишиться тут, і повернути його не буде чим. Щоб зберегти його, створіть обліковий запис.</string>
     <string name="signin_leave_confirm">Усе одно увійти</string>
+    <string name="signin_forgot">Я забув пароль</string>
+
+    <string name="reset_title">Новий пароль</string>
+    <string name="reset_body">Уведіть адресу електронної пошти вашого облікового запису. Якщо такий обліковий запис є, код надійде на цю адресу.</string>
+    <string name="reset_action_request">Надіслати код</string>
+    <string name="reset_sent_title">Загляньте до пошти</string>
+    <string name="reset_sent_body">Якщо для %1$s є обліковий запис, код уже прямує туди. Уведіть його нижче разом із новим паролем.</string>
+    <string name="reset_code">Код із листа</string>
+    <string name="reset_new_password">Новий пароль</string>
+    <string name="reset_action">Зберегти новий пароль</string>
+    <string name="reset_again">Запросити новий код</string>
+    <string name="reset_back">Назад до входу</string>
 
     <string name="settings_title">Налаштування</string>
     <string name="settings_subtitle">Ваш обліковий запис, мова застосунку, ваші дані та правові сторінки.</string>

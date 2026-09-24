@@ -705,6 +705,9 @@ fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     "password_too_short" -> stringResource(R.string.error_password_too_short)
     "email_taken" -> stringResource(R.string.error_email_taken)
     "credentials_rejected" -> stringResource(R.string.error_credentials_rejected)
+    // Wrong, too old, or already spent — one sentence for all three, because the server refuses all
+    // three the same way and the only thing the user can do about any of them is ask for a new code.
+    "reset_code_rejected" -> stringResource(R.string.error_reset_code_rejected)
     // Three ways a link can fail and three things to do about it: correct the address, try again,
     // or paste the advert by hand after all.
     "link_not_an_address" -> stringResource(R.string.error_link_not_an_address)

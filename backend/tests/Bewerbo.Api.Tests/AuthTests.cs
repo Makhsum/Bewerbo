@@ -1,3 +1,5 @@
+using Bewerbo.Api.Domain;
+using Bewerbo.Api.Mail;
 using Bewerbo.Api.Services;
 using Xunit;
 
@@ -109,5 +111,119 @@ public class SessionTokenTests
     {
         Assert.Equal("abc", SessionToken.FromHeader("abc"));
         Assert.Equal("abc", SessionToken.FromHeader("bearer abc"));
+    }
+}
+
+/// <summary>
+/// The third thing the door rests on, and the one whose failure is quietest: a reset code that
+/// outlives its half hour, or that survives being guessed at all afternoon, is a working sign-in
+/// screen with a back way in behind it.
+/// </summary>
+public class ResetCodeTests
+{
+    /// <summary>
+    /// Six digits, leading zeros and all. Trimmed to five by an int somewhere, the code in the mail
+    /// and the code the server checks stop being the same thing for one user in ten.
+    /// </summary>
+    [Fact]
+    public void A_code_is_always_six_digits()
+    {
+        for (var i = 0; i < 500; i++)
+        {
+            var code = ResetCode.Issue();
+
+            Assert.Equal(6, code.Length);
+            Assert.All(code, c => Assert.True(char.IsAsciiDigit(c)));
+        }
+    }
+
+    [Fact]
+    public void Two_codes_are_not_the_same_code()
+    {
+        var codes = Enumerable.Range(0, 200).Select(_ => ResetCode.Issue()).ToList();
+
+        Assert.True(codes.Distinct().Count() > codes.Count / 2);
+    }
+
+    [Fact]
+    public void A_fresh_reset_is_live()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        Assert.True(ResetCode.IsLive(Reset(now + ResetCode.Lifetime, attempts: 0), now));
+    }
+
+    /// <summary>The half hour is over. The row may still be there; the code is not.</summary>
+    [Fact]
+    public void A_reset_that_is_older_than_its_lifetime_is_not()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        Assert.False(ResetCode.IsLive(Reset(now - TimeSpan.FromSeconds(1), attempts: 0), now));
+    }
+
+    /// <summary>
+    /// A million codes and no limit is an afternoon's work. The last allowed attempt still counts,
+    /// which is what makes the cap five rather than four or six.
+    /// </summary>
+    [Fact]
+    public void A_reset_that_has_been_guessed_at_too_often_is_not()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var expires = now + ResetCode.Lifetime;
+
+        Assert.True(ResetCode.IsLive(Reset(expires, ResetCode.MaxAttempts - 1), now));
+        Assert.False(ResetCode.IsLive(Reset(expires, ResetCode.MaxAttempts), now));
+    }
+
+    private static PasswordReset Reset(DateTimeOffset expiresAt, int attempts) =>
+        new() { ExpiresAt = expiresAt, Attempts = attempts };
+}
+
+/// <summary>
+/// The one text this server writes that no screen can rewrite. What it has to carry is the code, in
+/// a form a user can copy out of it — everything else about the mail is manners.
+/// </summary>
+public class PasswordResetMailTests
+{
+    /// <summary>The four the app itself is offered in. A fifth here would be a language nobody reads.</summary>
+    [Theory]
+    [InlineData("de")]
+    [InlineData("en")]
+    [InlineData("ru")]
+    [InlineData("uk")]
+    public void Every_language_the_app_offers_has_a_mail_with_the_code_in_it(string language)
+    {
+        var mail = PasswordResetMail.For("olena.k@example.com", language, "064391");
+
+        Assert.Equal("olena.k@example.com", mail.To);
+        Assert.NotEmpty(mail.Subject);
+        Assert.Contains("064391", mail.Body);
+        Assert.Contains("30", mail.Body);
+    }
+
+    /// <summary>
+    /// A tag this server has no text for still gets a mail. German, the way every other fallback in
+    /// this API is German — a reset the user cannot read is still a reset they can use, and no mail
+    /// at all is not.
+    /// </summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("tr")]
+    public void A_language_that_is_not_offered_falls_back_to_German(string? language)
+    {
+        Assert.Equal(
+            PasswordResetMail.For("olena.k@example.com", "de", "064391").Subject,
+            PasswordResetMail.For("olena.k@example.com", language, "064391").Subject);
+    }
+
+    /// <summary>"uk-UA" is the same language as "uk", and a phone is as likely to name either.</summary>
+    [Fact]
+    public void A_regional_tag_reads_as_its_language()
+    {
+        Assert.Equal(
+            PasswordResetMail.For("olena.k@example.com", "uk", "064391").Body,
+            PasswordResetMail.For("olena.k@example.com", "uk-UA", "064391").Body);
     }
 }

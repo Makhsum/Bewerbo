@@ -73,6 +73,18 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     suspend fun signIn(credentials: Credentials): Session =
         client.post("$baseUrl/api/auth/sign-in") { json(credentials) }.body()
 
+    /// Asks for the reset mail. It answers the same whether or not the address has an account here,
+    /// so nothing this returns says whether one was sent — the screen tells the user to look in
+    /// their mail either way. See AuthController for why.
+    suspend fun forgotPassword(request: ForgotPasswordRequest) {
+        client.post("$baseUrl/api/auth/forgot-password") { json(request) }
+    }
+
+    /// Spends the code out of that mail on a new password, and comes back signed in: the answer is
+    /// the same [Session] a sign-in returns, so the app lands exactly where a sign-in lands.
+    suspend fun resetPassword(request: ResetPasswordRequest): Session =
+        client.post("$baseUrl/api/auth/reset-password") { json(request) }.body()
+
     /// Who the token names — asked at every launch, before anything is drawn. A refusal means the
     /// session has ended and the door goes back up; see [AppViewModel.bootstrap].
     suspend fun session(token: String): Session =

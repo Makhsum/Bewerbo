@@ -317,6 +317,22 @@ public record RegisterRequest(string Email, string Password, Guid? AdoptProfileI
 public record CredentialsRequest(string Email, string Password);
 
 /// <summary>
+/// A user who cannot remember their password, asking for the one mail this product sends.
+///
+/// <paramref name="Language"/> is the interface language of the app that is asking, and it is the
+/// one place in this API where the server is told it. Everywhere else the screen writes the
+/// sentence from a kind; a mail has no screen behind it, so whoever writes it has to know the
+/// language. See <see cref="Mail.PasswordResetMail"/>.
+/// </summary>
+public record ForgotPasswordRequest(string Email, string? Language);
+
+/// <summary>
+/// The code out of that mail and the password it buys. The address travels with it because the code
+/// is only ever valid for the account it was sent to — a code is not an identity on its own.
+/// </summary>
+public record ResetPasswordRequest(string Email, string Code, string Password);
+
+/// <summary>
 /// Whether the profile this phone still names may be kept by a new account — what the door asks
 /// before it offers to keep it. False both for a profile that already has an owner and for one
 /// that is no longer there; neither is this phone's to give.

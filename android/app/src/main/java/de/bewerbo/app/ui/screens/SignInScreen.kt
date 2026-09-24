@@ -71,6 +71,7 @@ fun SignInScreen(state: AppState, viewModel: AppViewModel) {
     var password by remember { mutableStateOf("") }
     var legalPage by remember { mutableStateOf<LegalPage?>(null) }
     var leaving by remember { mutableStateOf(false) }
+    var resetting by remember { mutableStateOf(false) }
 
     val page = legalPage
     if (page != null) {
@@ -93,6 +94,17 @@ fun SignInScreen(state: AppState, viewModel: AppViewModel) {
                 .safeDrawingPadding(),
         ) {
             LegalScreen(page, state, viewModel) { legalPage = null }
+        }
+        return
+    }
+
+    // In place of the door for the same reason the legal pages are: there is no NavHost above the
+    // Scaffold to push onto. The address already typed goes with it, so a user who tried their
+    // password twice does not type it a third time.
+    if (resetting) {
+        ResetPasswordScreen(state, viewModel, email) {
+            resetting = false
+            viewModel.forgetPasswordReset()
         }
         return
     }
@@ -241,6 +253,24 @@ fun SignInScreen(state: AppState, viewModel: AppViewModel) {
                         )
                     }
                 }
+
+                // Only under the sign-in. Somebody filling in a brand new account has no password
+                // to have forgotten, and the offer there would read as a warning.
+                if (!registering) {
+                    item {
+                        TextButton(
+                            onClick = {
+                                resetting = true
+                                viewModel.dismissError()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("signin_btn_forgot"),
+                        ) {
+                            Text(stringResource(R.string.signin_forgot))
+                        }
+                    }
+                }
             }
 
             LegalFooter { legalPage = it }
@@ -255,6 +285,186 @@ fun SignInScreen(state: AppState, viewModel: AppViewModel) {
             },
             onClose = { leaving = false },
         )
+    }
+}
+
+/**
+ * The way back in when the password is gone — the door in two steps, on the door's own screen.
+ *
+ * The step is read off [AppState.resetRequestedFor] and not off anything the server said, because
+ * the server deliberately says nothing: forgot-password answers the same way for an address it has
+ * never seen. So the second step is reached whether or not there was an account, and the Callout
+ * says "if there is an account for this address" rather than "we have sent you a code". That is not
+ * hedging — it is the one sentence that is true either way, and saying more would make this screen
+ * the fastest way to find out who has an account here.
+ *
+ * The wordmark row comes along for a reason beyond looking like the door: the mail is written in
+ * the interface language, so the language button has to be reachable on the screen that asks for
+ * it. The legal footer does not — it is one tap away on the door behind this.
+ */
+@Composable
+private fun ResetPasswordScreen(
+    state: AppState,
+    viewModel: AppViewModel,
+    initialEmail: String,
+    onClose: () -> Unit,
+) {
+    var email by remember { mutableStateOf(initialEmail) }
+    var code by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val sentTo = state.resetRequestedFor
+
+    // Same reason as the legal pages: nothing below this answers the system back, so without it the
+    // gesture falls through to the Activity and leaves Bewerbo.
+    BackHandler { onClose() }
+
+    Surface(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .imePadding()
+                .testTag("reset_screen"),
+        ) {
+            Wordmark(state, viewModel)
+
+            LazyColumn(
+                Modifier.weight(1f),
+                contentPadding = PaddingValues(
+                    start = Space.m, end = Space.m, bottom = Space.m,
+                ),
+                verticalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                item {
+                    Text(
+                        stringResource(R.string.reset_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.testTag("reset_headline"),
+                    )
+                }
+
+                if (sentTo == null) {
+                    item {
+                        Text(
+                            stringResource(R.string.reset_body),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = LocalSemanticColors.current.muted,
+                        )
+                    }
+                    item {
+                        LabelledField(
+                            label = stringResource(R.string.person_email),
+                            value = email,
+                            onValueChange = { email = it },
+                            testTag = "reset_email",
+                        )
+                    }
+                } else {
+                    item {
+                        Callout(
+                            icon = BewerboIcons.Mail,
+                            title = stringResource(R.string.reset_sent_title),
+                            body = stringResource(R.string.reset_sent_body, sentTo),
+                            modifier = Modifier.testTag("reset_sent_note"),
+                        )
+                    }
+                    item {
+                        LabelledField(
+                            label = stringResource(R.string.reset_code),
+                            value = code,
+                            onValueChange = { code = it },
+                            testTag = "reset_code",
+                        )
+                    }
+                    item {
+                        LabelledField(
+                            label = stringResource(R.string.reset_new_password),
+                            value = password,
+                            onValueChange = { password = it },
+                            testTag = "reset_password",
+                            password = true,
+                        )
+                    }
+                    item {
+                        // The door's own rule, word for word: it is the same password and the same
+                        // eight characters, and a second sentence for it would be a second rule.
+                        Text(
+                            stringResource(R.string.signin_password_rule),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = LocalSemanticColors.current.muted,
+                            modifier = Modifier.testTag("reset_password_rule"),
+                        )
+                    }
+                }
+
+                state.error?.let { error ->
+                    item {
+                        Text(
+                            errorMessage(error),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = LocalSemanticColors.current.danger,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("reset_error"),
+                        )
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = {
+                            if (sentTo == null) {
+                                viewModel.requestPasswordReset(email)
+                            } else {
+                                viewModel.resetPassword(code, password)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Space.s)
+                            .testTag("reset_btn_submit"),
+                        enabled = state.busy == null,
+                    ) {
+                        Text(
+                            stringResource(
+                                if (sentTo == null) {
+                                    R.string.reset_action_request
+                                } else {
+                                    R.string.reset_action
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                // The way out of a code that never arrived, or one that is older than its half
+                // hour. It goes back to the address rather than straight out to the door, because
+                // asking again is what the refusal tells the user to do.
+                if (sentTo != null) {
+                    item {
+                        TextButton(
+                            onClick = viewModel::forgetPasswordReset,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("reset_btn_again"),
+                        ) {
+                            Text(stringResource(R.string.reset_again))
+                        }
+                    }
+                }
+
+                item {
+                    TextButton(
+                        onClick = onClose,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("reset_btn_back"),
+                    ) {
+                        Text(stringResource(R.string.reset_back))
+                    }
+                }
+            }
+        }
     }
 }
 

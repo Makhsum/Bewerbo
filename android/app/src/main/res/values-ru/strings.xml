@@ -46,6 +46,7 @@
     <string name="error_password_too_short">Пароль должен быть не короче 8 знаков.</string>
     <string name="error_email_taken">Для этого адреса аккаунт уже есть. Войдите в него.</string>
     <string name="error_credentials_rejected">Адрес или пароль неверны.</string>
+    <string name="error_reset_code_rejected">Код неверен или больше не действует. Запросите новый.</string>
     <string name="error_link_not_an_address">Это не веб-адрес. Проверьте его и попробуйте снова.</string>
     <string name="error_link_unreachable">Страница по этой ссылке не ответила. Попробуйте снова или вставьте текст вакансии.</string>
     <string name="error_link_no_text">На этой странице нет текста вакансии. Вставьте текст вручную.</string>
@@ -385,6 +386,18 @@
     <string name="signin_leave_title">Оставить этот Lebenslauf здесь?</string>
     <string name="signin_leave_body">Lebenslauf на этом телефоне не принадлежит ни одному аккаунту. Если войти в другой, он останется здесь, и вернуть его будет нечем. Чтобы сохранить его, создайте аккаунт.</string>
     <string name="signin_leave_confirm">Всё равно войти</string>
+    <string name="signin_forgot">Я забыл пароль</string>
+
+    <string name="reset_title">Новый пароль</string>
+    <string name="reset_body">Введите адрес электронной почты вашего аккаунта. Если такой аккаунт есть, код придёт на этот адрес.</string>
+    <string name="reset_action_request">Отправить код</string>
+    <string name="reset_sent_title">Загляните в почту</string>
+    <string name="reset_sent_body">Если для %1$s есть аккаунт, код уже идёт туда. Введите его ниже вместе с новым паролем.</string>
+    <string name="reset_code">Код из письма</string>
+    <string name="reset_new_password">Новый пароль</string>
+    <string name="reset_action">Сохранить новый пароль</string>
+    <string name="reset_again">Запросить новый код</string>
+    <string name="reset_back">Назад ко входу</string>
 
     <string name="settings_title">Настройки</string>
     <string name="settings_subtitle">Ваш аккаунт, язык приложения, ваши данные и правовые страницы.</string>

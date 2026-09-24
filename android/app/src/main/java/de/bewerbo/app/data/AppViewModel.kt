@@ -86,6 +86,10 @@ data class AppState(
     /// "Create an account" keeps and what signing in to another account leaves behind. Null on a
     /// phone that never ran a build without the door, which is every phone after the first sign-out.
     val adoptableProfileId: String? = null,
+    /// The address a reset mail has just been asked for, and the one thing that moves the door's
+    /// reset panel from "which address?" to "the code out of the mail". Null everywhere else; the
+    /// server never says whether an account was there, so this only records that we ASKED.
+    val resetRequestedFor: String? = null,
     /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
     val uiLanguage: String = "en",
     val showDinGrid: Boolean = false,
@@ -372,6 +376,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun signIn(email: String, password: String) = launch("door") {
         enter(api.signIn(Credentials(email.trim(), password)))
     }
+
+    /**
+     * Asks for the mail that carries a reset code.
+     *
+     * [AppState.resetRequestedFor] is set from what the user typed and NOT from anything the server
+     * said, because the server deliberately says nothing: it answers the same way for an address it
+     * has never seen as for one it has. So the panel moves on to the code either way, and the user
+     * reads the same sentence — which is the whole of the protection, and the reason the address is
+     * carried forward rather than asked for a second time.
+     *
+     * The interface language goes with the request. It is the one thing the server is told about
+     * it, and only because a mail has no screen behind it to write the sentence; see
+     * PasswordResetMail on the server.
+     */
+    fun requestPasswordReset(email: String) = launch("door") {
+        val address = email.trim()
+        api.forgotPassword(ForgotPasswordRequest(address, _state.value.uiLanguage))
+        _state.update { it.copy(resetRequestedFor = address) }
+    }
+
+    /// Spends the code on a new password and enters the account it belongs to — through [enter],
+    /// exactly as a sign-in does, so the user lands on their own profile with everything in it.
+    fun resetPassword(code: String, password: String) = launch("door") {
+        val address = _state.value.resetRequestedFor ?: return@launch
+        enter(api.resetPassword(ResetPasswordRequest(address, code.trim(), password)))
+    }
+
+    /// Leaves the reset behind — the panel closing, or the user going back to ask for another code.
+    /// The refusal goes with it: it explained a form that is no longer on screen.
+    fun forgetPasswordReset() =
+        _state.update { it.copy(resetRequestedFor = null, error = null) }
 
     /**
      * Leaves the account, and leaves nothing of it on the phone.

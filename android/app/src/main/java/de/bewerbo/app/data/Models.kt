@@ -421,6 +421,21 @@ data class RegisterRequest(
 @Serializable
 data class Credentials(val email: String, val password: String)
 
+/// What a user who cannot remember their password asks for. [language] is the interface language
+/// this app is drawn in, and the one thing the server is ever told about it — the mail it writes has
+/// no screen behind it to put the sentence together, so the sentence has to leave the server whole.
+@Serializable
+data class ForgotPasswordRequest(val email: String, val language: String)
+
+/// The code out of that mail and the password it buys. The address travels with it because a code is
+/// only ever the code of one account.
+@Serializable
+data class ResetPasswordRequest(
+    val email: String,
+    val code: String,
+    val password: String,
+)
+
 /// Whether the profile this phone still names may be kept by a new account. False both for one
 /// that already has an owner and for one that is no longer there — neither is this phone's to give.
 @Serializable

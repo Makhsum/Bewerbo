@@ -66,6 +66,22 @@ public class AccountErasureTests
         Assert.Empty(db.AuthTokens);
     }
 
+    /// <summary>
+    /// And the reset the account may have had in flight when it asked to be forgotten. A live code
+    /// left behind would be a way to claim an address on a server that no longer holds the account
+    /// it named.
+    /// </summary>
+    [Fact]
+    public async Task Erasing_an_account_takes_a_password_reset_that_was_still_open()
+    {
+        await using var db = NewDatabase();
+        var id = Filled(db);
+
+        await AccountErasure.EraseAsync(db, id);
+
+        Assert.Empty(db.PasswordResets);
+    }
+
     [Fact]
     public async Task Erasing_another_account_leaves_this_one_untouched()
     {
@@ -114,6 +130,14 @@ public class AccountErasureTests
             Password = PasswordHash.Create("acht-zeichen"),
             ProfileId = profile.Id,
             Tokens = [new AuthToken { TokenHash = SessionToken.HashOf(SessionToken.Issue()) }],
+            PasswordResets =
+            [
+                new PasswordReset
+                {
+                    CodeHash = PasswordHash.Create(ResetCode.Issue()),
+                    ExpiresAt = DateTimeOffset.UtcNow + ResetCode.Lifetime,
+                },
+            ],
         });
         db.SaveChanges();
         db.ChangeTracker.Clear();

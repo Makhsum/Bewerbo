@@ -237,6 +237,13 @@ public class Account
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public List<AuthToken> Tokens { get; set; } = [];
+
+    /// <summary>
+    /// The reset this account has asked for and not yet spent. A list rather than one record,
+    /// because the cascade hangs off it exactly as it does off <see cref="Tokens"/>; that at most
+    /// one is ever live is kept true by <see cref="Controllers.AuthController"/>, not by the model.
+    /// </summary>
+    public List<PasswordReset> PasswordResets { get; set; } = [];
 }
 
 /// <summary>
@@ -257,4 +264,39 @@ public class AuthToken
     public string TokenHash { get; set; } = "";
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+/// <summary>
+/// A reset that has been asked for: everything the server keeps of the code it put in a mail.
+///
+/// The code itself is nowhere in here, for the reason the password is not either — a table anybody
+/// can read would otherwise be a way into every account that has forgotten its password in the
+/// last half hour. Deleting the row is what spends the reset, the way deleting an
+/// <see cref="AuthToken"/> is what revokes a session; <see cref="Services.ResetCode"/> holds the
+/// two rules that decide whether a row still counts.
+/// </summary>
+public class PasswordReset
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid AccountId { get; set; }
+    public Account? Account { get; set; }
+
+    /// <summary>The PBKDF2 record of the code, in the format <see cref="Services.PasswordHash"/> writes.</summary>
+    public string CodeHash { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// When the code stops working. Written down rather than derived from the lifetime in force
+    /// today, for the reason <see cref="Services.PasswordHash"/> writes down its iteration count: a
+    /// row outlives the constant it was made under.
+    /// </summary>
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>
+    /// How often a wrong code has been offered for this reset. Six digits are few enough to be
+    /// worth guessing at, so the guessing is what is capped rather than the digits raised — a code
+    /// that has to be copied out of a mail by hand has to stay readable.
+    /// </summary>
+    public int Attempts { get; set; }
 }
