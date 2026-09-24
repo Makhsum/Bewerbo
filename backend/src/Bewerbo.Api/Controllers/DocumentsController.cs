@@ -31,12 +31,21 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
     [HttpPost("")]
     public async Task<IActionResult> Add([FromQuery, BindRequired] Guid profileId, [FromBody] DocumentDto document)
     {
+        // A positional record deserialises an omitted member as null even where the type says it is
+        // not nullable, so a body without "title" or without "note" used to reach the database as
+        // null and come back as a 500 with nothing in it to act on. Name the field that is missing,
+        // and treat the genuinely optional ones as empty — the two answers the profile sections
+        // already give, see ProfileController.PatchExperience.
+        if (document.Title is null) return InvalidRequest("title", "The body has no \"title\".");
+
         var stored = new StoredDocument
         {
             ProfileId = profileId,
             Title = document.Title,
+            // A kind that was left out is a document of no particular kind, which is what the
+            // fallback of ParseEnum already says; a note that was left out is no note.
             Kind = ParseEnum(document.Kind, DocumentKind.Sonstiges),
-            Note = document.Note,
+            Note = document.Note ?? "",
             PageCount = document.PageCount <= 0 ? 1 : document.PageCount,
             // Only a count that actually arrived counts as stated: a body that names no pages at
             // all is not the user saying "one page", it is a client that left the field out.
