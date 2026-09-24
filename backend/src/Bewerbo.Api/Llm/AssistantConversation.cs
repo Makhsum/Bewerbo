@@ -33,8 +33,9 @@ public interface IAssistantConversation
 /// is the whole of what the feature produces. Nothing about the rule changes for anything the
 /// server itself composes.
 ///
-/// Nothing is stored and nothing is proposed into the profile here: the reply is read, and a write
-/// goes through the profile's own routes as every other write does.
+/// Nothing is stored and nothing is WRITTEN into the profile here. The turn does propose entries —
+/// see <see cref="AssistantProposal"/> — but a proposal is a thing to read, and the write goes
+/// through the profile's own routes when the user has accepted it, as every other write does.
 /// </summary>
 public class AssistantConversation(ILanguageModel model, ILogger<AssistantConversation> log)
     : IAssistantConversation
@@ -55,6 +56,18 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
         "Impressum", "DSGVO",
     ];
 
+    /// <summary>
+    /// The profile sections a proposal can land in, spelled as
+    /// <c>PATCH /api/profile/{id}/sections/…</c> spells them. Named here because three things have
+    /// to agree on the word — the prompt, the enum in <see cref="OutputSchemas.Assistant"/> and
+    /// the client's own switch — and only two of them are C#.
+    /// </summary>
+    private const string ExperienceSection = "berufserfahrung";
+
+    private const string EducationSection = "ausbildung";
+
+    private const string LanguagesSection = "sprachen";
+
     public async Task<AssistantReply?> TurnAsync(Profile profile, IReadOnlyList<AssistantMessage> said,
         string uiLanguage, CancellationToken ct = default)
     {
@@ -64,13 +77,54 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
             System(uiLanguage), Prompt(profile, said),
             OutputSchemas.AssistantSchemaName, OutputSchemas.Assistant, ct);
 
-        if (result is { Reply.Length: > 0 }) return result;
+        // What comes back may propose an entry the profile cannot take. That is filtered here
+        // rather than drawn: see Usable.
+        if (result is { Reply.Length: > 0 }) return result with { Proposals = Usable(result.Proposals) };
 
         // An answer with nothing in it is not an answer. The route turns this into the same refusal
         // an unconfigured installation gets, because from where the user stands it is the same
         // thing: the assistant did not answer.
         log.LogInformation("Model returned no usable assistant turn.");
         return null;
+    }
+
+    /// <summary>
+    /// The proposals that can actually become a profile entry, and no others.
+    ///
+    /// An accepted proposal is saved through the profile's own section routes, and those need a
+    /// section they know, a name, and — for a station or a qualification — a date they can parse.
+    /// A proposal missing one of the three is a card offering a save that then fails, so it is
+    /// dropped before the screen ever draws it. The system prompt asks the model for the same
+    /// thing; this is what holds when it answers otherwise.
+    ///
+    /// The wording is never touched. Title and detail are what the user will read and then accept,
+    /// and a server that tidied them would be putting a sentence in the profile that nobody saw.
+    /// </summary>
+    private static List<AssistantProposal> Usable(IEnumerable<AssistantProposal> proposals) =>
+        proposals
+            .Where(p => p.Kind is ExperienceSection or EducationSection or LanguagesSection)
+            .Where(p => !string.IsNullOrWhiteSpace(p.Title) && !string.IsNullOrWhiteSpace(p.Source))
+            .Select(p => p with { From = Day(p.From), To = Day(p.To) })
+            .Where(p => p.Kind == LanguagesSection || p.From.Length > 0)
+            .ToList();
+
+    /// <summary>
+    /// A date as the section routes take it — <c>yyyy-MM-dd</c> — or empty where what came back is
+    /// not one. A model asked for "JJJJ-MM" answers "2019-04" and sometimes "2019"; both name a
+    /// start the user really said, and the profile's own form widens them the same way. Anything
+    /// else is a guess nobody can save, and empty is what says so.
+    /// </summary>
+    private static string Day(string? value)
+    {
+        var text = (value ?? "").Trim();
+        foreach (var candidate in new[] { text, text + "-01", text + "-01-01" })
+        {
+            if (DateOnly.TryParseExact(candidate, "yyyy-MM-dd", out var date))
+            {
+                return date.ToString("yyyy-MM-dd");
+            }
+        }
+        return "";
     }
 
     /// <summary>
@@ -86,10 +140,23 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
         "»reply« benennt zuerst, WAS DU VERSTANDEN HAST — Stationen, Jahre, Abschlüsse, Sprachen, " +
         "so wie die Person sie genannt hat. Behaupte nichts, was nicht gesagt wurde, und rate keine " +
         "Jahreszahl. »missing« nennt kurz, was für einen Lebenslauf noch fehlt, ein Punkt pro Zeile. " +
+        "»proposals« ist dasselbe Verstandene, aber so, wie es im Profil stünde: ein Eintrag je " +
+        "Station, Abschluss oder Sprache, und nichts sonst. »kind« ist der Abschnitt des Profils — " +
+        $"{ExperienceSection}: »title« = Position, »detail« = Arbeitgeber; " +
+        $"{EducationSection}: »title« = Abschluss, »detail« = Institution; " +
+        $"{LanguagesSection}: »title« = Sprache, »detail« = Niveau. " +
+        "»title« und »detail« stehen AUF DEUTSCH und genau so, wie sie später im Lebenslauf stehen " +
+        "sollen — ohne Klammern, ohne Erklärung, ohne die Sprache der Person daneben. " +
+        "»source« zitiert WÖRTLICH die Worte der Person, aus denen du den Eintrag gelesen hast, in " +
+        "deren Sprache und unverändert. Was kein Eintrag ist, gehört nicht in »proposals«. " +
+        $"»from« und »to« im Format JJJJ-MM; bei {LanguagesSection} bleiben beide leer, bei etwas " +
+        "Andauerndem bleibt »to« leer. Eine Station oder ein Abschluss OHNE genanntes Anfangsjahr " +
+        "gehört nach »missing« und nicht nach »proposals«. " +
         "Höchstens 120 Wörter in »reply«. Keine Emoji. " +
-        "Die einzigen deutschen Wörter, die in deiner Antwort stehen dürfen, sind diese: " +
+        "In »reply« und »missing« sind dies die einzigen deutschen Wörter, die stehen dürfen: " +
         string.Join(", ", KeptGermanTerms) +
-        ". Jedes andere deutsche Wort übersetzt du in die Sprache der Antwort.";
+        ". Jedes andere deutsche Wort übersetzt du dort in die Sprache der Antwort. Für »title« " +
+        "und »detail« gilt das NICHT: die sind der deutsche Text selbst.";
 
     /// <summary>
     /// What has been said, under what is already on file — built as

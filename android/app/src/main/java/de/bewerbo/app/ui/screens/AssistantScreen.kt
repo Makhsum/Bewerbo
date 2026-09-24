@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.AssistantProposalChoice
 import de.bewerbo.app.data.AssistantTurn
+import de.bewerbo.app.data.ProposalDecision
 import de.bewerbo.app.data.hasAssistant
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
@@ -206,7 +208,11 @@ fun AssistantScreen(state: AppState, viewModel: AppViewModel, onOpenProfile: () 
                 // What is still missing belongs to the LATEST answer only. An older one was answered
                 // by the turns after it, and leaving it standing would have the screen ask twice for
                 // something the user has since said.
-                AssistantTurnCard(index, turn, latest = index == turns.lastIndex)
+                //
+                // The proposals do NOT work that way: each is still undecided until it is answered,
+                // and one on an older turn is a thing the user has not got round to rather than a
+                // question that has been overtaken.
+                AssistantTurnCard(index, turn, latest = index == turns.lastIndex, state, viewModel)
             }
 
             // An answer takes a model call, and a screen that shows nothing while it runs is a
@@ -236,9 +242,16 @@ fun AssistantScreen(state: AppState, viewModel: AppViewModel, onOpenProfile: () 
     }
 }
 
-/// One turn: who said it, what they said, and — on the latest answer — what it says is missing.
+/// One turn: who said it, what they said, what it proposes for the profile, and — on the latest
+/// answer — what it says is missing.
 @Composable
-private fun AssistantTurnCard(index: Int, turn: AssistantTurn, latest: Boolean) {
+private fun AssistantTurnCard(
+    index: Int,
+    turn: AssistantTurn,
+    latest: Boolean,
+    state: AppState,
+    viewModel: AppViewModel,
+) {
     val colors = LocalSemanticColors.current
 
     BewerboCard(Modifier.testTag("assistant_turn_$index")) {
@@ -260,6 +273,10 @@ private fun AssistantTurnCard(index: Int, turn: AssistantTurn, latest: Boolean) 
             modifier = Modifier.padding(top = Space.xs),
         )
 
+        if (turn.proposals.isNotEmpty()) {
+            AssistantProposalSection(index, turn.proposals, state, viewModel)
+        }
+
         if (!turn.fromUser && latest && turn.missing.isNotEmpty()) {
             Column(Modifier.padding(top = Space.s).testTag("assistant_missing")) {
                 SectionLabel(stringResource(R.string.assistant_missing))
@@ -269,6 +286,169 @@ private fun AssistantTurnCard(index: Int, turn: AssistantTurn, latest: Boolean) 
             }
         }
     }
+}
+
+/**
+ * What the assistant understood, as it would stand in the profile — each proposal beside the words
+ * it was read from, and each answered on its own.
+ *
+ * This is the same bargain the experience card's duty rewrite strikes, moved to where the user
+ * first meets it: the German is a SUGGESTION until it is taken, it is read next to the user's own
+ * wording, and what is saved is the string that was on screen. It matters more here than there,
+ * because the German the assistant writes is what an employer will read and the user cannot judge
+ * it from a sentence of prose saying it was understood.
+ *
+ * A refused proposal keeps its card and says it was left out. Letting it disappear would read as
+ * something having happened to the user's own words, and nothing has: they stand as they were
+ * written, in the turn above.
+ */
+@Composable
+private fun AssistantProposalSection(
+    turn: Int,
+    proposals: List<AssistantProposalChoice>,
+    state: AppState,
+    viewModel: AppViewModel,
+) {
+    val colors = LocalSemanticColors.current
+
+    Column(
+        Modifier
+            .padding(top = Space.s)
+            .testTag("assistant_proposals_$turn"),
+    ) {
+        SectionLabel(stringResource(R.string.assistant_proposals))
+        Text(
+            stringResource(R.string.assistant_proposals_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.xs),
+        )
+
+        proposals.forEachIndexed { index, choice ->
+            AssistantProposalCard(turn, index, choice, state, viewModel)
+        }
+    }
+}
+
+/// One proposal: which section it belongs in, the user's own words, the German proposed for them,
+/// and the two answers — or, once it has been answered, which of the two was given.
+@Composable
+private fun AssistantProposalCard(
+    turn: Int,
+    index: Int,
+    choice: AssistantProposalChoice,
+    state: AppState,
+    viewModel: AppViewModel,
+) {
+    val colors = LocalSemanticColors.current
+    val proposal = choice.proposal
+    val tag = "assistant_proposal_${turn}_$index"
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = Space.m)
+            .testTag(tag),
+    ) {
+        StatusPill(stringResource(sectionLabel(proposal.kind)), PillTone.Neutral)
+
+        // The user's own words first, and the German under them. The order is the claim: this is
+        // what you said, and this is what we would write for it — not the other way round.
+        Text(
+            stringResource(R.string.assistant_proposal_source),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.s),
+        )
+        Text(
+            proposal.source,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.testTag("${tag}_source"),
+        )
+
+        Text(
+            stringResource(R.string.assistant_proposal_german),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.s),
+        )
+        // Drawn exactly as the profile draws the entry it would become — the title on its own line
+        // and the rest beneath it — so that "the profile shows what I read" is something the user
+        // can see rather than take on trust.
+        Text(
+            proposal.title,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.testTag("${tag}_german"),
+        )
+        val detail = listOfNotNull(
+            proposal.detail.ifBlank { null },
+            proposal.from.ifBlank { null }?.let { from ->
+                "${from.take(7)} – ${
+                    proposal.to.ifBlank { null }?.take(7)
+                        ?: stringResource(R.string.profile_entry_ongoing)
+                }"
+            },
+        ).joinToString("  ·  ")
+        if (detail.isNotEmpty()) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier.testTag("${tag}_detail"),
+            )
+        }
+
+        when (choice.decision) {
+            ProposalDecision.Pending -> Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = Space.s),
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                Button(
+                    onClick = { viewModel.acceptProposal(turn, index) },
+                    // One save at a time, as the composer's own buttons are gated: two proposals
+                    // accepted at once would each send the section as it stood before the other.
+                    enabled = state.busy == null,
+                    modifier = Modifier.testTag("${tag}_accept"),
+                ) {
+                    Text(stringResource(R.string.assistant_proposal_accept))
+                }
+                OutlinedButton(
+                    onClick = { viewModel.refuseProposal(turn, index) },
+                    modifier = Modifier.testTag("${tag}_keep"),
+                ) {
+                    Text(stringResource(R.string.assistant_proposal_keep))
+                }
+            }
+
+            ProposalDecision.Accepted -> Text(
+                stringResource(R.string.assistant_proposal_accepted),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.success,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("${tag}_accepted"),
+            )
+
+            ProposalDecision.Kept -> Text(
+                stringResource(R.string.assistant_proposal_kept),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("${tag}_kept"),
+            )
+        }
+    }
+}
+
+/// The name of the profile section a proposal would land in, in the user's language — the same
+/// string the Profil screen writes over that section, so the two agree on what it is called.
+private fun sectionLabel(kind: String) = when (kind) {
+    AppViewModel.EXPERIENCE_SECTION -> R.string.profile_section_experience
+    AppViewModel.EDUCATION_SECTION -> R.string.profile_section_education
+    else -> R.string.profile_section_languages
 }
 
 /// The composer: the one field, the picture beside it and the send button.

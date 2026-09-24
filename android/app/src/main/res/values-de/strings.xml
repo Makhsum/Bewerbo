@@ -165,6 +165,14 @@
     <string name="assistant_thinking_title">Antwort wird vorbereitet</string>
     <string name="assistant_thinking_body">Ihr Text wird gelesen. Das dauert einige Sekunden.</string>
     <string name="assistant_missing">Fehlt noch</string>
+    <string name="assistant_proposals">Was davon ins Profil käme</string>
+    <string name="assistant_proposals_note">Jede Zeile ist ein Vorschlag. Lesen Sie das Deutsche neben Ihren eigenen Worten und entscheiden Sie darüber; nichts steht im Profil, bevor Sie es übernehmen.</string>
+    <string name="assistant_proposal_source">Ihre Worte</string>
+    <string name="assistant_proposal_german">Auf Deutsch</string>
+    <string name="assistant_proposal_accept">Übernehmen</string>
+    <string name="assistant_proposal_keep">Weglassen</string>
+    <string name="assistant_proposal_accepted">Steht im Profil, genau in diesen Worten.</string>
+    <string name="assistant_proposal_kept">Weggelassen. Ihre eigenen Worte bleiben, wie Sie sie geschrieben haben.</string>
     <string name="assistant_you">Sie</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">Kein Assistent in dieser Installation</string>

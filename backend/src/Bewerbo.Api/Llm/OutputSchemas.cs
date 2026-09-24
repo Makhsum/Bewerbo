@@ -115,15 +115,40 @@ public static class OutputSchemas
     /// what goes in them is written in the language the user wrote in. The shape is still closed,
     /// for the reason every schema in this file is — an answer with a field nobody drew is an
     /// answer nobody reads.
+    ///
+    /// "proposals" is the exception inside the exception: "title" and "detail" ARE German, because
+    /// they are the strings a profile entry is made of, and "source" quotes the user's own words
+    /// back so the two can be read side by side. "kind" lists the profile sections by the names
+    /// their PATCH routes carry.
     /// </summary>
     public const string Assistant = """
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reply", "missing"],
+      "required": ["reply", "missing", "proposals"],
       "properties": {
         "reply":   { "type": "string" },
-        "missing": { "type": "array", "items": { "type": "string" }, "maxItems": 6 }
+        "missing": { "type": "array", "items": { "type": "string" }, "maxItems": 6 },
+        "proposals": {
+          "type": "array", "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "source", "title", "detail", "from", "to"],
+            "properties": {
+              "kind":   { "type": "string",
+                          "enum": ["berufserfahrung", "ausbildung", "sprachen"] },
+              "source": { "type": "string",
+                          "description": "The user's own words this entry was read from, quoted." },
+              "title":  { "type": "string",
+                          "description": "German: the Position, the Abschluss or the Sprache." },
+              "detail": { "type": "string",
+                          "description": "German: the Arbeitgeber, the Institution or the Niveau." },
+              "from":   { "type": "string", "description": "YYYY-MM, or empty. Never guessed." },
+              "to":     { "type": "string", "description": "YYYY-MM, or empty while it goes on." }
+            }
+          }
+        }
       }
     }
     """;

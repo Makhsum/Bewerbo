@@ -411,8 +411,46 @@ data class AssistantTurnRequest(val uiLanguage: String, val messages: List<Assis
 /// What the assistant answered. [reply] is prose in the language the user wrote in — the one answer
 /// of this API that is a finished sentence rather than a kind and its arguments. [missing] is what
 /// it says is still needed for a Lebenslauf, one short line each and in the same language.
+/// [proposals] is the same understanding as profile entries, for the user to decide on one by one.
 @Serializable
-data class AssistantReply(val reply: String = "", val missing: List<String> = emptyList())
+data class AssistantReply(
+    val reply: String = "",
+    val missing: List<String> = emptyList(),
+    val proposals: List<AssistantProposal> = emptyList(),
+)
+
+/// One thing the assistant understood, as it would stand in the profile.
+///
+/// [source] is the user's own wording it was read from, quoted; [title] and [detail] are the German
+/// proposed for it — the pair the user reads side by side before deciding. They are the exact
+/// strings the profile entry is made of and are sent back unchanged, so the profile afterwards
+/// carries the German that was read and not a second reading of it.
+///
+/// [kind] is the profile section it belongs in, spelled as the PATCH routes spell it:
+/// `berufserfahrung`, `ausbildung` or `sprachen`. [from] and [to] are ISO dates, empty for a
+/// language and empty in [to] for something still going on.
+@Serializable
+data class AssistantProposal(
+    val kind: String = "",
+    val source: String = "",
+    val title: String = "",
+    val detail: String = "",
+    val from: String = "",
+    val to: String = "",
+)
+
+/// What the user has decided about one proposal. [Pending] is the only state in which it is still
+/// an offer — the other two are what the card says once it has been answered, and a refusal is said
+/// out loud rather than left as a card that quietly disappeared.
+enum class ProposalDecision { Pending, Accepted, Kept }
+
+/// One proposal beside the decision made about it. Client-side only, like [DutyChoice]: the
+/// decision never travels, and nothing reaches the profile until [ProposalDecision.Accepted] has
+/// been written there through the section's own route.
+data class AssistantProposalChoice(
+    val proposal: AssistantProposal,
+    val decision: ProposalDecision = ProposalDecision.Pending,
+)
 
 /// One turn as the SCREEN holds it: what was said, and — for an answer — what came with it.
 /// Client-side only, like [DutyChoice]: [AssistantMessage] is what travels, and this is what is
@@ -421,6 +459,7 @@ data class AssistantTurn(
     val fromUser: Boolean,
     val text: String,
     val missing: List<String> = emptyList(),
+    val proposals: List<AssistantProposalChoice> = emptyList(),
 )
 
 

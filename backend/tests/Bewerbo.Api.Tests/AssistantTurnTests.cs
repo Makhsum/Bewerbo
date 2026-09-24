@@ -88,6 +88,111 @@ public class AssistantTurnTests
     }
 
     /// <summary>
+    /// The pair the user decides about — the German and the words it was read from — has to reach
+    /// the client whole. A proposal whose source is dropped on the way is a German sentence with
+    /// nothing to compare it against, which is the thing this card exists to prevent.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_reaches_the_client_with_the_users_own_wording_beside_the_german()
+    {
+        await using var db = NewDatabase();
+        var model = new StubModel(new AssistantReply
+        {
+            Reply = "Зрозуміло.",
+            Proposals =
+            [
+                new AssistantProposal
+                {
+                    Kind = "berufserfahrung", Source = "я працювала у лікарні в Києві",
+                    Title = "Pflegefachkraft", Detail = "Stadtklinik Kyjiw",
+                    From = "2018-04", To = "",
+                },
+            ],
+        });
+        var controller = Routes(db, model);
+
+        var result = await controller.Turn(
+            Turn("Я шість років працювала у лікарні в Києві, з 2018 року."), Conversation(model), default);
+
+        var reply = Assert.IsType<AssistantReplyDto>(Assert.IsType<OkObjectResult>(result).Value);
+        var proposal = Assert.Single(reply.Proposals);
+        Assert.Equal("berufserfahrung", proposal.Kind);
+        Assert.Equal("я працювала у лікарні в Києві", proposal.Source);
+        Assert.Equal("Pflegefachkraft", proposal.Title);
+        Assert.Equal("Stadtklinik Kyjiw", proposal.Detail);
+        // Widened to the shape PATCH /sections/berufserfahrung parses, and nothing else touched.
+        Assert.Equal("2018-04-01", proposal.From);
+        Assert.Equal("", proposal.To);
+    }
+
+    /// <summary>
+    /// A proposal the profile's own routes would refuse is dropped rather than drawn: a card
+    /// offering a save that then fails is worse than one that was never offered. The three ways it
+    /// can be unusable, in one answer — an unknown section, no name, and no start date on a station.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_the_profile_could_not_take_is_dropped_before_it_is_offered()
+    {
+        await using var db = NewDatabase();
+        var model = new StubModel(new AssistantReply
+        {
+            Reply = "ok",
+            Proposals =
+            [
+                new AssistantProposal
+                {
+                    Kind = "hobbys", Source = "я люблю шахи", Title = "Schach", From = "2010-01",
+                },
+                new AssistantProposal
+                {
+                    Kind = "berufserfahrung", Source = "я працювала", Title = "", From = "2010-01",
+                },
+                new AssistantProposal
+                {
+                    Kind = "berufserfahrung", Source = "колись давно у магазині",
+                    Title = "Verkäuferin", From = "",
+                },
+                new AssistantProposal
+                {
+                    Kind = "sprachen", Source = "українська рідна",
+                    Title = "Ukrainisch", Detail = "Muttersprache",
+                },
+            ],
+        });
+        var controller = Routes(db, model);
+
+        var result = await controller.Turn(Turn("Erzähl ich mal."), Conversation(model), default);
+
+        var reply = Assert.IsType<AssistantReplyDto>(Assert.IsType<OkObjectResult>(result).Value);
+        // The language survives without a date; a language has none, and none is asked of it.
+        var proposal = Assert.Single(reply.Proposals);
+        Assert.Equal("sprachen", proposal.Kind);
+        Assert.Equal("", proposal.From);
+    }
+
+    /// <summary>
+    /// The prompt has to say that title and detail are German and that source is the user's own
+    /// words, because nothing downstream can tell the two apart — a proposal whose German half
+    /// came back in Ukrainian would be saved into the profile exactly as it arrived.
+    /// </summary>
+    [Fact]
+    public async Task The_prompt_says_which_half_of_a_proposal_is_german_and_which_is_quoted()
+    {
+        await using var db = NewDatabase();
+        var model = new StubModel(new AssistantReply { Reply = "ok" });
+        var controller = Routes(db, model);
+
+        await controller.Turn(Turn("Hallo"), Conversation(model), default);
+
+        Assert.Contains("AUF DEUTSCH", model.LastSystem);
+        Assert.Contains("WÖRTLICH", model.LastSystem);
+        foreach (var section in new[] { "berufserfahrung", "ausbildung", "sprachen" })
+        {
+            Assert.Contains(section, model.LastSystem);
+        }
+    }
+
+    /// <summary>
     /// A turn with nothing in it is refused before the model is paid for it. Whitespace is the case
     /// that matters: it is what a client sends when the composer holds only a newline.
     /// </summary>

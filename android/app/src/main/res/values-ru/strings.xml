@@ -162,6 +162,14 @@
     <string name="assistant_thinking_title">Готовится ответ</string>
     <string name="assistant_thinking_body">Ваш текст читается. Это занимает несколько секунд.</string>
     <string name="assistant_missing">Чего ещё не хватает</string>
+    <string name="assistant_proposals">Что из этого попало бы в профиль</string>
+    <string name="assistant_proposals_note">Каждая строка — предложение. Прочитайте немецкий текст рядом со своими словами и решите по каждому: в профиль ничего не попадает, пока вы это не примете.</string>
+    <string name="assistant_proposal_source">Ваши слова</string>
+    <string name="assistant_proposal_german">По-немецки</string>
+    <string name="assistant_proposal_accept">Принять</string>
+    <string name="assistant_proposal_keep">Не добавлять</string>
+    <string name="assistant_proposal_accepted">В профиле, ровно этими словами.</string>
+    <string name="assistant_proposal_kept">Не добавлено. Ваши собственные слова остаются как есть.</string>
     <string name="assistant_you">Вы</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">В этой установке помощника нет</string>

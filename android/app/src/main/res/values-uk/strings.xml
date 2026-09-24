@@ -164,6 +164,14 @@
     <string name="assistant_thinking_title">Готується відповідь</string>
     <string name="assistant_thinking_body">Ваш текст читається. Це триває кілька секунд.</string>
     <string name="assistant_missing">Чого ще бракує</string>
+    <string name="assistant_proposals">Що з цього потрапило б до профілю</string>
+    <string name="assistant_proposals_note">Кожен рядок — пропозиція. Прочитайте німецький текст поруч із власними словами й вирішіть щодо кожного: до профілю нічого не потрапляє, доки ви це не приймете.</string>
+    <string name="assistant_proposal_source">Ваші слова</string>
+    <string name="assistant_proposal_german">Німецькою</string>
+    <string name="assistant_proposal_accept">Прийняти</string>
+    <string name="assistant_proposal_keep">Не додавати</string>
+    <string name="assistant_proposal_accepted">У профілі, саме цими словами.</string>
+    <string name="assistant_proposal_kept">Не додано. Ваші власні слова залишаються як є.</string>
     <string name="assistant_you">Ви</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">У цій установці помічника немає</string>

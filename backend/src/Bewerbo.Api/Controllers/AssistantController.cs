@@ -44,7 +44,11 @@ public class AssistantController(BewerboDbContext db, ILanguageModel model) : Be
         // the assistant did not answer. Same kind, so the screen has one thing to say about it.
         return reply is null
             ? RefusedProblem(AssistantUnavailable, AssistantUnavailableKind)
-            : Ok(new AssistantReplyDto(reply.Reply, reply.Missing));
+            : Ok(new AssistantReplyDto(reply.Reply, reply.Missing,
+                reply.Proposals
+                    .Select(p => new AssistantProposalDto(
+                        p.Kind, p.Source, p.Title, p.Detail, p.From, p.To))
+                    .ToList()));
     }
 
     internal const string AssistantUnavailable =

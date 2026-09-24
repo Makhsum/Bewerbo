@@ -115,7 +115,20 @@ public record AssistantMessageDto(bool FromUser, string Text);
 /// The one answer of this API that carries a finished sentence rather than a kind and its
 /// arguments. See <see cref="Llm.AssistantConversation"/> for why that is not the rule breaking.
 /// </summary>
-public record AssistantReplyDto(string Reply, IReadOnlyList<string> Missing);
+public record AssistantReplyDto(
+    string Reply, IReadOnlyList<string> Missing, IReadOnlyList<AssistantProposalDto> Proposals);
+
+/// <summary>
+/// One thing the assistant understood, as it would stand in the profile: the German beside the
+/// user's own wording it was read from.
+///
+/// <paramref name="Title"/> and <paramref name="Detail"/> are the exact strings a profile entry is
+/// made of, and the app sends them back unchanged through <c>PATCH /sections/…</c> — so what the
+/// user read before accepting is what the profile then carries. Nothing is stored by the turn that
+/// produced this; a proposal nobody accepts leaves no trace at all.
+/// </summary>
+public record AssistantProposalDto(
+    string Kind, string Source, string Title, string Detail, string From, string To);
 
 
 public record ParsePostingRequest(Guid ProfileId, string Text, string? EmployerType);

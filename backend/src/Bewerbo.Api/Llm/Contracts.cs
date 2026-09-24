@@ -142,4 +142,57 @@ public record AssistantReply
     /// </summary>
     [JsonPropertyName("missing")]
     public List<string> Missing { get; init; } = [];
+
+    /// <summary>
+    /// What of it would stand in the profile, one entry each. Empty for a turn that carried no
+    /// station, qualification or language — a question answered, a greeting.
+    /// </summary>
+    [JsonPropertyName("proposals")]
+    public List<AssistantProposal> Proposals { get; init; } = [];
+}
+
+/// <summary>
+/// One thing the assistant understood, as it would stand in the profile — the German beside the
+/// user's own wording it was read from.
+///
+/// <see cref="Source"/> is quoted for the reason <see cref="ExtractedField.Quote"/> is: the user
+/// is deciding about a pair, and a paraphrase of their own sentence is not something they can
+/// recognise as theirs. <see cref="Title"/> and <see cref="Detail"/> are the German, and they are
+/// the exact strings a profile entry is made of — nothing re-derives them on the way in, so what
+/// the user accepted is what the profile carries.
+///
+/// Nothing here is stored by the turn that produced it. An accepted proposal is saved by the
+/// client through the profile's own section routes, so this API keeps one write path.
+/// </summary>
+public record AssistantProposal
+{
+    /// <summary>
+    /// berufserfahrung | ausbildung | sprachen — the profile section it belongs in, spelled as
+    /// <c>PATCH /api/profile/{id}/sections/…</c> spells it.
+    /// </summary>
+    [JsonPropertyName("kind")]
+    public string Kind { get; init; } = "";
+
+    /// <summary>The user's own words this was read from, quoted, in their own language.</summary>
+    [JsonPropertyName("source")]
+    public string Source { get; init; } = "";
+
+    /// <summary>The German first line of the entry: the Position, the Abschluss or the Sprache.</summary>
+    [JsonPropertyName("title")]
+    public string Title { get; init; } = "";
+
+    /// <summary>
+    /// The German second line: the Arbeitgeber, the Institution or the Niveau. May be empty —
+    /// somebody who says what they did without saying where still has a station.
+    /// </summary>
+    [JsonPropertyName("detail")]
+    public string Detail { get; init; } = "";
+
+    /// <summary>The start, as a year and a month — never a guessed one. Empty for a language.</summary>
+    [JsonPropertyName("from")]
+    public string From { get; init; } = "";
+
+    /// <summary>The end, empty for something still going on and for a language.</summary>
+    [JsonPropertyName("to")]
+    public string To { get; init; } = "";
 }

@@ -183,6 +183,14 @@
     <string name="assistant_thinking_title">Preparing an answer</string>
     <string name="assistant_thinking_body">Reading what you wrote. This takes a few seconds.</string>
     <string name="assistant_missing">Still missing</string>
+    <string name="assistant_proposals">What would go into your profile</string>
+    <string name="assistant_proposals_note">Each of these is a suggestion. Read the German beside your own words and decide on it; nothing reaches your profile until you take it.</string>
+    <string name="assistant_proposal_source">Your words</string>
+    <string name="assistant_proposal_german">In German</string>
+    <string name="assistant_proposal_accept">Take this</string>
+    <string name="assistant_proposal_keep">Leave it out</string>
+    <string name="assistant_proposal_accepted">In your profile, in exactly these words.</string>
+    <string name="assistant_proposal_kept">Left out. Your own words stand as you wrote them.</string>
     <string name="assistant_you">You</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">No assistant on this installation</string>

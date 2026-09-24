@@ -714,9 +714,101 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             ),
         )
         _state.update {
-            it.copy(assistant = it.assistant + AssistantTurn(false, answer.reply, answer.missing))
+            it.copy(
+                assistant = it.assistant + AssistantTurn(
+                    false, answer.reply, answer.missing,
+                    // Every proposal arrives undecided. The user reads the German beside their own
+                    // words and answers it one by one — nothing is taken because it was offered.
+                    answer.proposals.map { proposal -> AssistantProposalChoice(proposal) },
+                ),
+            )
         }
     }
+
+    /**
+     * Writes ONE proposal into the profile, exactly as the card showed it.
+     *
+     * Through the section's own PATCH route, as every write in this app goes: the assistant
+     * produces content and never a storage effect, so there is one write path and the profile
+     * cannot be filled from two directions. The title and the detail travel unchanged — what the
+     * user read before accepting is what the profile then carries, and nothing re-derives it.
+     *
+     * The entry is appended to what the section already holds. A proposal is an addition to a life
+     * that is being described, never a correction of one already on file; replacing an entry is
+     * the form's job, and it is one tap away.
+     */
+    fun acceptProposal(turn: Int, index: Int) = launch(PROPOSAL) {
+        val id = profileId() ?: return@launch
+        val profile = state.value.profile ?: return@launch
+        val choice = state.value.assistant.getOrNull(turn)?.proposals?.getOrNull(index)
+            ?: return@launch
+        if (choice.decision != ProposalDecision.Pending) return@launch
+        val proposal = choice.proposal
+
+        val saved = when (proposal.kind) {
+            EXPERIENCE_SECTION -> api.saveExperience(
+                id,
+                profile.experience + Experience(
+                    position = proposal.title, employer = proposal.detail,
+                    from = proposal.from, to = proposal.to.ifBlank { null },
+                ),
+            )
+            EDUCATION_SECTION -> api.saveEducation(
+                id,
+                profile.education + Education(
+                    degree = proposal.title, institution = proposal.detail,
+                    from = proposal.from, to = proposal.to.ifBlank { null },
+                ),
+            )
+            LANGUAGES_SECTION -> api.saveLanguages(
+                id,
+                profile.languages + LanguageSkill(language = proposal.title, level = proposal.detail),
+            )
+            // A section this build does not know is one the server should not have sent; leaving
+            // the card pending is the honest answer, and the next build will draw it.
+            else -> return@launch
+        }
+        _state.update {
+            it.copy(
+                profile = saved,
+                assistant = it.assistant.decided(turn, index, ProposalDecision.Accepted),
+            )
+        }
+        refreshDerived()
+    }
+
+    /**
+     * The user refused one proposal.
+     *
+     * Nothing was stored, so there is nothing to undo — the same bargain [discardDutyOutcomes]
+     * strikes. The card stays and says the German was left out, rather than disappearing: the
+     * user's own words are what still stand, and a card that vanished would read as if something
+     * had happened to them.
+     */
+    fun refuseProposal(turn: Int, index: Int) = _state.update {
+        it.copy(assistant = it.assistant.decided(turn, index, ProposalDecision.Kept))
+    }
+
+    /**
+     * The conversation with ONE proposal's decision changed.
+     *
+     * By position and not by an id, unlike [dutyOutcomes]: a proposal has no id to key a map with —
+     * it was never stored anywhere — and the turns are the screen's own state, so the decision
+     * belongs beside the proposal it is about. Positions are stable here for the same reason: a
+     * turn is only ever appended, and none is ever removed.
+     */
+    private fun List<AssistantTurn>.decided(turn: Int, index: Int, decision: ProposalDecision) =
+        mapIndexed { t, one ->
+            if (t != turn) {
+                one
+            } else {
+                one.copy(
+                    proposals = one.proposals.mapIndexed { i, choice ->
+                        if (i == index) choice.copy(decision = decision) else choice
+                    },
+                )
+            }
+        }
 
     /**
      * Reads an old Lebenslauf out of a photo into the composer.
@@ -1225,6 +1317,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// The name of the assistant's busy state. Named rather than spelled out at both ends:
         /// the screen draws the "preparing an answer" row off exactly this string.
         const val ASSISTANT = "assistant"
+
+        /// The busy state of accepting one proposal. Its own name and not [ASSISTANT]'s, because
+        /// the screen tells them apart: a save must not draw the "preparing an answer" row.
+        const val PROPOSAL = "proposal"
+
+        /// The profile sections a proposal can land in, spelled as the PATCH routes spell them —
+        /// and as the server's own schema lists them. The wire word is the contract here, so it is
+        /// written once rather than at each of the three branches that switch on it.
+        const val EXPERIENCE_SECTION = "berufserfahrung"
+
+        const val EDUCATION_SECTION = "ausbildung"
+
+        const val LANGUAGES_SECTION = "sprachen"
 
         /// The kind for "the server was not reached at all", which no ProblemDetails can carry.
         const val UNREACHABLE = "unreachable"
