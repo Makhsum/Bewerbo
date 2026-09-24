@@ -139,7 +139,19 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BewerboDbContext>();
+    // Two different starts, one schema. A machine with no database gets the whole of it from
+    // EnsureCreated; a machine that has been running since an earlier version gets nothing from it —
+    // EnsureCreated only ever creates, never completes — and keeps its rows while SchemaUpdate adds
+    // what the model has gained since. The line it writes is deliberate: an installation that was
+    // behind should say so once on the way up, rather than let the next request explain it as a 500.
     db.Database.EnsureCreated();
+    var schemaChanges = db.BringSchemaUpToDate();
+    if (schemaChanges.Count > 0)
+    {
+        app.Logger.LogInformation(
+            "Database schema brought up to date, {Count} addition(s): {Changes}",
+            schemaChanges.Count, string.Join(", ", schemaChanges));
+    }
 }
 
 app.UseExceptionHandler();
