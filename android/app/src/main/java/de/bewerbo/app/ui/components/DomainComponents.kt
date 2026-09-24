@@ -732,5 +732,9 @@ fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     "scan_too_large" -> stringResource(R.string.error_scan_too_large)
     "scan_too_many_pages" -> stringResource(R.string.error_scan_too_many_pages)
     "scan_missing" -> stringResource(R.string.error_scan_missing)
+    // The model went away while the app was open — the one case AssistantController refuses for,
+    // since the screen already draws the form where health said so at launch. Without this line the
+    // German the server sent is what the reader gets, in an interface that is not German.
+    "assistant_unavailable" -> stringResource(R.string.error_assistant_unavailable)
     else -> error.detail.ifBlank { stringResource(R.string.error_unknown) }
 }
