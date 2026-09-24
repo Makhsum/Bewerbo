@@ -59,10 +59,16 @@ public record DocumentScanDto(string ContentType, string FileName, int SizeBytes
 /// survives the scan that is uploaded next; out, so the screen can say where the number it shows
 /// came from. A caller that leaves it out says nothing, and a count that was not stated goes on
 /// being filled in from the file.
+///
+/// <paramref name="AddedOnDevice"/> is the same arrangement for the same reason: the installation
+/// that filed the record, travelling in so it can be kept and out so the screen can compare it with
+/// its OWN id. Only the client knows which device it is, and only the client can answer "was this
+/// one mine?" — so the server carries the id and draws no conclusion from it. Left out it is empty,
+/// which says nothing about where the document came from rather than something false.
 /// </summary>
 public record DocumentDto(
     Guid? Id, string Title, string Kind, string Note, int PageCount,
-    bool PageCountStated = false, DocumentScanDto? Scan = null);
+    bool PageCountStated = false, string AddedOnDevice = "", DocumentScanDto? Scan = null);
 
 /// <summary>
 /// Whether this account has read what holding a scan means and agreed to it, and when.
@@ -334,7 +340,7 @@ public static class DtoMapping
     /// ones that do not, say nothing about scans rather than something false.
     /// </summary>
     public static DocumentDto ToDto(this StoredDocument d, ScanSummary? scan = null) => new(
-        d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount, d.PageCountStated,
+        d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount, d.PageCountStated, d.AddedOnDevice,
         scan is null ? null : new DocumentScanDto(
             scan.ContentType, scan.FileName, scan.SizeBytes, scan.AddedAt.ToString("o")));
 }

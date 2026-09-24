@@ -164,6 +164,7 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
             DocumentRow(
                 document = document,
                 index = index,
+                deviceId = viewModel.deviceId,
                 busy = state.busy != null,
                 onOpenScan = { viewModel.openScan(document) },
                 onAddScan = {
@@ -244,13 +245,15 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
  *
  * The state is said in WORDS and not only in a tint, the way the demand rows above it are: "No copy
  * stored" over a row whose only difference from its neighbour is a paler icon is not something a
- * user reads. A row without a copy also says why — the document was added somewhere else — because
- * the absence looks like a fault of this screen otherwise, and offers the one action that fixes it.
+ * user reads. A row without a copy also says what is missing, because the absence looks like a
+ * fault of this screen otherwise, and offers the one action that fixes it — WHY it is missing is
+ * only said where the record answers it, see [noCopyReason].
  */
 @Composable
 private fun DocumentRow(
     document: StoredDocument,
     index: Int,
+    deviceId: String,
     busy: Boolean,
     onOpenScan: () -> Unit,
     onAddScan: () -> Unit,
@@ -313,10 +316,12 @@ private fun DocumentRow(
 
                 if (!stored) {
                     Text(
-                        stringResource(R.string.locker_added_elsewhere),
+                        stringResource(noCopyReason(document, deviceId)),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.muted,
-                        modifier = Modifier.padding(top = Space.xs),
+                        modifier = Modifier
+                            .padding(top = Space.xs)
+                            .testTag("locker_item_no_copy_reason_$index"),
                     )
                     OutlinedButton(
                         onClick = onAddScan,
@@ -805,6 +810,19 @@ private fun scanChooser(context: Context, file: File, contentType: String?, titl
 /// and a line saying so under every document would say nothing.
 private fun pagesSourceLabel(document: StoredDocument) =
     if (document.pageCountStated) R.string.locker_pages_from_you else R.string.locker_pages_from_file
+
+/// Why a document has no stored copy. Every row without one used to be told it had been added on
+/// another device, which is not something the record says: a document filed on THIS phone with no
+/// file chosen, and one whose file the server refused, are both in that state and neither came
+/// from anywhere else. The claim is made only where the stamp the record carries is another
+/// device's — an empty stamp is a record from before it existed and answers neither way, so it
+/// gets the sentence that is true of all three: the scan is missing, and adding it is the move.
+private fun noCopyReason(document: StoredDocument, deviceId: String) =
+    if (document.addedOnDevice.isNotBlank() && document.addedOnDevice != deviceId) {
+        R.string.locker_added_elsewhere
+    } else {
+        R.string.locker_no_scan_yet
+    }
 
 /// What a scan's type is called on screen. Not translated and not meant to be: PDF, JPEG and PNG
 /// are the same three letters in every language the app is offered in.

@@ -405,6 +405,7 @@
     <string name="locker_copy_stored">Kopie gespeichert</string>
     <string name="locker_no_copy">Keine Kopie gespeichert</string>
     <string name="locker_added_elsewhere">Dieses Dokument wurde auf einem anderen Gerät angelegt. Legen Sie den Scan ab, dann ist er überall dabei.</string>
+    <string name="locker_no_scan_yet">Für dieses Dokument wurde noch kein Scan abgelegt. Legen Sie ihn ab, dann ist er überall dabei.</string>
     <string name="locker_add_scan">Scan ablegen</string>
     <string name="locker_open_scan">Scan öffnen</string>
     <string name="locker_size_kb">%1$d KB</string>

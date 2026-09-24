@@ -404,6 +404,7 @@
     <string name="locker_copy_stored">Копія зберігається</string>
     <string name="locker_no_copy">Копії немає</string>
     <string name="locker_added_elsewhere">Цей документ додано на іншому пристрої. Додайте скан — і він буде з вами всюди.</string>
+    <string name="locker_no_scan_yet">Скан цього документа ще не додано. Додайте його — і він буде з вами всюди.</string>
     <string name="locker_add_scan">Додати скан</string>
     <string name="locker_open_scan">Відкрити скан</string>
     <string name="locker_size_kb">%1$d КБ</string>

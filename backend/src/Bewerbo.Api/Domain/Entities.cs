@@ -150,6 +150,19 @@ public class StoredDocument
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>
+    /// WHICH installation filed this document, as the opaque id that client stamps its own writes
+    /// with — never read here, only kept and handed back, so that the screen can tell a document
+    /// it filed itself from one that arrived from the user's other phone.
+    ///
+    /// Empty is "nobody said", and that is the honest answer twice over: for a record written
+    /// before this field existed, and for a client that does not stamp. It must not be read as
+    /// either origin. The Documents screen used to tell the user that EVERY document without a
+    /// scan had been added on another device, which is a statement about their own data the server
+    /// never held — see <see cref="Scan"/>, whose absence is what that sentence was drawn from.
+    /// </summary>
+    public string AddedOnDevice { get; set; } = "";
+
+    /// <summary>
     /// The scanned file, where the user has stored one. Null is the normal state and not a fault:
     /// the RECORD is what the Anlagenverzeichnis needs, and a document may be named without its
     /// scan having been added on this device yet.

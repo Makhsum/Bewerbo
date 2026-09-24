@@ -59,6 +59,11 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
             // Only a count that actually arrived counts as stated: a body that names no pages at
             // all is not the user saying "one page", it is a client that left the field out.
             PageCountStated = document.PageCountStated && document.PageCount > 0,
+            // Kept as it arrives and never interpreted: a client that stamps its writes gets to
+            // recognise its own documents later, one that does not leaves the record saying
+            // nothing about where it came from. See StoredDocument.AddedOnDevice for why saying
+            // nothing is the right answer and not a gap.
+            AddedOnDevice = document.AddedOnDevice ?? "",
         };
         db.Documents.Add(stored);
         await db.SaveChangesAsync();

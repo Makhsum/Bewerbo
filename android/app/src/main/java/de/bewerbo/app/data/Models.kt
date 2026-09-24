@@ -71,8 +71,14 @@ data class StoredDocument(
     /// when a file is uploaded for the document, and it is what lets the count be shown with its
     /// source instead of silently changing.
     val pageCountStated: Boolean = false,
-    /// The copy the server holds, or null when only the record is there — which is what a document
-    /// added on another device looks like until its scan is added. Its presence IS "Copy stored".
+    /// The installation that filed this document — [AppViewModel.deviceId] as it was stamped on
+    /// the way in, empty on a record written before the stamp existed. Only this device can read
+    /// it, by comparing it with its own id, and that comparison is the ONLY thing that may be
+    /// called "added on another device": a missing [scan] says nothing about where a document
+    /// came from.
+    val addedOnDevice: String = "",
+    /// The copy the server holds, or null when only the record is there — because it was filed on
+    /// another device, or because nobody has added the scan yet. Its presence IS "Copy stored".
     val scan: DocumentScanInfo? = null,
 )
 

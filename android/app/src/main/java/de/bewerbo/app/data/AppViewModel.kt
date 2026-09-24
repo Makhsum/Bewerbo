@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.UUID
 
 /**
  * Why a call failed, in the two pieces the snackbar needs. [kind] is what the message says, looked
@@ -309,6 +310,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     private fun sessionPrefs() = getApplication<Application>()
         .getSharedPreferences("bewerbo-session", android.content.Context.MODE_PRIVATE)
+
+    /**
+     * What this installation calls itself when it files a document, so that the Mappe can tell a
+     * document THIS phone filed from one that came off the user's other one.
+     *
+     * A random id written once and read from then on. It says nothing about the phone and nothing
+     * about the user — it only has to differ from the next installation's, which is the whole of
+     * what "another device" means here.
+     *
+     * In [sessionPrefs] and not in [prefs] for the reason that file exists: allowBackup is on, and
+     * an id restored onto a new phone out of a Google backup would make that phone answer "I filed
+     * this" for every document the old one filed — which is the false claim this id was added to
+     * end. Signing out does not clear it; the device stays the device.
+     */
+    val deviceId: String by lazy {
+        sessionPrefs().getString("deviceId", null) ?: UUID.randomUUID().toString().also {
+            sessionPrefs().edit().putString("deviceId", it).apply()
+        }
+    }
 
     private fun refreshDerived() = launch(null) {
         val id = profileId() ?: return@launch
@@ -975,7 +995,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         val languages = _state.value.profile?.languages.orEmpty()
 
-        api.addDocument(id, document)
+        fileDocument(id, document)
         val profile = api.saveLanguages(
             id,
             languages.map { if (it.language == language) it.copy(certificateOnFile = true) else it },
@@ -1153,13 +1173,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // -- locker ----------------------------------------------------------------------------
 
     /**
+     * Files a document record, stamped with the device that filed it.
+     *
+     * Every route that creates a document goes through here, and that is the point of it: the page
+     * count rule was written into the Mappe's add card alone and the Abgleich went on overwriting
+     * counts for another release, because THERE ARE TWO forms that file a document. A rule about
+     * what a filed document carries belongs where both of them pass.
+     *
+     * The stamp is what lets the Mappe say "added on another device" about the documents that were
+     * — and only about those. See [deviceId] and [StoredDocument.addedOnDevice].
+     */
+    private suspend fun fileDocument(profileId: String, document: StoredDocument) =
+        api.addDocument(profileId, document.copy(addedOnDevice = deviceId))
+
+    /**
      * Files a document, and the scan the user picked for it where there is one.
      *
      * The record first and the file second, because the scan belongs to a document and there is no
      * id to hang it on until the record exists. If the upload then fails the record stays, and
      * that is the right way round: the Anlagenverzeichnis can already name the Zeugnis, and the row
-     * says "No copy stored" with a button to try again — which is exactly the state a document
-     * added on another device is in anyway.
+     * says "No copy stored" with a button to try again — beside the sentence for a document filed
+     * here whose scan is still missing, and not the one about another device, which this document
+     * is not.
      *
      * Which is why everything that follows from the RECORD is read back BETWEEN the two calls and
      * not after both. A refused upload — too large, too many pages, a type that is not stored —
@@ -1171,7 +1206,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun addDocument(document: StoredDocument) = launch("document") {
         val id = profileId() ?: return@launch
-        val created = api.addDocument(id, document)
+        val created = fileDocument(id, document)
         val picked = _state.value.pickedScan
 
         _state.update { it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null) }
