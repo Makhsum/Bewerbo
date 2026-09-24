@@ -8,6 +8,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -27,7 +28,16 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 /// The backend, as the client sees it. One place that knows a URL.
-class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
+///
+/// [token] is the session this device holds, read again for every call rather than handed over
+/// once: the server now refuses any request that does not carry it, and a client that kept a copy
+/// would go on sending one after a sign-out. A supplier that returns null is a device with no
+/// session, and the calls that are open to anyone — the door, the health check, the legal pages —
+/// work exactly as before.
+class BewerboApi(
+    private val baseUrl: String = BuildConfig.API_BASE_URL,
+    private val token: () -> String?,
+) {
 
     /// Lenient on purpose: a ProblemDetails carries members this app does not model, and a failure
     /// that cannot be parsed must still come out as a failure rather than as a parser exception.
@@ -45,6 +55,15 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
             // Rendering a Bewerbungsmappe and reading the PDF back takes longer than a normal call.
             requestTimeoutMillis = 60_000
             connectTimeoutMillis = 10_000
+        }
+
+        // Who is asking, on every call. Here and not written out per route, because the server asks
+        // it of every route: the thirty-odd calls below are addressed by a profile, a posting, a
+        // Bewerbung or a document id, and each of them is now refused unless the session says that
+        // id is this user's. The block runs per request, so the token it sends is the one the
+        // preferences hold at that moment rather than the one this object was built with.
+        defaultRequest {
+            token()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
 
         // Every non-2xx becomes an [ApiFailure] carrying the server's kind, and that is two things
@@ -87,13 +106,12 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
 
     /// Who the token names — asked at every launch, before anything is drawn. A refusal means the
     /// session has ended and the door goes back up; see [AppViewModel.bootstrap].
-    suspend fun session(token: String): Session =
-        client.get("$baseUrl/api/auth/session") { bearer(token) }.body()
+    suspend fun session(): Session = client.get("$baseUrl/api/auth/session").body()
 
     /// Ends this device's session and no other. The same account signed in on another phone stays
     /// signed in, which is the whole reason the token is per device rather than per account.
-    suspend fun signOut(token: String) {
-        client.post("$baseUrl/api/auth/sign-out") { bearer(token) }
+    suspend fun signOut() {
+        client.post("$baseUrl/api/auth/sign-out")
     }
 
     /// Whether the profile this phone is still naming may be kept by a new account — asked before
@@ -255,13 +273,6 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     private inline fun <reified T> io.ktor.client.request.HttpRequestBuilder.json(body: T) {
         contentType(ContentType.Application.Json)
         setBody(body)
-    }
-
-    /// The signed-in device, named on a call that has to know who is asking. Written out here
-    /// rather than installed as a default header: the token is read off the preferences by the
-    /// view model per call, and a client that carried one would go on sending it after a sign-out.
-    private fun io.ktor.client.request.HttpRequestBuilder.bearer(token: String) {
-        header(HttpHeaders.Authorization, "Bearer $token")
     }
 
     private suspend fun download(response: HttpResponse, into: File): File {

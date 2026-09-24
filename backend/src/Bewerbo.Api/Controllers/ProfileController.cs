@@ -13,6 +13,7 @@ using static Bewerbo.Api.Contracts.DtoMapping;
 namespace Bewerbo.Api.Controllers;
 
 [Route("api/profile")]
+[IdNames(OwnedResource.Profile)]
 public class ProfileController(BewerboDbContext db, ILanguageModel model) : BewerboController
 {
     [HttpPost("")]

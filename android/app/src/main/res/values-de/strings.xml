@@ -50,6 +50,7 @@
     <string name="error_email_taken">Zu dieser E-Mail-Adresse gibt es schon ein Konto. Melden Sie sich stattdessen an.</string>
     <string name="error_credentials_rejected">E-Mail-Adresse oder Passwort stimmt nicht.</string>
     <string name="error_reset_code_rejected">Der Code stimmt nicht oder gilt nicht mehr. Fordern Sie einen neuen an.</string>
+    <string name="error_session_invalid">Diese Anmeldung gilt nicht mehr. Bitte melden Sie sich erneut an.</string>
     <string name="error_link_not_an_address">Das ist keine Web-Adresse. Prüfen Sie sie und versuchen Sie es erneut.</string>
     <string name="error_link_unreachable">Die Seite hinter dem Link hat nicht geantwortet. Versuchen Sie es erneut oder fügen Sie den Text der Anzeige ein.</string>
     <string name="error_link_no_text">Auf dieser Seite steht kein Anzeigentext. Fügen Sie den Text stattdessen ein.</string>

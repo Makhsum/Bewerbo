@@ -1,7 +1,10 @@
 using System.Text.Json.Serialization;
+using Bewerbo.Api.Controllers;
 using Bewerbo.Api.Data;
 using Bewerbo.Api.Llm;
 using Bewerbo.Api.Mail;
+using Bewerbo.Api.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +32,17 @@ builder.Services.AddDbContext<BewerboDbContext>(options =>
     }
 });
 
-builder.Services.AddControllers();
+// Who is asking, and whether what they named is theirs. The scheme reads the Authorization header
+// and hands the request the account's profile id; the filter compares that id against the record
+// every route is addressed by. [Authorize] on BewerboController is what applies the first to the
+// whole API, and the filter is registered globally for the same reason — a route written later is
+// covered by default rather than by being remembered. See SessionAuthentication and OwnershipFilter.
+builder.Services
+    .AddAuthentication(SessionAuthentication.Scheme)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthentication.Scheme, null);
+builder.Services.AddAuthorization();
+
+builder.Services.AddControllers(options => options.Filters.Add<OwnershipFilter>());
 
 builder.Services.Configure<MvcOptions>(options =>
 {
@@ -149,6 +162,9 @@ app.Use(async (context, next) =>
 
     await next(context);
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

@@ -1,9 +1,15 @@
 using Bewerbo.Api.Llm;
 using Bewerbo.Api.Mail;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bewerbo.Api.Controllers;
 
+/// <summary>
+/// Open to anyone, and it says nothing about anybody: the app asks it at launch, before the door
+/// has been through, to learn which writer and which mail sender this installation runs.
+/// </summary>
+[AllowAnonymous]
 [Route("api/health")]
 public class HealthController(ILanguageModel model, IMailSender mail) : BewerboController
 {

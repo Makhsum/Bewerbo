@@ -64,6 +64,7 @@
     <string name="error_email_taken">There is already an account for this e-mail address. Sign in instead.</string>
     <string name="error_credentials_rejected">E-mail or password is not right.</string>
     <string name="error_reset_code_rejected">The code is not right, or it is no longer valid. Ask for a new one.</string>
+    <string name="error_session_invalid">This sign-in is no longer valid. Please sign in again.</string>
     <string name="error_link_not_an_address">That is not a web address. Check it and try again.</string>
     <string name="error_link_unreachable">The page behind that link did not answer. Try again, or paste the text of the posting.</string>
     <string name="error_link_no_text">There is no posting text on that page. Paste the text instead.</string>

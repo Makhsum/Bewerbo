@@ -3,6 +3,7 @@ using Bewerbo.Api.Data;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Mail;
 using Bewerbo.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +23,14 @@ namespace Bewerbo.Api.Controllers;
 /// account here is telling them something about the person behind it, and the user who mistyped
 /// one of the two retypes both anyway. The reset follows the same line — it answers the same way
 /// whether or not the address is one this server knows.
+///
+/// The one controller that is open to anyone, and it has to be: these are the routes a caller
+/// reaches BEFORE they have a session, and the two that do carry a token —
+/// <see cref="Session"/> and <see cref="EndSession"/> — have to be able to answer for one the
+/// server no longer knows. They read the header themselves; the rest of the API leaves that to
+/// <see cref="Services.SessionAuthenticationHandler"/>.
 /// </summary>
+[AllowAnonymous]
 [Route("api/auth")]
 public class AuthController(BewerboDbContext db, IMailSender mail, ILogger<AuthController> log)
     : BewerboController

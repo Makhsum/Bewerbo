@@ -708,6 +708,10 @@ fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     // Wrong, too old, or already spent — one sentence for all three, because the server refuses all
     // three the same way and the only thing the user can do about any of them is ask for a new code.
     "reset_code_rejected" -> stringResource(R.string.error_reset_code_rejected)
+    // Every call now carries the session, so this is the server saying the session itself is gone —
+    // ended on another device, or the account with it. The door is already back up by the time this
+    // is read; see AppViewModel.launch.
+    "session_invalid" -> stringResource(R.string.error_session_invalid)
     // Three ways a link can fail and three things to do about it: correct the address, try again,
     // or paste the advert by hand after all.
     "link_not_an_address" -> stringResource(R.string.error_link_not_an_address)

@@ -1,6 +1,7 @@
 using Bewerbo.Api.Contracts;
 using Bewerbo.Api.Legal;
 using Bewerbo.Api.Llm;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bewerbo.Api.Controllers;
@@ -12,7 +13,11 @@ namespace Bewerbo.Api.Controllers;
 /// The PROSE of the terms, the privacy notice and the Impressum is interface text and lives in the
 /// app's resources, in every language it is offered in. Only what varies by deployment comes from
 /// here — see <see cref="LegalOptions"/> for why an address must not be compiled into the APK.
+///
+/// Open to anyone: the Impressum, the AGB and the privacy notice are reachable from the door, and
+/// a privacy notice a user has to sign in to read is not one.
 /// </summary>
+[AllowAnonymous]
 [Route("api/legal")]
 public class LegalController(LegalOptions legal, LlmOptions model) : BewerboController
 {

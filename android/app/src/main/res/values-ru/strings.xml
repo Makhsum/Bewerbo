@@ -47,6 +47,7 @@
     <string name="error_email_taken">Для этого адреса аккаунт уже есть. Войдите в него.</string>
     <string name="error_credentials_rejected">Адрес или пароль неверны.</string>
     <string name="error_reset_code_rejected">Код неверен или больше не действует. Запросите новый.</string>
+    <string name="error_session_invalid">Сеанс больше не действует. Войдите снова.</string>
     <string name="error_link_not_an_address">Это не веб-адрес. Проверьте его и попробуйте снова.</string>
     <string name="error_link_unreachable">Страница по этой ссылке не ответила. Попробуйте снова или вставьте текст вакансии.</string>
     <string name="error_link_no_text">На этой странице нет текста вакансии. Вставьте текст вручную.</string>

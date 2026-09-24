@@ -141,7 +141,10 @@ data class EmailDraft(val file: File, val recipient: String, val subject: String
  */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val api = BewerboApi()
+    // The session goes to the server on every call, and it is read out of the preferences each
+    // time rather than held here: signing out removes it, and the next call must then be as
+    // anonymous as a call from a phone that never signed in. See [sessionPrefs].
+    private val api = BewerboApi { sessionPrefs().getString("authToken", null) }
     private val _state = MutableStateFlow(AppState())
     val state: StateFlow<AppState> = _state.asStateFlow()
 
@@ -168,7 +171,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val token = sessionPrefs().getString("authToken", null)
         if (token != null) {
             val session = try {
-                api.session(token)
+                api.session()
             } catch (_: ApiFailure) {
                 // The server ANSWERED and would not have it: the session was ended on another
                 // device, or the account is gone. Only THAT signs the user out — a server that
@@ -440,8 +443,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * makes: what stays is in the account, what was on the device is gone.
      */
     fun signOut() = launch("door") {
-        sessionPrefs().getString("authToken", null)?.let { token ->
-            runCatching { api.signOut(token) }
+        if (sessionPrefs().getString("authToken", null) != null) {
+            runCatching { api.signOut() }
         }
         forgetTheAccountOnThisDevice()
     }
@@ -1099,6 +1102,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(busy = busy, error = null) }
         runCatching { block() }
             .onFailure { failure ->
+                // A session the server no longer knows is the one failure that is not just a
+                // snackbar: it was ended on another device, or the account is gone, and every
+                // further call would be refused the same way. The door goes back up and the phone
+                // keeps nothing of the account — the same thing signing out does, for the same
+                // reason. The kind is AuthController's "session_invalid".
+                if (failure is ApiFailure && failure.kind == "session_invalid") {
+                    forgetTheAccountOnThisDevice()
+                }
                 _state.update { it.copy(error = errorOf(failure), loading = false) }
             }
         _state.update { it.copy(busy = null) }

@@ -49,6 +49,7 @@
     <string name="error_email_taken">Для цієї адреси обліковий запис уже є. Увійдіть до нього.</string>
     <string name="error_credentials_rejected">Адреса або пароль неправильні.</string>
     <string name="error_reset_code_rejected">Код неправильний або вже не діє. Запросіть новий.</string>
+    <string name="error_session_invalid">Сеанс уже не діє. Увійдіть знову.</string>
     <string name="error_link_not_an_address">Це не веб-адреса. Перевірте її та спробуйте ще раз.</string>
     <string name="error_link_unreachable">Сторінка за цим посиланням не відповіла. Спробуйте ще раз або вставте текст вакансії.</string>
     <string name="error_link_no_text">На цій сторінці немає тексту вакансії. Вставте текст вручну.</string>

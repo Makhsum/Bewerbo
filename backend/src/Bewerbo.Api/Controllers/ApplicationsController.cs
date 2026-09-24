@@ -13,6 +13,7 @@ using static Bewerbo.Api.Contracts.DtoMapping;
 namespace Bewerbo.Api.Controllers;
 
 [Route("api/applications")]
+[IdNames(OwnedResource.Application)]
 public class ApplicationsController(BewerboDbContext db) : BewerboController
 {
     [HttpPost("")]
@@ -21,8 +22,11 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     {
         var profile = await db.FullProfileAsync(request.ProfileId);
         var posting = await db.Postings.FindAsync(request.PostingId);
-        if (profile is null) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
-        if (posting is null) return NotFoundProblem(PostingsController.PostingMissing, PostingsController.PostingMissingKind);
+        // The two ids this API takes in a BODY rather than in the address, so OwnershipFilter does
+        // not see them. A record of somebody else's is refused as one that is not there, exactly as
+        // it is everywhere else — see that filter for why the two answer alike.
+        if (profile is null || profile.Id != SignedInProfileId) return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
+        if (posting is null || posting.ProfileId != SignedInProfileId) return NotFoundProblem(PostingsController.PostingMissing, PostingsController.PostingMissingKind);
         if (Incomplete(profile) is { } refusal) return refusal;
 
         var match = MatchFor(profile, posting);

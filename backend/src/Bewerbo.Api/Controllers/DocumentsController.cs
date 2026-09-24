@@ -25,6 +25,7 @@ namespace Bewerbo.Api.Controllers;
 /// <see cref="ProfileController"/>, which is where that agreement is given.
 /// </summary>
 [Route("api/documents")]
+[IdNames(OwnedResource.Document)]
 public class DocumentsController(BewerboDbContext db) : BewerboController
 {
     [HttpPost("")]

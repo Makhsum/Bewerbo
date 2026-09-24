@@ -1,3 +1,5 @@
+using Bewerbo.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bewerbo.Api.Controllers;
@@ -12,12 +14,28 @@ namespace Bewerbo.Api.Controllers;
 /// that returned a bare JSON string, was a second and a third shape for a client to know about.
 /// There is one now.
 ///
-/// Authorisation belongs here too when it arrives: an [Authorize] on this class reaches every route
-/// in the API, and an [AllowAnonymous] on the few that stay open is then the readable exception.
+/// Authorisation lives here as well, and it is the [Authorize] this file always said it would be:
+/// one attribute that reaches every route in the API, with an [AllowAnonymous] on the few that stay
+/// open — the door itself, the health check, the legal facts — as the readable exception. A
+/// controller written later is covered by deriving from this class rather than by being remembered.
+/// Who the caller is comes from <see cref="Services.SessionAuthenticationHandler"/>; whether what
+/// they named is theirs comes from <see cref="OwnershipFilter"/>.
 /// </summary>
 [ApiController]
+[Authorize]
 public abstract class BewerboController : ControllerBase
 {
+    /// <summary>
+    /// The profile of the account whose token this request carried — the one id this caller is
+    /// entitled to name.
+    ///
+    /// <see cref="Guid.Empty"/> where there is no session, which is a value no record has: a
+    /// comparison against it fails, so a route reading this without one refuses rather than
+    /// matching something by accident. Every route but the open ones is behind the [Authorize]
+    /// above and always has a session.
+    /// </summary>
+    protected Guid SignedInProfileId => User.SignedInProfileId() ?? Guid.Empty;
+
     /// <summary>
     /// The record the route names does not exist. The title is left to the framework on purpose, so
     /// that a 404 the API writes and a 404 the router writes for an address that matches nothing
@@ -27,8 +45,11 @@ public abstract class BewerboController : ControllerBase
     /// every user-facing sentence of this API now carries one: the server never learns the
     /// interface language, so the detail is German on every screen. The client writes the sentence
     /// from the kind and keeps the German as its fallback. See <see cref="Contracts.NextStepDto"/>.
+    ///
+    /// Reachable from <see cref="OwnershipFilter"/> as well as from the routes, so that an id
+    /// belonging to somebody else is refused in exactly the shape an id that is not there is.
     /// </summary>
-    protected ObjectResult NotFoundProblem(string detail, string kind)
+    protected internal ObjectResult NotFoundProblem(string detail, string kind)
     {
         var problem = Problem(statusCode: StatusCodes.Status404NotFound, detail: detail);
         if (problem.Value is ProblemDetails details)

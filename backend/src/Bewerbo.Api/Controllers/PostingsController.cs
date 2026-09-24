@@ -12,6 +12,7 @@ using static Bewerbo.Api.Contracts.DtoMapping;
 namespace Bewerbo.Api.Controllers;
 
 [Route("api/postings")]
+[IdNames(OwnedResource.Posting)]
 public class PostingsController(BewerboDbContext db) : BewerboController
 {
     [HttpPost("parse")]
@@ -19,6 +20,13 @@ public class PostingsController(BewerboDbContext db) : BewerboController
         [FromServices] ILanguageModel model, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Text)) return InvalidRequest("text", "Kein Anzeigentext.");
+        // The profile this advert is being filed under travels in the BODY, where OwnershipFilter
+        // does not see it — and what is stored here is the full text of an advert, under the id it
+        // names. Refused as a profile that is not there, the way every other mismatch is.
+        if (request.ProfileId != SignedInProfileId)
+        {
+            return NotFoundProblem(ProfileController.ProfileMissing, ProfileController.ProfileMissingKind);
+        }
 
         // A model reads a posting better than a regex does — but the rule-based parser is a
         // complete implementation, not a placeholder, so both paths produce the same shape and
