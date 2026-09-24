@@ -36,7 +36,16 @@ public class DocumentsController(BewerboDbContext db) : BewerboController
         // null and come back as a 500 with nothing in it to act on. Name the field that is missing,
         // and treat the genuinely optional ones as empty — the two answers the profile sections
         // already give, see ProfileController.PatchExperience.
-        if (document.Title is null) return InvalidRequest("title", "The body has no \"title\".");
+        //
+        // Asked as IsNullOrWhiteSpace and not as null, because that is the question the profile
+        // sections ask — ProfileController.Missing refuses a blank "position" in the same breath as
+        // an absent one, and a title is no different: what a document has instead of a name is what
+        // the Anlagenverzeichnis prints under its number, and a numbered Anlage with nothing beside
+        // it goes to the employer either way. One client mistake, one answer.
+        if (string.IsNullOrWhiteSpace(document.Title))
+        {
+            return InvalidRequest("title", "The body has no \"title\".");
+        }
 
         var stored = new StoredDocument
         {

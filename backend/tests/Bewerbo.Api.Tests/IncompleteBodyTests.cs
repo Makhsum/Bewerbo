@@ -82,6 +82,30 @@ public class IncompleteBodyTests
     }
 
     /// <summary>
+    /// A title that ARRIVED and says nothing is the same mistake as one that never arrived, and the
+    /// profile sections have always answered it as one — <c>ProfileController.Missing</c> asks
+    /// IsNullOrWhiteSpace, so a blank "position" is refused beside an absent one. This route asked
+    /// only whether the member was null, so a blank title came back 201 and the Anlagenverzeichnis
+    /// printed a numbered Anlage with nothing next to it, in a page that goes to an employer.
+    /// </summary>
+    [Theory]
+    [InlineData("\"\"")]
+    [InlineData("\"   \"")]
+    public async Task A_document_body_whose_title_says_nothing_is_refused_like_an_absent_one(string title)
+    {
+        await using var db = NewDatabase();
+        var profile = ProfileOf(db);
+
+        var refusal = await Documents(db).Add(profile, DocumentFrom($$"""
+            { "title": {{title}}, "kind": "Arbeitszeugnis", "note": "", "pageCount": 1 }
+            """));
+
+        Assert.IsType<BadRequestObjectResult>(refusal);
+        Assert.Contains("title", FieldsAtFault(refusal));
+        Assert.Empty(db.Documents);
+    }
+
+    /// <summary>
     /// The card's second criterion, asked of both routes at once: one client mistake, one shape.
     /// Both answer 400 with the field at fault under "errors", which is where the framework's own
     /// binding failures land — so a client reads all three the same way.
