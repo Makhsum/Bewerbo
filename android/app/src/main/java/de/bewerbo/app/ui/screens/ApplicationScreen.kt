@@ -11,6 +11,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,16 +92,26 @@ private fun placeOf(route: String): Destination? =
  * [navigate] leads out of the flow to a place: a Maschinenlesbarkeit check that could not be run
  * because a profile field is empty says so and takes the user to where that field is filled in.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (String) -> Unit) {
     val colors = LocalSemanticColors.current
     val application = state.application
 
-    // The Anlagenverzeichnis exists as a page only when there is something for it to list.
-    val availableParts = if (state.profile?.documents.isNullOrEmpty()) {
-        listOf("anschreiben", "lebenslauf")
-    } else {
-        listOf("anschreiben", "lebenslauf", "anlagenverzeichnis")
+    val documents = state.profile?.documents.orEmpty()
+    // The documents whose scan this installation actually holds. A copy can only be appended where
+    // there is one, and the two counts below are what the export card states rather than implies.
+    val withCopy = documents.filter { it.scan != null }
+    val withoutCopy = documents.filter { it.scan == null }
+
+    // The Anlagenverzeichnis exists as a page only when there is something for it to list, and the
+    // copies only when one of those documents has a file behind it — offering either otherwise
+    // promises a page the saved PDF does not contain.
+    val availableParts = buildList {
+        add("anschreiben")
+        add("lebenslauf")
+        if (documents.isNotEmpty()) add("anlagenverzeichnis")
+        if (withCopy.isNotEmpty()) add("scans")
     }
     var selectedParts by remember(availableParts) { mutableStateOf(availableParts.toSet()) }
 
@@ -556,9 +567,15 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                     color = colors.muted,
                     modifier = Modifier.padding(top = Space.s),
                 )
-                Row(
-                    Modifier.padding(top = Space.s),
+                // FlowRow for the reason the Profil screen's section rail uses one: three chips fit
+                // a phone-width row and the fourth did not — "Copies" was laid out past the right
+                // edge, present to a driver and invisible to the user, which is the worst of both.
+                FlowRow(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.s),
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
                     availableParts.forEach { part ->
                         val chosen = part in selectedParts
@@ -572,6 +589,44 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                                         selectedParts - part
                                     } else selectedParts + part
                                 },
+                        )
+                    }
+                }
+
+                // What the fourth part actually contains, in numbers. "Copies" on its own says
+                // nothing about how many of the documents have one, and a Mappe that quietly
+                // leaves out a Zeugnis the Anlagenverzeichnis promises is worse than one that
+                // offers no copies at all.
+                if ("scans" in availableParts) {
+                    Text(
+                        stringResource(
+                            R.string.application_scans_summary, withCopy.size, documents.size,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                        modifier = Modifier
+                            .padding(top = Space.s)
+                            .testTag("application_scans_summary"),
+                    )
+                }
+
+                // And the ones that have none, by name. The user can do two things about it —
+                // add the scan, or send that document separately — and neither is possible if
+                // they only find out when the employer asks.
+                if (withoutCopy.isNotEmpty() && documents.isNotEmpty()) {
+                    Box(Modifier.padding(top = Space.s)) {
+                        Callout(
+                            icon = BewerboIcons.Attention,
+                            title = pluralStringResource(
+                                R.plurals.application_scans_missing_title,
+                                withoutCopy.size, withoutCopy.size,
+                            ),
+                            body = stringResource(
+                                R.string.application_scans_missing_body,
+                                withoutCopy.joinToString(", ") { it.title },
+                            ),
+                            tone = PillTone.Attention,
+                            modifier = Modifier.testTag("application_scans_missing"),
                         )
                     }
                 }
@@ -810,6 +865,7 @@ private fun emailChooser(context: Context, draft: EmailDraft, title: String): In
 private fun partLabel(part: String) = when (part) {
     "anschreiben" -> R.string.part_anschreiben
     "lebenslauf" -> R.string.part_lebenslauf
+    "scans" -> R.string.part_scans
     else -> R.string.part_anlagen
 }
 

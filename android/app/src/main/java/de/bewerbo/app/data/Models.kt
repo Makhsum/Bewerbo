@@ -66,7 +66,36 @@ data class StoredDocument(
     val kind: String = "Sonstiges",
     val note: String = "",
     val pageCount: Int = 1,
+    /// The copy the server holds, or null when only the record is there — which is what a document
+    /// added on another device looks like until its scan is added. Its presence IS "Copy stored".
+    val scan: DocumentScanInfo? = null,
 )
+
+/**
+ * The stored scan of a document, without the file.
+ *
+ * Everything the Mappe needs to draw a row and the viewer needs to name what it is showing; the
+ * bytes are fetched one document at a time, because a list of documents is read on every screen
+ * and a photographed Zeugnis weighs two megabytes.
+ */
+@Serializable
+data class DocumentScanInfo(
+    /// application/pdf | image/jpeg | image/png — determined by the server from the bytes.
+    val contentType: String = "",
+    val fileName: String = "",
+    val sizeBytes: Int = 0,
+    val addedAt: String = "",
+)
+
+/**
+ * Whether this account has agreed to Bewerbo holding the scans of its documents.
+ *
+ * Asked before the first scan is offered to the server, and enforced by the server anyway — the
+ * upload is refused with `scan_consent_missing` while it is false. So this decides whether the
+ * disclosure is SHOWN; it does not decide whether the rule holds.
+ */
+@Serializable
+data class ScanConsent(val agreed: Boolean = false, val agreedAt: String? = null)
 
 @Serializable
 data class Translation(

@@ -134,9 +134,61 @@ public class StoredDocument
     public string Note { get; set; } = "";
     public int PageCount { get; set; }
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// The scanned file, where the user has stored one. Null is the normal state and not a fault:
+    /// the RECORD is what the Anlagenverzeichnis needs, and a document may be named without its
+    /// scan having been added on this device yet.
+    /// </summary>
+    public DocumentScan? Scan { get; set; }
 }
 
 public enum DocumentKind { Arbeitszeugnis, Zertifikat, Sprachnachweis, AnabinAuszug, Sonstiges }
+
+/// <summary>
+/// The scanned file behind a <see cref="StoredDocument"/>, as the account's rather than the phone's.
+///
+/// Until this existed the Mappe held the record of a Zeugnis and nothing else, so a reinstall or a
+/// second device showed a complete list of documents with no file behind any of it, and the
+/// Bewerbungsmappe could not be put together there. The scan is what makes the list mean something
+/// away from the one phone it was typed on.
+///
+/// A table of its own rather than columns on <see cref="StoredDocument"/>, for one reason: the
+/// document record is read by the profile, the Übersicht, the Abgleich and the Anlagenverzeichnis,
+/// and every one of those would otherwise drag ten megabytes of scan along to print a title.
+/// <see cref="Content"/> is loaded only where the bytes are the answer.
+///
+/// The bytes live in the database and not in a folder beside the binary, and that is what makes
+/// erasure a single statement: the cascade Profile → StoredDocument → DocumentScan takes them,
+/// on PostgreSQL and on the SQLite fallback alike, with no second store for anybody to sweep.
+/// </summary>
+public class DocumentScan
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid DocumentId { get; set; }
+    public StoredDocument? Document { get; set; }
+
+    /// <summary>
+    /// What the bytes actually are — "application/pdf", "image/jpeg" or "image/png". Determined
+    /// from the bytes themselves and never from what the upload claimed; see
+    /// <see cref="Services.ScanFile"/>.
+    /// </summary>
+    public string ContentType { get; set; } = "";
+
+    /// <summary>The name the file had on the device, kept so the user recognises it again.</summary>
+    public string FileName { get; set; } = "";
+
+    public byte[] Content { get; set; } = [];
+
+    /// <summary>
+    /// The length of <see cref="Content"/>, written down beside it. The screen names a size on a
+    /// list of documents, and reading the column to count its own bytes is the one query this
+    /// table exists to avoid.
+    /// </summary>
+    public int SizeBytes { get; set; }
+
+    public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
+}
 
 public class Posting
 {
@@ -235,6 +287,18 @@ public class Account
     public Guid ProfileId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// When this account read what holding a scan means and agreed to it, or null while it has
+    /// not. <see cref="Controllers.DocumentsController"/> refuses an upload while it is null, so
+    /// "the user reads it before the first scan leaves the phone" is a rule of the SERVER rather
+    /// than a habit of one screen — a second client, or the same screen after a rewrite, cannot
+    /// store a scan by forgetting to ask.
+    ///
+    /// The moment and not a bool, because that is what the user is entitled to be told back: a
+    /// consent that cannot say when it was given is not evidence of anything.
+    /// </summary>
+    public DateTimeOffset? ScansAgreedAt { get; set; }
 
     public List<AuthToken> Tokens { get; set; } = [];
 

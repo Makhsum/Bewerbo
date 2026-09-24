@@ -54,6 +54,12 @@
     <string name="error_link_unreachable">Die Seite hinter dem Link hat nicht geantwortet. Versuchen Sie es erneut oder fügen Sie den Text der Anzeige ein.</string>
     <string name="error_link_no_text">Auf dieser Seite steht kein Anzeigentext. Fügen Sie den Text stattdessen ein.</string>
     <string name="error_photo_unreadable">In diesem Bild waren keine Worte zu erkennen. Versuchen Sie ein schärferes oder fügen Sie den Text ein.</string>
+    <string name="error_scan_consent_missing">Bewerbo darf noch keine Kopien aufbewahren. Wählen Sie den Scan erneut und lesen Sie, was gespeichert wird.</string>
+    <string name="error_scan_type_unsupported">Als Scan lassen sich nur PDF, JPEG und PNG speichern.</string>
+    <string name="error_scan_too_large">Diese Datei ist zu groß. Gespeichert werden höchstens 10 MB.</string>
+    <string name="error_scan_too_many_pages">Diese Datei hat mehr als 20 Seiten. Legen Sie nur die Seiten ab, die zu diesem Dokument gehören.</string>
+    <string name="error_scan_missing">Für dieses Dokument ist keine Kopie gespeichert.</string>
+    <string name="error_scan_unreadable">Diese Datei ließ sich nicht lesen. Wählen Sie eine andere.</string>
 
     <!-- Die offenen Schritte. Der Server sagt, WELCHER Schritt es ist und was hineingehört; der
          Satz wird hier geschrieben, weil der Server die Oberflächensprache nie erfährt. -->
@@ -318,6 +324,9 @@
     <string name="part_anschreiben">Anschreiben</string>
     <string name="part_lebenslauf">Lebenslauf</string>
     <string name="part_anlagen">Anlagenverzeichnis</string>
+    <string name="part_scans">Kopien</string>
+    <string name="application_scans_summary">Von %2$d Dokumenten haben %1$d eine gespeicherte Kopie; sie werden hinter das Anlagenverzeichnis gehängt</string>
+    <string name="application_scans_missing_body">%1$s — im Anlagenverzeichnis benannt, ohne gespeicherte Datei. Legen Sie den Scan ab oder senden Sie ihn getrennt.</string>
 
     <string name="status_entwurf">Entwurf</string>
     <string name="status_versendet">Versendet</string>
@@ -332,16 +341,50 @@
 
     <string name="locker_subtitle">Zeugnisse, Zertifikate und der anabin-Auszug, auf die sich das Anlagenverzeichnis beruft.</string>
     <string name="locker_empty_title">Es sind noch keine Unterlagen abgelegt</string>
-    <string name="locker_empty_body">Legen Sie die Dokumente ab, auf die sich Ihre Bewerbung beruft. Bewerbo führt hier den Vermerk; der Scan selbst bleibt auf Ihrem Gerät.</string>
+    <string name="locker_empty_body">Legen Sie die Dokumente ab, auf die sich Ihre Bewerbung beruft. Bewerbo führt hier den Vermerk — und den Scan, sobald Sie einen ablegen.</string>
     <string name="locker_add">Dokument hinzufügen</string>
     <string name="locker_field_title">Titel</string>
     <string name="locker_field_note">Notiz</string>
     <string name="locker_field_pages">Seiten</string>
     <string name="locker_storage_title">Was hier gespeichert wird</string>
-    <string name="locker_storage_body">Bewerbo speichert den Vermerk zu einem Dokument — Titel, Art und Seitenzahl —, damit das Anlagenverzeichnis es benennen kann. Die Datei selbst wird nicht hochgeladen.</string>
+    <string name="locker_storage_body">Bewerbo speichert den Vermerk zu einem Dokument — Titel, Art und Seitenzahl —, damit das Anlagenverzeichnis es benennen kann. Der Scan wird nur gespeichert, wenn Sie einen ablegen, und erst, nachdem Sie gelesen haben, was das bedeutet.</string>
     <string name="locker_demand_title">Diese Anzeige verlangt · %1$d</string>
     <string name="locker_demand_outstanding">Fehlt noch</string>
     <string name="locker_demand_on_file">Abgelegt</string>
+
+    <string name="locker_field_scan">Scan</string>
+    <string name="locker_scan_photo">Foto aufnehmen</string>
+    <string name="locker_scan_file">Datei auswählen</string>
+    <string name="locker_scan_remove">Entfernen</string>
+    <string name="locker_pages_from_file">aus der Datei gelesen</string>
+    <string name="locker_copy_stored">Kopie gespeichert</string>
+    <string name="locker_no_copy">Keine Kopie gespeichert</string>
+    <string name="locker_added_elsewhere">Dieses Dokument wurde auf einem anderen Gerät angelegt. Legen Sie den Scan ab, dann ist er überall dabei.</string>
+    <string name="locker_add_scan">Scan ablegen</string>
+    <string name="locker_open_scan">Scan öffnen</string>
+    <string name="locker_size_kb">%1$d KB</string>
+
+    <string name="scan_notice_title">Bevor dieser Scan Ihr Telefon verlässt</string>
+    <string name="scan_notice_intro">Einmal lesen. Es wird nichts gesendet, bevor Sie sich unten entscheiden.</string>
+    <string name="scan_notice_what_label">Was</string>
+    <string name="scan_notice_what">Die Datei selbst — %1$s — zusammen mit ihrem Namen, ihrer Größe und ihrer Seitenzahl.</string>
+    <string name="scan_notice_where_label">Wo</string>
+    <string name="scan_notice_where">Auf dem Bewerbo-Server, betrieben von %1$s — demselben, auf dem Ihr Profil bereits liegt. An das Sprachmodell, das Ihr Deutsch schreibt, wird er nicht weitergegeben.</string>
+    <string name="scan_notice_where_unnamed">Auf dem Bewerbo-Server, auf dem Ihr Profil bereits liegt. Diese Installation hat nicht angegeben, wer sie betreibt. An das Sprachmodell, das Ihr Deutsch schreibt, wird der Scan nicht weitergegeben.</string>
+    <string name="scan_notice_why_label">Wozu</string>
+    <string name="scan_notice_why">Damit der Scan auf jedem Gerät zu öffnen ist, auf dem Sie sich anmelden, und in die Bewerbungsmappe kann, die Sie ausgeben.</string>
+    <string name="scan_notice_how_long_label">Wie lange</string>
+    <string name="scan_notice_how_long">Bis Sie das Dokument löschen, die Kopie entfernen oder Ihr Konto löschen. Mit dem Konto gehen die Scans sofort mit.</string>
+    <string name="scan_notice_agree">Scan speichern</string>
+    <string name="scan_notice_decline">Jetzt nicht</string>
+
+    <string name="scan_action_share">Kopie teilen</string>
+    <string name="scan_action_replace">Ersetzen</string>
+    <string name="scan_action_remove">Kopie entfernen</string>
+    <string name="scan_remove_note">Wird die Kopie entfernt, bleibt das Dokument auf der Liste — das Anlagenverzeichnis benennt es weiterhin — und die Datei wird vom Server gelöscht.</string>
+    <string name="scan_page_of">Seite %1$d von %2$d</string>
+    <string name="scan_loading">Scan wird geholt…</string>
+    <string name="scan_unreadable">Diese Datei lässt sich hier nicht anzeigen. Teilen Sie eine Kopie, um sie zu öffnen.</string>
 
     <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>
     <string name="kind_zertifikat">Zertifikat</string>
@@ -454,7 +497,7 @@
 
     <string name="legal_privacy_controller">Verantwortlich dafür, was mit Ihren Daten geschieht, ist der im Impressum genannte Betreiber. Dort steht auch, wie Sie ihn erreichen.</string>
     <string name="legal_privacy_stored">Gespeichert sind: was Sie über sich eintragen — Name, Adresse, Telefon, E-Mail, Geburtsdatum, Ihre Stellen, Ihre Ausbildung, Ihre Sprachen und die Gründe, die Sie für Lücken angegeben haben; zu jedem abgelegten Dokument Titel, Art und Seitenzahl; die Stellenanzeigen, die Sie einfügen; und die Bewerbungen, die die App schreibt.</string>
-    <string name="legal_privacy_files">Die Dokumente selbst werden nicht hochgeladen. Ein Zeugnis bleibt auf Ihrem Gerät — Bewerbo behält nur den Eintrag, den das Anlagenverzeichnis braucht, um es zu benennen.</string>
+    <string name="legal_privacy_files">Der Vermerk zu einem Dokument — was das Anlagenverzeichnis braucht, um es zu benennen — wird immer gespeichert. Die gescannte Datei nur dann, wenn Sie eine ablegen und zustimmen. Sie gehört dann zu Ihrem Konto statt zu einem Telefon, und mit dem Konto wird sie mitgelöscht.</string>
     <string name="legal_privacy_why">Wozu: um die Unterlagen herzustellen, um die Sie gebeten haben — das ist die Vereinbarung zwischen uns, Art. 6 Abs. 1 lit. b DSGVO. Nichts davon wird für Werbung genutzt und nichts gegen Geld weitergegeben.</string>
     <string name="legal_privacy_model">Das Deutsche schreibt ein Sprachmodell außerhalb dieses Servers: dafür, und für nichts anderes, geht das, was Sie eingetragen haben, an %1$s.</string>
     <string name="legal_privacy_model_none">Auf dieser Installation ist kein Sprachmodell im Einsatz. Was Sie eintragen, wird auf dem Server selbst nach Regeln ins Deutsche gebracht und verlässt ihn nur in der Datei, die Sie selbst ausgeben.</string>

@@ -51,6 +51,12 @@
     <string name="error_link_unreachable">Страница по этой ссылке не ответила. Попробуйте снова или вставьте текст вакансии.</string>
     <string name="error_link_no_text">На этой странице нет текста вакансии. Вставьте текст вручную.</string>
     <string name="error_photo_unreadable">На этом изображении не удалось разобрать слова. Попробуйте более чёткое или вставьте текст.</string>
+    <string name="error_scan_consent_missing">Bewerbo ещё не разрешено хранить копии. Выберите скан снова и прочитайте, что сохраняется.</string>
+    <string name="error_scan_type_unsupported">Как скан можно сохранить только PDF, JPEG и PNG.</string>
+    <string name="error_scan_too_large">Этот файл слишком большой. Сохраняется не более 10 МБ.</string>
+    <string name="error_scan_too_many_pages">В этом файле больше 20 страниц. Сохраните только те страницы, которые относятся к этому документу.</string>
+    <string name="error_scan_missing">Для этого документа копия не хранится.</string>
+    <string name="error_scan_unreadable">Этот файл не удалось прочитать. Выберите другой.</string>
 
     <!-- Открытые шаги. Сервер говорит, КАКОЙ это шаг и что в него подставить; сама фраза
          пишется здесь, потому что язык интерфейса серверу неизвестен. -->
@@ -315,6 +321,9 @@
     <string name="part_anschreiben">Anschreiben</string>
     <string name="part_lebenslauf">Lebenslauf</string>
     <string name="part_anlagen">Anlagenverzeichnis</string>
+    <string name="part_scans">Копии</string>
+    <string name="application_scans_summary">Из %2$d документов копия хранится у %1$d; они идут после Anlagenverzeichnis</string>
+    <string name="application_scans_missing_body">%1$s — назван в Anlagenverzeichnis, но файла для него нет. Добавьте скан или отправьте его отдельно.</string>
 
     <string name="status_entwurf">Черновик</string>
     <string name="status_versendet">Отправлена</string>
@@ -329,16 +338,50 @@
 
     <string name="locker_subtitle">Zeugnisse, сертификаты и выписка из anabin, на которые ссылается Anlagenverzeichnis.</string>
     <string name="locker_empty_title">Документов пока нет</string>
-    <string name="locker_empty_body">Добавьте документы, на которые ссылается ваша заявка. Bewerbo хранит здесь только запись; сам скан остаётся на вашем устройстве.</string>
+    <string name="locker_empty_body">Добавьте документы, на которые ссылается ваша заявка. Bewerbo хранит здесь запись — и скан, как только вы его добавите.</string>
     <string name="locker_add">Добавить документ</string>
     <string name="locker_field_title">Название</string>
     <string name="locker_field_note">Примечание</string>
     <string name="locker_field_pages">Страниц</string>
     <string name="locker_storage_title">Что здесь хранится</string>
-    <string name="locker_storage_body">Bewerbo хранит запись о документе — название, вид и число страниц — чтобы Anlagenverzeichnis мог его назвать. Сам файл не загружается.</string>
+    <string name="locker_storage_body">Bewerbo хранит запись о документе — название, вид и число страниц — чтобы Anlagenverzeichnis мог его назвать. Скан сохраняется, только если вы его добавите, и лишь после того, как прочитаете, что это значит.</string>
     <string name="locker_demand_title">Эта вакансия просит · %1$d</string>
     <string name="locker_demand_outstanding">Не хватает</string>
     <string name="locker_demand_on_file">Приложено</string>
+
+    <string name="locker_field_scan">Скан</string>
+    <string name="locker_scan_photo">Сфотографировать</string>
+    <string name="locker_scan_file">Выбрать файл</string>
+    <string name="locker_scan_remove">Убрать</string>
+    <string name="locker_pages_from_file">считано из файла</string>
+    <string name="locker_copy_stored">Копия хранится</string>
+    <string name="locker_no_copy">Копии нет</string>
+    <string name="locker_added_elsewhere">Этот документ добавлен на другом устройстве. Добавьте скан — и он будет с вами везде.</string>
+    <string name="locker_add_scan">Добавить скан</string>
+    <string name="locker_open_scan">Открыть скан</string>
+    <string name="locker_size_kb">%1$d КБ</string>
+
+    <string name="scan_notice_title">Прежде чем этот скан покинет телефон</string>
+    <string name="scan_notice_intro">Прочитайте один раз. Ничего не отправляется, пока вы не выберете внизу.</string>
+    <string name="scan_notice_what_label">Что</string>
+    <string name="scan_notice_what">Сам файл — %1$s — вместе с его именем, размером и числом страниц.</string>
+    <string name="scan_notice_where_label">Где</string>
+    <string name="scan_notice_where">На сервере Bewerbo, которым управляет %1$s — на том же, где уже хранится ваш профиль. Языковой модели, которая пишет ваш немецкий, он не передаётся.</string>
+    <string name="scan_notice_where_unnamed">На сервере Bewerbo, где уже хранится ваш профиль. Эта установка не указала, кто ею управляет. Языковой модели, которая пишет ваш немецкий, скан не передаётся.</string>
+    <string name="scan_notice_why_label">Зачем</string>
+    <string name="scan_notice_why">Чтобы скан открывался на каждом устройстве, где вы входите, и попадал в Bewerbungsmappe, которую вы выгружаете.</string>
+    <string name="scan_notice_how_long_label">Как долго</string>
+    <string name="scan_notice_how_long">Пока вы не удалите документ, не уберёте копию или не удалите аккаунт. Вместе с аккаунтом сканы уходят сразу.</string>
+    <string name="scan_notice_agree">Сохранить скан</string>
+    <string name="scan_notice_decline">Не сейчас</string>
+
+    <string name="scan_action_share">Поделиться копией</string>
+    <string name="scan_action_replace">Заменить</string>
+    <string name="scan_action_remove">Убрать копию</string>
+    <string name="scan_remove_note">Если убрать копию, документ останется в списке — Anlagenverzeichnis по-прежнему его называет — а файл будет удалён с сервера.</string>
+    <string name="scan_page_of">Страница %1$d из %2$d</string>
+    <string name="scan_loading">Скан загружается…</string>
+    <string name="scan_unreadable">Этот файл здесь не показать. Поделитесь копией, чтобы открыть его.</string>
 
     <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>
     <string name="kind_zertifikat">Сертификат</string>
@@ -451,7 +494,7 @@
 
     <string name="legal_privacy_controller">За то, что происходит с вашими данными, отвечает владелец, названный в Impressum; там же указано, как с ним связаться.</string>
     <string name="legal_privacy_stored">Хранится: то, что вы о себе вносите — имя, адрес, телефон, почта, дата рождения, ваши места работы, образование, языки и причины, которые вы указали для перерывов; по каждому отложенному документу — название, вид и число страниц; объявления, которые вы вставляете; и заявки, которые пишет приложение.</string>
-    <string name="legal_privacy_files">Сами документы не загружаются. Zeugnis остаётся на вашем устройстве — Bewerbo хранит лишь запись, которая нужна Anlagenverzeichnis, чтобы его назвать.</string>
+    <string name="legal_privacy_files">Запись о документе — то, что нужно Anlagenverzeichnis, чтобы его назвать — хранится всегда. Отсканированный файл — только если вы его добавите и согласитесь. Тогда он принадлежит вашему аккаунту, а не одному телефону, и вместе с аккаунтом удаляется.</string>
     <string name="legal_privacy_why">Зачем: чтобы изготовить документы, о которых вы попросили — это и есть соглашение между нами, ст. 6 (1) (b) DSGVO. Ничто из этого не идёт на рекламу и не передаётся за деньги.</string>
     <string name="legal_privacy_model">Немецкий текст пишет языковая модель вне этого сервера: для этого — и ни для чего другого — внесённое вами уходит на %1$s.</string>
     <string name="legal_privacy_model_none">На этой установке языковая модель не используется. Внесённое вами переводится на немецкий по правилам на самом сервере и уходит с него только в том файле, который вы выгружаете сами.</string>

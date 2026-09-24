@@ -1,3 +1,4 @@
+using Bewerbo.Api.Data;
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Services;
 
@@ -36,7 +37,32 @@ public record DutyOutcomeDto(string Original, string Outcome);
 
 public record DutyOutcomesDto(IReadOnlyList<DutyOutcomeDto> Lines);
 
-public record DocumentDto(Guid? Id, string Title, string Kind, string Note, int PageCount);
+/// <summary>
+/// The scan stored for a document — everything about the file except the file. The bytes are their
+/// own answer, at <c>GET /api/documents/{id}/scan</c>, because a list of documents is read on every
+/// screen and a Zeugnis weighs two megabytes.
+///
+/// Its presence in a <see cref="DocumentDto"/> IS "a copy is stored": the row says so, and it says
+/// so the same on the phone the scan was added on and on the next one the user signs in with.
+/// </summary>
+public record DocumentScanDto(string ContentType, string FileName, int SizeBytes, string AddedAt);
+
+/// <summary>
+/// One document of the Mappe. <paramref name="Scan"/> is null when only the RECORD is held — the
+/// normal state of a document added on another device, and what the Documents screen draws its
+/// "No copy stored" row from. It is ignored on the way in: a scan is stored by its own route, not
+/// by naming it in the body that creates the record.
+/// </summary>
+public record DocumentDto(
+    Guid? Id, string Title, string Kind, string Note, int PageCount, DocumentScanDto? Scan = null);
+
+/// <summary>
+/// Whether this account has read what holding a scan means and agreed to it, and when.
+///
+/// The screen asks before it offers to store the first one; the server refuses the upload while
+/// this is false, so the two cannot drift apart. See <see cref="Domain.Account.ScansAgreedAt"/>.
+/// </summary>
+public record ScanConsentDto(bool Agreed, string? AgreedAt);
 
 public record ProfileDto(
     Guid Id,
@@ -228,7 +254,20 @@ public static class DtoMapping
 
     public static LanguageDto ToDto(this LanguageSkill l) => new(l.Id, l.Language, l.Level, l.CertificateOnFile);
 
-    public static DocumentDto ToDto(this StoredDocument d) => new(d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount);
+    /// <summary>
+    /// The record of a document, and the scan behind it where the caller has looked one up.
+    ///
+    /// <paramref name="scan"/> is passed in rather than read off <c>d.Scan</c> deliberately. The
+    /// navigation is not loaded by <see cref="Data.ProfileQueries.FullProfileAsync"/> — including
+    /// it would carry every scan's bytes into memory to print a title — so reading it here would
+    /// answer "no copy stored" for a document that has one. The callers that owe the user that
+    /// answer fetch <see cref="Data.ProfileQueries.ScanSummariesAsync"/> and hand it over; the
+    /// ones that do not, say nothing about scans rather than something false.
+    /// </summary>
+    public static DocumentDto ToDto(this StoredDocument d, ScanSummary? scan = null) => new(
+        d.Id, d.Title, d.Kind.ToString(), d.Note, d.PageCount,
+        scan is null ? null : new DocumentScanDto(
+            scan.ContentType, scan.FileName, scan.SizeBytes, scan.AddedAt.ToString("o")));
 }
 
 /// <summary>

@@ -33,6 +33,29 @@ public class AccountErasureTests
     }
 
     /// <summary>
+    /// And the scans behind those documents — a photograph of somebody's Arbeitszeugnis is the most
+    /// personal thing this server holds.
+    ///
+    /// This is the one part of the erasure carried by the DATABASE's cascade rather than by the
+    /// change tracker: <see cref="Domain.StoredDocument.Scan"/> is deliberately never loaded, so
+    /// that a call wanting a title does not read ten megabytes of Zeugnisse (see
+    /// <see cref="Data.ProfileQueries.ScanSummariesAsync"/>) — and nothing in memory therefore
+    /// knows the scans exist. Which is exactly why the test runs against a real SQLite database:
+    /// the cascade only holds if the foreign key is enforced, and here it is being enforced or it
+    /// is not.
+    /// </summary>
+    [Fact]
+    public async Task Erasing_an_account_takes_the_scans_of_its_documents()
+    {
+        await using var db = NewDatabase();
+        var id = Filled(db);
+
+        await AccountErasure.EraseAsync(db, id);
+
+        Assert.Empty(db.DocumentScans);
+    }
+
+    /// <summary>
     /// The one record the cascade does not reach. A Posting names a ProfileId with no relationship
     /// behind it, so an erasure that trusted the cascade left the full text of every advert the user
     /// had pasted on the server under their own profile id — and nothing on the way out said so.
@@ -116,7 +139,18 @@ public class AccountErasureTests
             Education = [new EducationEntry { Degree = "Bakalavr", From = new DateOnly(2013, 9, 1) }],
             Languages = [new LanguageSkill { Language = "Ukrainisch", Level = "Muttersprache" }],
             Gaps = [new GapExplanation { From = new DateOnly(2023, 8, 1), To = new DateOnly(2024, 1, 1), Reason = "Umzug" }],
-            Documents = [new StoredDocument { Title = "Arbeitszeugnis", Kind = DocumentKind.Arbeitszeugnis }],
+            Documents =
+            [
+                new StoredDocument
+                {
+                    Title = "Arbeitszeugnis", Kind = DocumentKind.Arbeitszeugnis,
+                    Scan = new DocumentScan
+                    {
+                        ContentType = "application/pdf", FileName = "zeugnis.pdf",
+                        Content = "%PDF-1.7"u8.ToArray(), SizeBytes = 8,
+                    },
+                },
+            ],
         };
         db.Profiles.Add(profile);
         db.SaveChanges();

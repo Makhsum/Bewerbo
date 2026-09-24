@@ -24,4 +24,10 @@
         <item quantity="many">%1$d страниц</item>
         <item quantity="other">%1$d страницы</item>
     </plurals>
+    <plurals name="application_scans_missing_title">
+        <item quantity="one">%1$d документ без копии</item>
+        <item quantity="few">%1$d документа без копии</item>
+        <item quantity="many">%1$d документов без копии</item>
+        <item quantity="other">%1$d документа без копии</item>
+    </plurals>
 </resources>

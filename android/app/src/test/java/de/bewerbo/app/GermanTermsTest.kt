@@ -34,7 +34,7 @@ class GermanTermsTest {
     /// Latin words that are not German and not a term: the product's own name, file formats, the
     /// country codes in an example, and the date placeholders of a hint.
     private val ALLOWED_WORDS = setOf(
-        "Bewerbo", "PDF", "KB", "MM", "YYYY", "JJJJ", "UA", "RU", "DE", "EU",
+        "Bewerbo", "PDF", "JPEG", "PNG", "KB", "MM", "YYYY", "JJJJ", "UA", "RU", "DE", "EU",
     )
 
     /// The German chrome this card translated away. Naming it is what keeps it from drifting back

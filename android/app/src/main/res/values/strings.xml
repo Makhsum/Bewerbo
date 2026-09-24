@@ -68,6 +68,12 @@
     <string name="error_link_unreachable">The page behind that link did not answer. Try again, or paste the text of the posting.</string>
     <string name="error_link_no_text">There is no posting text on that page. Paste the text instead.</string>
     <string name="error_photo_unreadable">No words could be made out in that picture. Try a sharper one, or paste the text.</string>
+    <string name="error_scan_consent_missing">Bewerbo has not been allowed to keep copies yet. Choose the scan again and read what is stored.</string>
+    <string name="error_scan_type_unsupported">Only PDF, JPEG and PNG can be stored as a scan.</string>
+    <string name="error_scan_too_large">That file is too large. The most that can be stored is 10 MB.</string>
+    <string name="error_scan_too_many_pages">That file has more than 20 pages. Store only the pages that belong to this document.</string>
+    <string name="error_scan_missing">There is no copy stored for this document.</string>
+    <string name="error_scan_unreadable">That file could not be read. Choose another one.</string>
 
     <!-- The outstanding steps. The server says WHICH step it is and what goes into it; the
          sentence is written here, because the server never learns the interface language. -->
@@ -346,6 +352,9 @@
     <string name="part_anschreiben">Anschreiben</string>
     <string name="part_lebenslauf">Lebenslauf</string>
     <string name="part_anlagen">Anlagenverzeichnis</string>
+    <string name="part_scans">Copies</string>
+    <string name="application_scans_summary">%1$d of %2$d documents have a copy stored, appended after the Anlagenverzeichnis</string>
+    <string name="application_scans_missing_body">%1$s — named in the Anlagenverzeichnis, with no file stored for it. Add the scan, or send it separately.</string>
 
     <!-- What happened to an application. The value keeps the backend's spelling. -->
     <string name="status_entwurf">Draft</string>
@@ -363,16 +372,54 @@
     <!-- Locker -->
     <string name="locker_subtitle">Zeugnisse, certificates and the anabin extract the Anlagenverzeichnis refers to.</string>
     <string name="locker_empty_title">There are no documents yet</string>
-    <string name="locker_empty_body">Add the documents your application refers to. Bewerbo keeps the record here; the scan itself stays on your device.</string>
+    <string name="locker_empty_body">Add the documents your application refers to. Bewerbo keeps the record here, and the scan too once you add one.</string>
     <string name="locker_add">Add a document</string>
     <string name="locker_field_title">Title</string>
     <string name="locker_field_note">Note</string>
     <string name="locker_field_pages">Pages</string>
     <string name="locker_storage_title">What is stored here</string>
-    <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The file itself is not uploaded.</string>
+    <string name="locker_storage_body">Bewerbo stores the record of a document — its title, kind and page count — so the Anlagenverzeichnis can name it. The scan is stored only if you add one, and only after you have read what that means.</string>
     <string name="locker_demand_title">This posting asks for · %1$d</string>
     <string name="locker_demand_outstanding">Outstanding</string>
     <string name="locker_demand_on_file">On file</string>
+
+    <!-- The scan behind a document. The RECORD is what the Anlagenverzeichnis needs; the scan is
+         what makes that record mean something on a second device. -->
+    <string name="locker_field_scan">Scan</string>
+    <string name="locker_scan_photo">Take a photo</string>
+    <string name="locker_scan_file">Choose a file</string>
+    <string name="locker_scan_remove">Remove</string>
+    <string name="locker_pages_from_file">read from the file</string>
+    <string name="locker_copy_stored">Copy stored</string>
+    <string name="locker_no_copy">No copy stored</string>
+    <string name="locker_added_elsewhere">This document was added on another device. Add the scan and it travels with you.</string>
+    <string name="locker_add_scan">Add the scan</string>
+    <string name="locker_open_scan">Open the scan</string>
+    <string name="locker_size_kb">%1$d KB</string>
+
+    <!-- The disclosure. Read once, before the first scan leaves the phone. -->
+    <string name="scan_notice_title">Before this scan leaves your phone</string>
+    <string name="scan_notice_intro">Read this once. Nothing is sent until you choose below.</string>
+    <string name="scan_notice_what_label">What</string>
+    <string name="scan_notice_what">The file itself — %1$s — together with its name, its size and its page count.</string>
+    <string name="scan_notice_where_label">Where</string>
+    <string name="scan_notice_where">On the Bewerbo server operated by %1$s, the same one your profile is already held on. It is not passed to the language model that writes your German.</string>
+    <string name="scan_notice_where_unnamed">On the Bewerbo server your profile is already held on. This installation has not said who operates it. The scan is not passed to the language model that writes your German.</string>
+    <string name="scan_notice_why_label">Why</string>
+    <string name="scan_notice_why">So the scan opens on every device you sign in on, and can go into the Bewerbungsmappe you export.</string>
+    <string name="scan_notice_how_long_label">How long</string>
+    <string name="scan_notice_how_long">Until you delete the document, remove the copy, or delete your account. Deleting the account takes the scans with it, at once.</string>
+    <string name="scan_notice_agree">Store the scan</string>
+    <string name="scan_notice_decline">Not now</string>
+
+    <!-- The stored scan, opened -->
+    <string name="scan_action_share">Share a copy</string>
+    <string name="scan_action_replace">Replace</string>
+    <string name="scan_action_remove">Remove copy</string>
+    <string name="scan_remove_note">Removing the copy keeps the document on the list — the Anlagenverzeichnis still names it — and deletes the file from the server.</string>
+    <string name="scan_page_of">Page %1$d of %2$d</string>
+    <string name="scan_loading">Fetching the scan…</string>
+    <string name="scan_unreadable">This file cannot be shown here. Share a copy to open it.</string>
 
     <!-- The kinds of document. The value keeps the backend's spelling. -->
     <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>
@@ -501,7 +548,7 @@
          the paragraph about the language model is chosen by what the server reports. -->
     <string name="legal_privacy_controller">Responsible for what happens to your data is the operator named in the Impressum, where you also find how to reach them.</string>
     <string name="legal_privacy_stored">Held are: what you enter about yourself — name, address, telephone, e-mail, date of birth, the jobs you have held, what you studied, your languages and the reasons you gave for gaps; for each document on file its title, kind and number of pages; the postings you paste in; and the applications the app writes.</string>
-    <string name="legal_privacy_files">The documents themselves are not uploaded. A Zeugnis stays on your device — Bewerbo keeps only the entry the Anlagenverzeichnis needs in order to name it.</string>
+    <string name="legal_privacy_files">The record of a document — what the Anlagenverzeichnis needs to name it — is always stored. The scanned file is stored only when you add one and agree to it. It then belongs to your account rather than to one phone, and deleting the account takes it with everything else.</string>
     <string name="legal_privacy_why">Why: to produce the documents you asked for, which is the agreement between us — Art. 6 (1) (b) DSGVO. Nothing here is used for advertising and nothing is passed on for money.</string>
     <string name="legal_privacy_model">The German is written by a language model outside this server: for that, and for nothing else, what you entered is sent to %1$s.</string>
     <string name="legal_privacy_model_none">No language model is in use on this installation. What you enter is turned into German by rules on the server itself, and leaves it only in the file you export yourself.</string>

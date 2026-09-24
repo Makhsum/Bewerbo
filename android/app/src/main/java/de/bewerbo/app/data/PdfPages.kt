@@ -1,6 +1,7 @@
 package de.bewerbo.app.data
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
@@ -44,3 +45,20 @@ fun renderPdfPages(file: File): List<Bitmap> {
         }
     }
 }
+
+/**
+ * A stored scan, page by page — what the viewer shows on a device the file was not added on.
+ *
+ * The same rendering as the Mappe's preview above, because it answers the same question: does what
+ * is stored actually look like the Zeugnis it claims to be. A PDF goes through [renderPdfPages]; a
+ * photograph is one page and needs only decoding.
+ *
+ * An empty list means the file could not be read as either — a download that produced nothing, or
+ * a type this build cannot draw. The viewer says so rather than showing a blank sheet.
+ */
+fun renderScanPages(file: File, contentType: String): List<Bitmap> =
+    if (contentType == "application/pdf") {
+        runCatching { renderPdfPages(file) }.getOrDefault(emptyList())
+    } else {
+        listOfNotNull(runCatching { BitmapFactory.decodeFile(file.path) }.getOrNull())
+    }

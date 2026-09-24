@@ -1,7 +1,9 @@
 using Bewerbo.Api.Domain;
 using Bewerbo.Api.Llm;
+using Bewerbo.Api.Services;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
+using UglyToad.PdfPig.Writer;
 
 namespace Bewerbo.Api.Rendering;
 
@@ -13,7 +15,12 @@ public enum ApplicationParts
     Anschreiben = 1,
     Lebenslauf = 2,
     Anlagenverzeichnis = 4,
-    All = Anschreiben | Lebenslauf | Anlagenverzeichnis,
+    /// <summary>
+    /// The stored copies of the documents, appended after the Anlagenverzeichnis — in the order
+    /// that page lists them, because an employer reads the list and then the attachments.
+    /// </summary>
+    Scans = 8,
+    All = Anschreiben | Lebenslauf | Anlagenverzeichnis | Scans,
 }
 
 /// <summary>
@@ -33,7 +40,8 @@ public static class MergedApplicationDocument
         IReadOnlyList<StoredDocument> documents,
         DateOnly date,
         ApplicationParts parts = ApplicationParts.All,
-        bool showInspector = false)
+        bool showInspector = false,
+        IReadOnlyList<DocumentScan>? scans = null)
     {
         var pieces = new List<IDocument>();
 
@@ -50,14 +58,53 @@ public static class MergedApplicationDocument
             pieces.Add(new AnlagenverzeichnisDocument(documents, profile));
         }
 
-        if (pieces.Count == 0)
+        var appended = parts.HasFlag(ApplicationParts.Scans)
+            ? ScanPages(documents, scans)
+            : [];
+
+        if (pieces.Count == 0 && appended.Count == 0)
         {
             throw new ArgumentException("An application with no parts cannot be exported.", nameof(parts));
         }
 
-        return pieces.Count == 1
-            ? pieces[0].GeneratePdf()
-            : Document.Merge(pieces).GeneratePdf();
+        // The scans are the only part that is not drawn by QuestPDF: they are files that already
+        // exist. QuestPDF's own Document.Merge takes IDocument and so cannot append one, which is
+        // why the written parts are rendered first and PdfPig's PdfMerger puts the result and the
+        // scans together. PdfPig is already a dependency — AtsTextCheck reads the finished file
+        // with it — so appending a Zeugnis costs no new package.
+        var written = pieces.Count switch
+        {
+            0 => null,
+            1 => pieces[0].GeneratePdf(),
+            _ => Document.Merge(pieces).GeneratePdf(),
+        };
+
+        if (appended.Count == 0) return written!;
+        return PdfMerger.Merge(written is null ? appended : [written, .. appended]);
+    }
+
+    /// <summary>
+    /// The stored copies as PDF, in the order the Anlagenverzeichnis lists them — so that "Anlage
+    /// 3" on that page and the third appended scan are the same document.
+    ///
+    /// A document with no copy stored is simply skipped. That is not silence: the export card says
+    /// how many of the documents have one and names the ones that do not, because a Mappe that
+    /// quietly leaves out a Zeugnis the Anlagenverzeichnis promises is worse than one that does not
+    /// offer to include any.
+    /// </summary>
+    private static List<byte[]> ScanPages(
+        IReadOnlyList<StoredDocument> documents, IReadOnlyList<DocumentScan>? scans)
+    {
+        if (scans is null || scans.Count == 0) return [];
+
+        var byDocument = scans.ToDictionary(s => s.DocumentId);
+        return AnlagenverzeichnisDocument.InListedOrder(documents)
+            .Select(d => byDocument.GetValueOrDefault(d.Id))
+            .Where(s => s is not null)
+            .Select(s => s!.ContentType == ScanFile.Pdf
+                ? s.Content
+                : new ScanPageDocument(s.Content).GeneratePdf())
+            .ToList();
     }
 
     /// <summary>

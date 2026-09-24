@@ -21,6 +21,13 @@ namespace Bewerbo.Api.Data;
 /// default. A profile carries tens of rows, not thousands; sorting them here costs nothing and
 /// behaves the same on both providers.
 /// </summary>
+/// <summary>
+/// What is known about one stored scan WITHOUT reading it: its type, the name it had on the device,
+/// how big it is and when it arrived. The bytes are deliberately not here — see
+/// <see cref="ProfileQueries.ScanSummariesAsync"/>.
+/// </summary>
+public record ScanSummary(string ContentType, string FileName, int SizeBytes, DateTimeOffset AddedAt);
+
 public static class ProfileQueries
 {
     public static async Task<Profile?> FullProfileAsync(this BewerboDbContext db, Guid id)
@@ -49,5 +56,28 @@ public static class ProfileQueries
         profile.Applications = [.. profile.Applications.OrderByDescending(a => a.CreatedAt).ThenBy(a => a.Id)];
 
         return profile;
+    }
+
+    /// <summary>
+    /// Which of this profile's documents have a scan stored, and what each one is — keyed by the
+    /// document id.
+    ///
+    /// Not an <c>Include</c> on <see cref="FullProfileAsync"/>, and that is the whole point of it
+    /// being a query of its own. The bytes live on the same row, so an Include would read every
+    /// scan of the profile into memory on a call that wanted a title and a page count — and the
+    /// app asks for the profile again after every single save. The projection below names four
+    /// columns, so the Content column is never in the SELECT at all.
+    /// </summary>
+    public static async Task<IReadOnlyDictionary<Guid, ScanSummary>> ScanSummariesAsync(
+        this BewerboDbContext db, Guid profileId)
+    {
+        var scans = await db.DocumentScans
+            .Where(s => s.Document!.ProfileId == profileId)
+            .Select(s => new { s.DocumentId, s.ContentType, s.FileName, s.SizeBytes, s.AddedAt })
+            .ToListAsync();
+
+        return scans.ToDictionary(
+            s => s.DocumentId,
+            s => new ScanSummary(s.ContentType, s.FileName, s.SizeBytes, s.AddedAt));
     }
 }

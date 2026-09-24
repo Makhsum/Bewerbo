@@ -39,7 +39,7 @@ public class AnlagenverzeichnisDocument(IReadOnlyList<StoredDocument> documents,
                     .LineHorizontal(0.6f).LineColor(DocumentTheme.Rule);
 
                 var index = 1;
-                foreach (var group in documents.GroupBy(d => d.Kind).OrderBy(g => g.Key))
+                foreach (var group in Grouped(documents))
                 {
                     column.Item().PaddingTop(5, Unit.Millimetre)
                         .Text(GroupTitle(group.Key))
@@ -48,7 +48,7 @@ public class AnlagenverzeichnisDocument(IReadOnlyList<StoredDocument> documents,
                         .Bold().LetterSpacing(0.08f)
                         .FontColor(DocumentTheme.Primary);
 
-                    foreach (var document in group.OrderBy(d => d.Title))
+                    foreach (var document in group)
                     {
                         column.Item().PaddingTop(1.5f, Unit.Millimetre).Row(row =>
                         {
@@ -81,6 +81,26 @@ public class AnlagenverzeichnisDocument(IReadOnlyList<StoredDocument> documents,
             });
         });
     }
+
+    /// <summary>
+    /// The documents in the order this page numbers them: grouped by kind, and by title inside a
+    /// group.
+    ///
+    /// Public and static because a SECOND reader now depends on it —
+    /// <see cref="MergedApplicationDocument"/> appends the stored scans after this page, and they
+    /// have to arrive in the order it just listed them. "Anlage 3" pointing at the fourth scan is
+    /// the kind of mistake nobody spots until an employer does.
+    /// </summary>
+    public static IEnumerable<IGrouping<DocumentKind, StoredDocument>> Grouped(
+        IReadOnlyList<StoredDocument> documents) =>
+        documents
+            .OrderBy(d => d.Title)
+            .GroupBy(d => d.Kind)
+            .OrderBy(g => g.Key);
+
+    /// <summary>The same order, flattened — what the appended scans are read in.</summary>
+    public static IEnumerable<StoredDocument> InListedOrder(IReadOnlyList<StoredDocument> documents) =>
+        Grouped(documents).SelectMany(g => g);
 
     private static string GroupTitle(DocumentKind kind) => kind switch
     {

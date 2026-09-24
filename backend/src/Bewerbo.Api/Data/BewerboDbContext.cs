@@ -11,6 +11,7 @@ public class BewerboDbContext(DbContextOptions<BewerboDbContext> options) : DbCo
     public DbSet<LanguageSkill> Languages => Set<LanguageSkill>();
     public DbSet<GapExplanation> Gaps => Set<GapExplanation>();
     public DbSet<StoredDocument> Documents => Set<StoredDocument>();
+    public DbSet<DocumentScan> DocumentScans => Set<DocumentScan>();
     public DbSet<Posting> Postings => Set<Posting>();
     public DbSet<Application> Applications => Set<Application>();
     public DbSet<Account> Accounts => Set<Account>();
@@ -47,6 +48,15 @@ public class BewerboDbContext(DbContextOptions<BewerboDbContext> options) : DbCo
             e.HasMany(p => p.Documents).WithOne(x => x.Profile!).HasForeignKey(x => x.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             e.HasMany(p => p.Applications).WithOne(x => x.Profile!).HasForeignKey(x => x.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<StoredDocument>(e =>
+        {
+            // One scan per document, and it goes when the document goes. That edge is what makes
+            // the whole of erasure the one cascade Profile → StoredDocument → DocumentScan, so
+            // AccountErasure has no second store to sweep — see DocumentScan.
+            e.HasOne(d => d.Scan).WithOne(s => s.Document!).HasForeignKey<DocumentScan>(s => s.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

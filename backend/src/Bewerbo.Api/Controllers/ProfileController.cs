@@ -241,6 +241,11 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
 
         var postings = await db.Postings.Where(p => p.ProfileId == id).ToListAsync();
         var applications = await db.Applications.Where(a => a.ProfileId == id).ToListAsync();
+        // The scans belong in the answer to "what do you hold about me": a copy of a Zeugnis is
+        // the most personal thing on this server. Their metadata and not their bytes — the file
+        // itself is fetched one at a time, and a base64 Zeugnis inside a JSON export is a file
+        // nobody can open.
+        var scans = await db.ScanSummariesAsync(id);
 
         var person = new PersonDto(profile.InputLanguage, profile.FirstName, profile.LastName,
             profile.Street, profile.PostalCode, profile.City, profile.Phone, profile.Email,
@@ -258,7 +263,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
             profile.Gaps.Select(g => new GapDto(Iso(g.From), Iso(g.To),
                 TimelineService.MonthsBetween(g.From, g.To),
                 !string.IsNullOrWhiteSpace(g.Reason), g.Reason, g.GermanWording)).ToList(),
-            profile.Documents.Select(d => d.ToDto()).ToList(),
+            profile.Documents.Select(d => d.ToDto(scans.GetValueOrDefault(d.Id))).ToList(),
             postings.Select(p => new ExportedPostingDto(p.Id, p.Company, p.JobTitle, p.Reference,
                 p.ParsedAt.ToString("o"), p.SourceText)).ToList(),
             applications.Select(a =>
@@ -272,6 +277,45 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
                         letter.Closing, letter.Attachments));
             }).ToList()));
     }
+
+    /// <summary>
+    /// Whether this account has agreed to Bewerbo holding the scans of its documents, and when.
+    ///
+    /// Addressed by the PROFILE id like everything else about the account here — the account says
+    /// which profile is the user's, and the rest of the API goes on speaking about the profile;
+    /// see <see cref="Contracts.SessionDto"/>. The Documents screen asks this before it offers to
+    /// store the first scan, and the upload is refused server-side while it is false, so the
+    /// disclosure cannot be skipped by a client that forgets to show it.
+    /// </summary>
+    [HttpGet("{id:guid}/scan-consent")]
+    public async Task<IActionResult> GetScanConsent(Guid id)
+    {
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.ProfileId == id);
+        return account is null
+            ? NotFoundProblem(ProfileMissing, ProfileMissingKind)
+            : Ok(Consent(account));
+    }
+
+    /// <summary>
+    /// Records that the user read the disclosure and agreed — the moment the first scan is allowed
+    /// to leave the phone.
+    ///
+    /// Idempotent, and the FIRST agreement is the one kept: agreeing again must not move the date,
+    /// because the date is what the user is entitled to be told back about their own consent.
+    /// </summary>
+    [HttpPost("{id:guid}/scan-consent")]
+    public async Task<IActionResult> AgreeToScans(Guid id)
+    {
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.ProfileId == id);
+        if (account is null) return NotFoundProblem(ProfileMissing, ProfileMissingKind);
+
+        account.ScansAgreedAt ??= DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync();
+        return Ok(Consent(account));
+    }
+
+    private static ScanConsentDto Consent(Domain.Account account) =>
+        new(account.ScansAgreedAt is not null, account.ScansAgreedAt?.ToString("o"));
 
     /// <summary>
     /// Erases the account and everything held under it — Art. 17 DSGVO. The work is in
@@ -367,6 +411,11 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
         var profile = await db.FullProfileAsync(id);
         if (profile is null) return null;
 
+        // Which documents have a copy stored — the one thing about the Mappe that is a fact of the
+        // ACCOUNT rather than of this phone, and therefore the one thing the screen cannot work out
+        // for itself. Metadata only; see ScanSummariesAsync for why it is not an Include.
+        var scans = await db.ScanSummariesAsync(id);
+
         return new ProfileDto(
             profile.Id,
             new PersonDto(profile.InputLanguage, profile.FirstName, profile.LastName, profile.Street,
@@ -376,7 +425,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
             profile.Experience.OrderByDescending(e => e.From).Select(e => e.ToDto()).ToList(),
             profile.Education.OrderByDescending(e => e.From).Select(e => e.ToDto()).ToList(),
             profile.Languages.Select(l => l.ToDto()).ToList(),
-            profile.Documents.Select(d => d.ToDto()).ToList(),
+            profile.Documents.Select(d => d.ToDto(scans.GetValueOrDefault(d.Id))).ToList(),
             ReadinessService.Completeness(profile),
             TranslationStatus(profile, model.IsConfigured));
     }

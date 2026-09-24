@@ -60,7 +60,7 @@ public static class ReadinessService
             evidenceOnFile, evidenceExpected,
             steps,
             applications,
-            profile.Documents.Select(DtoMapping.ToDto).ToList());
+            profile.Documents.Select(d => d.ToDto()).ToList());
     }
 
     /// <summary>

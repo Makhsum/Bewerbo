@@ -215,6 +215,39 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
         client.delete("$baseUrl/api/documents/$id")
     }
 
+    /// Stores the scanned file for a document, replacing the one that was there. The bytes are the
+    /// body and the name travels as a parameter — it is the name the file had on the device, kept
+    /// only so the user recognises it. What comes back is the document with its page count read
+    /// off the file, which is what the Anlagenverzeichnis then prints.
+    suspend fun storeScan(documentId: String, scan: PickedScan): StoredDocument =
+        client.post("$baseUrl/api/documents/$documentId/scan") {
+            parameter("name", scan.fileName)
+            contentType(ContentType.parse(scan.contentType))
+            setBody(scan.bytes)
+        }.body()
+
+    /// The scanned file itself, into [into] — what makes a document added on another phone
+    /// openable here. Through [download] like every other file this app fetches.
+    suspend fun scanFile(documentId: String, into: File): File =
+        download(client.get("$baseUrl/api/documents/$documentId/scan"), into)
+
+    /// Removes the stored copy and keeps the document: the Anlagenverzeichnis goes on naming it.
+    suspend fun deleteScan(documentId: String) {
+        client.delete("$baseUrl/api/documents/$documentId/scan")
+    }
+
+    // -- what may be held about the scans ------------------------------------------------------
+
+    /// Whether this account has agreed to Bewerbo holding its scans — what the Documents screen
+    /// asks before it offers to store the first one.
+    suspend fun scanConsent(profileId: String): ScanConsent =
+        client.get("$baseUrl/api/profile/$profileId/scan-consent").body()
+
+    /// Records that the disclosure was read and agreed to. Idempotent on the server, and the first
+    /// agreement is the one kept.
+    suspend fun agreeToScans(profileId: String): ScanConsent =
+        client.post("$baseUrl/api/profile/$profileId/scan-consent").body()
+
     suspend fun overview(profileId: String): Overview = client.get("$baseUrl/api/overview/$profileId").body()
 
     // -- plumbing ----------------------------------------------------------------------------
@@ -245,6 +278,22 @@ fun Context.documentsDir(): File = File(filesDir, "bewerbungen")
 /// Where a produced PDF lands on the device, under the app's own files so nothing needs a
 /// storage permission.
 fun Context.documentFile(name: String): File = File(documentsDir(), name)
+
+/// Where a fetched scan lands. Under [documentsDir] rather than in the cache, and for two reasons:
+/// that folder is the one FileProvider hands out content:// URIs for, so "Share a copy" can pass it
+/// to another app — and it is the folder signing out empties, so a scan does not outlive the
+/// session that fetched it.
+fun Context.scanFile(documentId: String, contentType: String): File =
+    File(documentsDir(), "scan-$documentId.${scanExtension(contentType)}")
+
+/// The extension that belongs to a scan's type. A file handed to another app is opened by its
+/// name as often as by its MIME type, so a Zeugnis called "scan-…" with no extension opens in
+/// nothing.
+fun scanExtension(contentType: String) = when (contentType) {
+    "image/jpeg" -> "jpg"
+    "image/png" -> "png"
+    else -> "pdf"
+}
 
 /// Where the preview's copy of the Mappe goes. The cache and not [documentFile]: it is re-rendered
 /// every time the chosen parts change and it is not the file the user asked to keep.

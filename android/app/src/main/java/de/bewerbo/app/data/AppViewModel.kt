@@ -72,6 +72,29 @@ data class AppState(
     /// it to a chooser and clears it — the same handover [pendingEmail] gets, for the same reason:
     /// a file in the app’s own storage is reachable from nowhere else.
     val pendingExport: File? = null,
+    /// Whether this account has agreed to Bewerbo holding the scans of its documents. Null until
+    /// the Documents screen has asked, and treated as "not yet" while it is — the disclosure must
+    /// not be skipped because an answer has not arrived.
+    val scanConsent: Boolean? = null,
+    /// The file the user chose as a scan, read off the device and STILL ON IT. Nothing has been
+    /// sent while this is set: it is held here while the disclosure is read, and dropped if the
+    /// user decides against it. State and not the screen's own `remember`, for the reason
+    /// [postingDraft] is — choosing a file opens the system picker and leaves the app.
+    val pickedScan: PickedScan? = null,
+    /// Which document the picked scan belongs to, or null when it is for the document currently
+    /// being added and there is no id yet. That is the difference between "upload it now" and
+    /// "hold it until Save".
+    val pickedScanFor: String? = null,
+    /// Whether the disclosure is up. Set the moment a scan is picked by an account that has not
+    /// agreed yet, cleared by agreeing or declining — see [AppViewModel.pickScan].
+    val scanNoticeOpen: Boolean = false,
+    /// The document whose stored copy is open in the viewer, and that copy rendered page by page.
+    /// Empty pages while it is being fetched.
+    val openScan: StoredDocument? = null,
+    val scanPages: List<android.graphics.Bitmap> = emptyList(),
+    /// The fetched scan, ready to be handed to another app. The screen passes it to a chooser and
+    /// clears it — the same handover [pendingExport] gets, for the same reason.
+    val pendingScanShare: File? = null,
     /// What the server holds about the account, for the settings screen to list. Null until the
     /// settings have been opened — no other screen reads it, so nothing fetches it before then.
     val accountData: DataExport? = null,
@@ -879,10 +902,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // -- locker ----------------------------------------------------------------------------
 
+    /**
+     * Files a document, and the scan the user picked for it where there is one.
+     *
+     * The record first and the file second, because the scan belongs to a document and there is no
+     * id to hang it on until the record exists. If the upload then fails the record stays, and
+     * that is the right way round: the Anlagenverzeichnis can already name the Zeugnis, and the row
+     * says "No copy stored" with a button to try again — which is exactly the state a document
+     * added on another device is in anyway.
+     */
     fun addDocument(document: StoredDocument) = launch("document") {
         val id = profileId() ?: return@launch
-        api.addDocument(id, document)
-        _state.update { it.copy(profile = api.profile(id)) }
+        val created = api.addDocument(id, document)
+        val picked = _state.value.pickedScan
+        if (picked != null && created.id != null) api.storeScan(created.id, picked)
+
+        _state.update { it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null) }
         rematch()
         refreshDerived()
     }
@@ -891,6 +926,138 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val id = profileId() ?: return@launch
         api.deleteDocument(documentId)
         _state.update { it.copy(profile = api.profile(id)) }
+        rematch()
+        refreshDerived()
+    }
+
+    // -- the scan behind a document ----------------------------------------------------------
+
+    /**
+     * Whether this account has already agreed to Bewerbo holding its scans — read when the
+     * Documents screen opens, because that is the only screen that offers to store one.
+     *
+     * A failure is swallowed on purpose, which is the exception to the rule [launch] exists for.
+     * Nothing was being saved: this read only decides whether the disclosure is SHOWN, and the
+     * fallback of not knowing is to show it. A snackbar for merely opening a screen would be noise
+     * over a question the server answers again on the upload.
+     */
+    fun loadScanConsent() = viewModelScope.launch {
+        val id = profileId() ?: return@launch
+        runCatching { api.scanConsent(id) }
+            .onSuccess { consent -> _state.update { it.copy(scanConsent = consent.agreed) } }
+    }
+
+    /**
+     * Reads the file the user chose and holds it — the whole of "nothing is sent until you choose
+     * below".
+     *
+     * The disclosure is raised HERE, at the pick, and not at the save. That is what makes it the
+     * thing the user reads before the first scan leaves the phone rather than a confirmation of
+     * something already under way: at this point the bytes have been read off the device and gone
+     * nowhere. Once agreed, [documentId] decides what happens next — an existing row's "Add the
+     * scan" uploads at once, while the add card holds the file until its Save.
+     *
+     * A file that is none of the three types never becomes a pick: the user is told now rather
+     * than after an upload. The server checks the same thing on the same bytes.
+     */
+    fun pickScan(uri: android.net.Uri, documentId: String? = null) = launch("scan") {
+        val picked = readScan(getApplication(), uri) ?: throw ApiFailure(SCAN_UNREADABLE, "")
+        _state.update { it.copy(pickedScan = picked, pickedScanFor = documentId) }
+
+        if (_state.value.scanConsent == true) deliverPickedScan() else openScanNotice()
+    }
+
+    /// Records that the disclosure was read and agreed to, then does what was waiting on it.
+    fun agreeToScans() = launch("scan") {
+        val id = profileId() ?: return@launch
+        val consent = api.agreeToScans(id)
+        _state.update { it.copy(scanConsent = consent.agreed, scanNoticeOpen = false) }
+        deliverPickedScan()
+    }
+
+    /// The other button under the disclosure. The picked file is dropped, and it never left the
+    /// phone — which is what the sentence above the two buttons says.
+    fun declineScans() =
+        _state.update { it.copy(scanNoticeOpen = false, pickedScan = null, pickedScanFor = null) }
+
+    /// Drops a file chosen in the add card before it was saved.
+    fun discardPickedScan() = _state.update { it.copy(pickedScan = null, pickedScanFor = null) }
+
+    private fun openScanNotice() = _state.update { it.copy(scanNoticeOpen = true) }
+
+    /**
+     * Sends the held file to the document it was picked for, where there is one.
+     *
+     * A pick made in the add card has no document yet and is left where it is: [addDocument]
+     * stores it once the record exists.
+     */
+    private suspend fun deliverPickedScan() {
+        val state = _state.value
+        val documentId = state.pickedScanFor ?: return
+        val picked = state.pickedScan ?: return
+        val id = profileId() ?: return
+
+        api.storeScan(documentId, picked)
+        _state.update {
+            it.copy(profile = api.profile(id), pickedScan = null, pickedScanFor = null)
+        }
+        rematch()
+        refreshDerived()
+    }
+
+    /**
+     * Fetches the stored copy of a document and renders it — the half of this card that makes a
+     * scan added on one phone READABLE on another.
+     *
+     * The pages are cleared before the call for the reason [refreshPreview] clears its own: pages
+     * left over from the document opened before are a picture of the wrong Zeugnis.
+     */
+    fun openScan(document: StoredDocument) = launch("scan") {
+        val id = document.id ?: return@launch
+        val info = document.scan ?: return@launch
+        _state.update { it.copy(openScan = document, scanPages = emptyList()) }
+
+        val file = api.scanFile(id, getApplication<Application>().scanFile(id, info.contentType))
+        _state.update { it.copy(scanPages = renderScanPages(file, info.contentType)) }
+    }
+
+    fun closeScan() = _state.update { it.copy(openScan = null, scanPages = emptyList()) }
+
+    /**
+     * Hands the fetched copy to another app.
+     *
+     * The file is the one [openScan] already wrote, so this shares what is on screen rather than
+     * fetching a second copy — and it is under the folder FileProvider serves, which is what makes
+     * a file in the app's private storage reachable at all. See [sendPdfByEmail], the same handover.
+     */
+    fun shareScan() {
+        val document = _state.value.openScan ?: return
+        val id = document.id ?: return
+        val info = document.scan ?: return
+
+        getApplication<Application>().scanFile(id, info.contentType).takeIf { it.isFile }
+            ?.let { file -> _state.update { it.copy(pendingScanShare = file) } }
+    }
+
+    fun scanShareHandled() = _state.update { it.copy(pendingScanShare = null) }
+
+    /**
+     * Removes the stored copy and keeps the document.
+     *
+     * Two things, and the viewer says so where the button is: the Anlagenverzeichnis goes on naming
+     * the Zeugnis because it is still being sent. What leaves is the copy Bewerbo was holding —
+     * the "remove the copies" the disclosure promises.
+     */
+    fun removeScan(documentId: String) = launch("scan") {
+        val id = profileId() ?: return@launch
+        api.deleteScan(documentId)
+        getApplication<Application>().documentsDir()
+            .listFiles { file -> file.name.startsWith("scan-$documentId.") }
+            ?.forEach { it.delete() }
+
+        _state.update {
+            it.copy(profile = api.profile(id), openScan = null, scanPages = emptyList())
+        }
         rematch()
         refreshDerived()
     }
@@ -962,5 +1129,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// The kind for a picture the recogniser found no words in. Client-side, like the two
         /// above: the reading happens on the device, so no server answer can carry it.
         const val PHOTO_UNREADABLE = "photo_unreadable"
+
+        /// The kind for a file that could not be read, or that is none of the three types a scan
+        /// may be. Client-side as well: the file is looked at on the device before it is offered,
+        /// so the user hears about a .docx now rather than after the upload.
+        const val SCAN_UNREADABLE = "scan_unreadable"
     }
 }

@@ -720,5 +720,13 @@ fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     "posting_missing" -> stringResource(R.string.error_posting_missing)
     "application_missing" -> stringResource(R.string.error_application_missing)
     "document_missing" -> stringResource(R.string.error_document_missing)
+    // The scan. Four refusals from the server and one raised on the device, and each names the
+    // one thing the user can do about it — which is why they are five sentences and not one.
+    AppViewModel.SCAN_UNREADABLE -> stringResource(R.string.error_scan_unreadable)
+    "scan_consent_missing" -> stringResource(R.string.error_scan_consent_missing)
+    "scan_type_unsupported" -> stringResource(R.string.error_scan_type_unsupported)
+    "scan_too_large" -> stringResource(R.string.error_scan_too_large)
+    "scan_too_many_pages" -> stringResource(R.string.error_scan_too_many_pages)
+    "scan_missing" -> stringResource(R.string.error_scan_missing)
     else -> error.detail.ifBlank { stringResource(R.string.error_unknown) }
 }

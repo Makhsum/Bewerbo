@@ -21,4 +21,8 @@
         <item quantity="one">%1$d page</item>
         <item quantity="other">%1$d pages</item>
     </plurals>
+    <plurals name="application_scans_missing_title">
+        <item quantity="one">%1$d document has no copy</item>
+        <item quantity="other">%1$d documents have no copy</item>
+    </plurals>
 </resources>

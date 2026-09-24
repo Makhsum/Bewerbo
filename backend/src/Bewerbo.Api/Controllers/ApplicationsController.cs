@@ -7,6 +7,7 @@ using Bewerbo.Api.Rendering;
 using Bewerbo.Api.Services;
 using Bewerbo.Api.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using static Bewerbo.Api.Contracts.DtoMapping;
 
 namespace Bewerbo.Api.Controllers;
@@ -107,7 +108,11 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
         var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv,
-            profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today));
+            profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
+            // The whole Mappe, scans included — this check reads the file that is actually sent,
+            // and the page count and size it reports are what the export panel then shows. Leaving
+            // the scans out here would have that panel name the figures of a shorter file.
+            scans: await ScansOf(profile));
 
         var result = AtsTextCheck.Run(pdf, profile);
         return Ok(new AtsDto(result.Passed, result.PageCount, result.SizeBytes,
@@ -134,7 +139,10 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
 
         var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv,
             profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
-            chosen, inspector ?? false);
+            chosen, inspector ?? false,
+            // Read only when the copies were actually asked for: this is the one query in the API
+            // that pulls the scan bytes for a whole profile at once.
+            chosen.HasFlag(ApplicationParts.Scans) ? await ScansOf(profile) : null);
 
         return File(pdf, "application/pdf", MergedApplicationDocument.FileName(profile, posting));
     }
@@ -176,6 +184,14 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
             ProfileIncompleteKind);
     }
 
+    /// <summary>
+    /// The stored copies of this profile's documents, WITH their bytes — the only read in the API
+    /// that wants them, and therefore the only one that pays for them. Every other answer about a
+    /// document carries <see cref="Data.ScanSummary"/> instead.
+    /// </summary>
+    private async Task<IReadOnlyList<DocumentScan>> ScansOf(Domain.Profile profile) =>
+        await db.DocumentScans.Where(s => s.Document!.ProfileId == profile.Id).ToListAsync();
+
     private static ApplicationParts ParseParts(string? parts)
     {
         if (string.IsNullOrWhiteSpace(parts)) return ApplicationParts.All;
@@ -188,6 +204,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
                 "anschreiben" => ApplicationParts.Anschreiben,
                 "lebenslauf" => ApplicationParts.Lebenslauf,
                 "anlagenverzeichnis" or "anlagen" => ApplicationParts.Anlagenverzeichnis,
+                "scans" => ApplicationParts.Scans,
                 _ => ApplicationParts.None,
             };
         }
