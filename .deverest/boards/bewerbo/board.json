@@ -1,0 +1,20 @@
+{
+  "Slug": "bewerbo",
+  "Name": "Bewerbo",
+  "SlackListId": null,
+  "ColumnOrder": [
+    "New Cards",
+    "In Work",
+    "Done"
+  ],
+  "FieldConfig": null,
+  "WorkingDirectory": "C:\\Projects\\Bewerbo",
+  "RunsDriveDesktop": false,
+  "DesktopApp": null,
+  "Kind": "Software",
+  "MainBranch": "main",
+  "CreatedAt": "2026-09-22T20:19:05.981773+00:00",
+  "LastImportedAt": null,
+  "DeletedTitles": [],
+  "FieldConfigJson": null
+}
