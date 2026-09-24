@@ -48,6 +48,24 @@ public class AccountErasureTests
         Assert.Empty(db.Postings);
     }
 
+    /// <summary>
+    /// The second record no cascade reaches, and the one that holds a name. An erasure that took
+    /// the profile but left the <see cref="Account"/> would leave the user's e-mail address on the
+    /// server after they asked to be forgotten, and leave every phone they were signed in on
+    /// pointing at a profile that is gone.
+    /// </summary>
+    [Fact]
+    public async Task Erasing_an_account_takes_the_sign_in_and_its_sessions_with_it()
+    {
+        await using var db = NewDatabase();
+        var id = Filled(db);
+
+        await AccountErasure.EraseAsync(db, id);
+
+        Assert.Empty(db.Accounts);
+        Assert.Empty(db.AuthTokens);
+    }
+
     [Fact]
     public async Task Erasing_another_account_leaves_this_one_untouched()
     {
@@ -60,6 +78,7 @@ public class AccountErasureTests
         Assert.NotNull(await db.Profiles.FindAsync(mine));
         Assert.Single(db.Postings);
         Assert.Single(db.Applications);
+        Assert.Single(db.Accounts);
     }
 
     [Fact]
@@ -89,6 +108,13 @@ public class AccountErasureTests
         var posting = new Posting { ProfileId = profile.Id, Company = "Siemens AG", SourceText = "Wir suchen …" };
         db.Postings.Add(posting);
         db.Applications.Add(new Application { ProfileId = profile.Id, PostingId = posting.Id });
+        db.Accounts.Add(new Account
+        {
+            Email = $"{Guid.NewGuid():n}@example.com",
+            Password = PasswordHash.Create("acht-zeichen"),
+            ProfileId = profile.Id,
+            Tokens = [new AuthToken { TokenHash = SessionToken.HashOf(SessionToken.Issue()) }],
+        });
         db.SaveChanges();
         db.ChangeTracker.Clear();
         return profile.Id;

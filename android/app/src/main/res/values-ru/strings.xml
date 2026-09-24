@@ -42,7 +42,10 @@
     <string name="error_application_missing">Этой заявки больше нет на сервере.</string>
     <string name="error_document_missing">Этого документа больше нет на сервере.</string>
     <string name="error_unknown">Не получилось. Попробуйте ещё раз.</string>
-    <string name="error_account_key_invalid">Это не ключ аккаунта. Скопируйте его из настроек другого устройства.</string>
+    <string name="error_email_invalid">Это не адрес электронной почты. Проверьте его и попробуйте снова.</string>
+    <string name="error_password_too_short">Пароль должен быть не короче 8 знаков.</string>
+    <string name="error_email_taken">Для этого адреса аккаунт уже есть. Войдите в него.</string>
+    <string name="error_credentials_rejected">Адрес или пароль неверны.</string>
     <string name="error_link_not_an_address">Это не веб-адрес. Проверьте его и попробуйте снова.</string>
     <string name="error_link_unreachable">Страница по этой ссылке не ответила. Попробуйте снова или вставьте текст вакансии.</string>
     <string name="error_link_no_text">На этой странице нет текста вакансии. Вставьте текст вручную.</string>
@@ -368,6 +371,21 @@
     <string name="term_impressum">страница, на которой немецкая служба называет, кто её ведёт — этого требует закон</string>
     <string name="term_dsgvo">европейский закон о защите данных, из которого идёт ваше право видеть, забрать и удалить свои данные</string>
 
+    <string name="signin_title">Вход</string>
+    <string name="signin_body">Всё, что вы написали, хранится в вашем аккаунте, а не на этом телефоне.</string>
+    <string name="signin_action">Войти</string>
+    <string name="signin_create_title">Создать аккаунт</string>
+    <string name="signin_create_body">Ваш профиль, ваша Bewerbungsmappe и каждая отправленная заявка остаются в вашем аккаунте. Войдите на новом телефоне — и всё на месте.</string>
+    <string name="signin_create_action">Создать аккаунт</string>
+    <string name="signin_have_account">У меня уже есть аккаунт</string>
+    <string name="signin_password">Пароль</string>
+    <string name="signin_password_rule">Не короче 8 знаков.</string>
+    <string name="signin_adopt_title">Пока вне аккаунта</string>
+    <string name="signin_adopt_body">Lebenslauf на этом телефоне пока не принадлежит ни одному аккаунту. Если создать аккаунт, он сохранится.</string>
+    <string name="signin_leave_title">Оставить этот Lebenslauf здесь?</string>
+    <string name="signin_leave_body">Lebenslauf на этом телефоне не принадлежит ни одному аккаунту. Если войти в другой, он останется здесь, и вернуть его будет нечем. Чтобы сохранить его, создайте аккаунт.</string>
+    <string name="signin_leave_confirm">Всё равно войти</string>
+
     <string name="settings_title">Настройки</string>
     <string name="settings_subtitle">Ваш аккаунт, язык приложения, ваши данные и правовые страницы.</string>
     <string name="settings_open">Открыть настройки</string>
@@ -375,11 +393,14 @@
 
     <string name="settings_account">Ваш аккаунт</string>
     <string name="settings_account_unnamed">Пока без имени</string>
-    <string name="settings_account_hint">Bewerbo не спрашивает ни пароля, ни адреса почты. Ключ ниже И ЕСТЬ ваш аккаунт: введите его на другом устройстве, чтобы перенести туда всё, и никому его не показывайте.</string>
-    <string name="settings_account_key">Ключ аккаунта</string>
-    <string name="settings_account_switch">Продолжить с другим аккаунтом</string>
-    <string name="settings_account_switch_body">Введите ключ, который показан на другом устройстве. Это устройство будет работать с тем аккаунтом; из аккаунта, который вы оставляете, ничего не удаляется.</string>
-    <string name="settings_account_switch_confirm">Продолжить</string>
+    <string name="settings_account_signed_in_as">Вы вошли как</string>
+    <string name="settings_account_sign_out">Выйти</string>
+    <string name="settings_sign_out_title">Выйти?</string>
+    <string name="settings_sign_out_kept">Ваш профиль, ваши документы и ваши заявки остаются в аккаунте. Войдите снова — и они на месте.</string>
+    <string name="settings_sign_out_leaves">На этом телефоне не останется ничего:</string>
+    <string name="settings_sign_out_leaves_cv">открытый Lebenslauf</string>
+    <string name="settings_sign_out_leaves_letter">вакансия и Anschreiben, над которым вы работаете</string>
+    <string name="settings_sign_out_leaves_files">сохранённые здесь файлы Bewerbungsmappe и предпросмотр</string>
 
     <string name="settings_language">Язык приложения</string>
     <string name="settings_language_hint">Язык, на котором здесь написано всё. Язык, на котором вы пишете ПРОФИЛЬ, относится к профилю и настраивается там.</string>

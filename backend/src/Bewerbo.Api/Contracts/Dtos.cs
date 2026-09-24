@@ -301,3 +301,27 @@ public record LegalOperatorDto(
 /// does with every other argument this API sends.
 /// </summary>
 public record LegalDto(LegalOperatorDto Operator, string ModelProcessor);
+
+/// <summary>
+/// The account a user asks for, with the profile this phone was already working on.
+///
+/// <paramref name="AdoptProfileId"/> is the whole of the migration path, and it costs the server no
+/// state: a phone that has been used before this update holds a nameless profile nobody owns, and
+/// registering is the moment it gets an owner. It is honoured only while that profile still belongs
+/// to no account — otherwise naming somebody else's id would hand their Lebenslauf to whoever typed
+/// it. Absent, or pointing at a profile that is spoken for, and the account starts empty.
+/// </summary>
+public record RegisterRequest(string Email, string Password, Guid? AdoptProfileId);
+
+/// <summary>What a user types at the door to get back in.</summary>
+public record CredentialsRequest(string Email, string Password);
+
+/// <summary>
+/// A signed-in device, as the server issues it.
+///
+/// <paramref name="Token"/> is shown exactly once, here: the server keeps only its hash, so it
+/// cannot be handed out again and signing out genuinely revokes it. <paramref name="ProfileId"/> is
+/// what every other route of this API is still addressed by — the account says which profile is the
+/// user's, and the rest of the app goes on reading the profile it always read.
+/// </summary>
+public record SessionDto(string Token, Guid AccountId, string Email, Guid ProfileId);

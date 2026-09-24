@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What a Google backup may NOT take off this phone. Everything else still rides along, which is why
+  this file exists rather than allowBackup="false": the interface language is a preference worth
+  restoring, and the account behind it is not something a backup should be able to hand over.
+
+  The session token is the whole of what proves this device is signed in, so it lives in its own
+  preferences file for the single purpose of being named here — see AppViewModel.sessionPrefs().
+  The produced documents go with it: a restored phone that is not signed in must not be holding
+  somebody's Bewerbungsmappe, which is the same promise the sign-out makes.
+
+  Read on API 26 to 30. API 31 and above read data_extraction_rules.xml, which says the same thing.
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="bewerbo-session.xml" />
+    <exclude domain="file" path="bewerbungen" />
+</full-backup-content>

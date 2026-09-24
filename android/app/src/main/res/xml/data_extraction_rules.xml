@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The same exclusions as backup_rules.xml, for API 31 and above — and for the device-to-device
+  transfer as well as the cloud backup. A phone handed over by a transfer is as much somebody
+  else's phone as a restored one is.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="bewerbo-session.xml" />
+        <exclude domain="file" path="bewerbungen" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="bewerbo-session.xml" />
+        <exclude domain="file" path="bewerbungen" />
+    </device-transfer>
+</data-extraction-rules>

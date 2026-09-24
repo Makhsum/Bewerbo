@@ -406,3 +406,28 @@ data class LegalInfo(
     @SerialName("operator") val operatorDetails: LegalOperator = LegalOperator(),
     val modelProcessor: String = "",
 )
+
+/// What a user asks for at the door. [adoptProfileId] is the nameless profile this phone was
+/// already working on — the server binds it to the new account only while it belongs to none, so
+/// naming one that is spoken for costs nothing and gives nothing away.
+@Serializable
+data class RegisterRequest(
+    val email: String,
+    val password: String,
+    val adoptProfileId: String? = null,
+)
+
+/// What a user types to come back to an account that exists.
+@Serializable
+data class Credentials(val email: String, val password: String)
+
+/// A signed-in device, as the server issues it. [token] is what this device keeps and sends back;
+/// [profileId] is the account's profile, and what every other call of this API is addressed by —
+/// the account says which profile is the user's, and the rest of the app reads it as it always did.
+@Serializable
+data class Session(
+    val token: String = "",
+    val accountId: String = "",
+    val email: String = "",
+    val profileId: String = "",
+)

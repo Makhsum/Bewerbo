@@ -51,6 +51,24 @@ public abstract class BewerboController : ControllerBase
     }
 
     /// <summary>
+    /// The caller is not signed in: no token, or one that has been revoked or never existed.
+    ///
+    /// A 401 and not a 404, because the difference matters to the client — a session that has ended
+    /// puts the door back up, while a record that is missing does not. Carries a
+    /// <paramref name="kind"/> for the reason the other two do.
+    /// </summary>
+    protected ObjectResult NotSignedInProblem(string detail, string kind)
+    {
+        var problem = Problem(statusCode: StatusCodes.Status401Unauthorized, detail: detail);
+        if (problem.Value is ProblemDetails details)
+        {
+            details.Extensions["kind"] = kind;
+        }
+
+        return problem;
+    }
+
+    /// <summary>
     /// The request was understood and could not be carried out — the page behind a link did not
     /// answer, what came back was not an advert. A 400 like <see cref="InvalidRequest"/>, but
     /// carrying a <paramref name="kind"/> the way <see cref="NotFoundProblem"/> does, because the

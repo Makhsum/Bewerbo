@@ -44,7 +44,10 @@
     <string name="error_application_missing">Цієї заявки більше немає на сервері.</string>
     <string name="error_document_missing">Цього документа більше немає на сервері.</string>
     <string name="error_unknown">Не вийшло. Спробуйте ще раз.</string>
-    <string name="error_account_key_invalid">Це не ключ облікового запису. Скопіюйте його з налаштувань іншого пристрою.</string>
+    <string name="error_email_invalid">Це не адреса електронної пошти. Перевірте її та спробуйте ще раз.</string>
+    <string name="error_password_too_short">Пароль має бути не коротшим за 8 знаків.</string>
+    <string name="error_email_taken">Для цієї адреси обліковий запис уже є. Увійдіть до нього.</string>
+    <string name="error_credentials_rejected">Адреса або пароль неправильні.</string>
     <string name="error_link_not_an_address">Це не веб-адреса. Перевірте її та спробуйте ще раз.</string>
     <string name="error_link_unreachable">Сторінка за цим посиланням не відповіла. Спробуйте ще раз або вставте текст вакансії.</string>
     <string name="error_link_no_text">На цій сторінці немає тексту вакансії. Вставте текст вручну.</string>
@@ -370,6 +373,21 @@
     <string name="term_impressum">сторінка, на якій німецька служба називає, хто нею опікується — цього вимагає закон</string>
     <string name="term_dsgvo">європейський закон про захист даних, з якого походить ваше право бачити, забрати й видалити свої дані</string>
 
+    <string name="signin_title">Вхід</string>
+    <string name="signin_body">Усе, що ви написали, зберігається у вашому обліковому записі, а не на цьому телефоні.</string>
+    <string name="signin_action">Увійти</string>
+    <string name="signin_create_title">Створити обліковий запис</string>
+    <string name="signin_create_body">Ваш профіль, ваша Bewerbungsmappe і кожна надіслана заявка залишаються у вашому обліковому записі. Увійдіть на новому телефоні — і все на місці.</string>
+    <string name="signin_create_action">Створити запис</string>
+    <string name="signin_have_account">У мене вже є обліковий запис</string>
+    <string name="signin_password">Пароль</string>
+    <string name="signin_password_rule">Не коротше за 8 знаків.</string>
+    <string name="signin_adopt_title">Поки поза обліковим записом</string>
+    <string name="signin_adopt_body">Lebenslauf на цьому телефоні поки не належить жодному обліковому запису. Якщо створити запис, він збережеться.</string>
+    <string name="signin_leave_title">Залишити цей Lebenslauf тут?</string>
+    <string name="signin_leave_body">Lebenslauf на цьому телефоні не належить жодному обліковому запису. Якщо увійти до іншого, він залишиться тут, і повернути його не буде чим. Щоб зберегти його, створіть обліковий запис.</string>
+    <string name="signin_leave_confirm">Усе одно увійти</string>
+
     <string name="settings_title">Налаштування</string>
     <string name="settings_subtitle">Ваш обліковий запис, мова застосунку, ваші дані та правові сторінки.</string>
     <string name="settings_open">Відкрити налаштування</string>
@@ -377,11 +395,14 @@
 
     <string name="settings_account">Ваш обліковий запис</string>
     <string name="settings_account_unnamed">Поки без імені</string>
-    <string name="settings_account_hint">Bewerbo не питає ні пароля, ні адреси пошти. Ключ нижче І Є вашим обліковим записом: введіть його на іншому пристрої, щоб перенести туди все, і нікому його не показуйте.</string>
-    <string name="settings_account_key">Ключ облікового запису</string>
-    <string name="settings_account_switch">Продовжити з іншим обліковим записом</string>
-    <string name="settings_account_switch_body">Введіть ключ, який показано на іншому пристрої. Цей пристрій працюватиме з тим записом; з того, який ви залишаєте, нічого не видаляється.</string>
-    <string name="settings_account_switch_confirm">Продовжити</string>
+    <string name="settings_account_signed_in_as">Ви увійшли як</string>
+    <string name="settings_account_sign_out">Вийти</string>
+    <string name="settings_sign_out_title">Вийти?</string>
+    <string name="settings_sign_out_kept">Ваш профіль, ваші документи та ваші заявки залишаються в обліковому записі. Увійдіть знову — і вони на місці.</string>
+    <string name="settings_sign_out_leaves">На цьому телефоні не залишиться нічого:</string>
+    <string name="settings_sign_out_leaves_cv">відкритий Lebenslauf</string>
+    <string name="settings_sign_out_leaves_letter">вакансія та Anschreiben, над яким ви працюєте</string>
+    <string name="settings_sign_out_leaves_files">збережені тут файли Bewerbungsmappe і попередній перегляд</string>
 
     <string name="settings_language">Мова застосунку</string>
     <string name="settings_language_hint">Мова, якою тут написано все. Мова, якою ви пишете ПРОФІЛЬ, належить профілю й налаштовується там.</string>

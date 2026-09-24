@@ -40,7 +40,6 @@ import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.IconRow
-import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.LanguageSelector
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.ScreenHeader
@@ -88,7 +87,7 @@ fun SettingsScreen(
         }
     }
 
-    var switching by remember { mutableStateOf(false) }
+    var signingOut by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
 
     Column(
@@ -108,15 +107,15 @@ fun SettingsScreen(
             contentPadding = PaddingValues(start = Space.m, end = Space.m, bottom = Space.m),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
-            item { AccountCard(state) { switching = true } }
+            item { AccountCard(state) { signingOut = true } }
             item { LanguageCard(state, viewModel) }
             item { DataCard(state, viewModel) { deleting = true } }
             item { LegalCard(onOpenLegal) }
         }
     }
 
-    if (switching) {
-        SwitchAccountDialog(viewModel) { switching = false }
+    if (signingOut) {
+        SignOutDialog(viewModel) { signingOut = false }
     }
     if (deleting) {
         DeleteAccountDialog(viewModel) { deleting = false }
@@ -153,15 +152,17 @@ private fun exportChooser(context: Context, file: File, title: String): Intent {
 }
 
 /**
- * The account, which until now the user had no way of seeing at all.
+ * The account — an e-mail address now, and not a key.
  *
- * The key is the account. There is no password to show instead, and there never was one — the id
- * was written into the device on first run and nobody was told about it, so a new phone meant
- * starting again from an empty profile with the old one still on the server. Showing it is what
- * turns that id into something the user owns.
+ * What stood here was the profile id, shown as the account and typed into a second device to move
+ * onto it. That was the ownership hole the door closes: a thirty-six-character key anybody could
+ * read off a screen was all that stood between a stranger and somebody's Lebenslauf. The address is
+ * what the user signed in with, so it tells them WHOSE application they are looking at — the one
+ * question the old card could not answer — and the way off this device is a sign-out rather than a
+ * swap.
  */
 @Composable
-private fun AccountCard(state: AppState, onSwitch: () -> Unit) {
+private fun AccountCard(state: AppState, onSignOut: () -> Unit) {
     val colors = LocalSemanticColors.current
     val person = state.profile?.person
     val name = listOfNotNull(person?.firstName?.ifBlank { null }, person?.lastName?.ifBlank { null })
@@ -177,41 +178,36 @@ private fun AccountCard(state: AppState, onSwitch: () -> Unit) {
                 .testTag("settings_account_name"),
         )
 
-        // The sentence stands ABOVE the key it talks about, because it says "the key below" — it is
-        // what tells the reader that the line of hex under it is not a diagnostic.
+        // The sentence stands ABOVE the address, because it is what the address is an answer to.
         Text(
-            stringResource(R.string.settings_account_hint),
+            stringResource(R.string.settings_account_signed_in_as),
             style = MaterialTheme.typography.bodySmall,
             color = colors.muted,
             modifier = Modifier.padding(top = Space.s),
         )
-        SectionLabel(
-            stringResource(R.string.settings_account_key),
-            Modifier.padding(top = Space.m),
-        )
-        // Selectable, because a key that cannot be copied is a key that has to be typed off a
-        // screen by somebody entering it on a second device — thirty-six characters of it.
+        // Selectable as the key was: an address read off a screen is retyped often enough — into a
+        // password manager, into a message to somebody helping — that copying it should be possible.
         SelectionContainer {
             Text(
-                state.profile?.id.orEmpty(),
+                state.accountEmail.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(top = Space.xs)
-                    .testTag("settings_account_key_value"),
+                    .testTag("settings_account_email"),
             )
         }
 
         OutlinedButton(
-            onClick = onSwitch,
+            onClick = onSignOut,
             modifier = Modifier
                 .padding(top = Space.s)
                 .fillMaxWidth()
-                .testTag("settings_btn_switch_account"),
+                .testTag("settings_btn_sign_out"),
         ) {
             Icon(BewerboIcons.Person, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(
-                stringResource(R.string.settings_account_switch),
+                stringResource(R.string.settings_account_sign_out),
                 modifier = Modifier.padding(start = Space.s),
             )
         }
@@ -401,46 +397,57 @@ private fun LegalCard(onOpen: (LegalPage) -> Unit) {
 }
 
 /**
- * Taking over an account that already exists, by its key.
+ * Leaving the account on this device.
+ *
+ * It names what goes from the phone, item by item, and says plainly what does not: everything the
+ * user produced is in the account and comes back with the next sign-in. Without both halves a
+ * sign-out reads as a delete — which is the reason people stay signed in on a phone they are
+ * handing to somebody else.
  *
  * Through [BewerboDialog] and not AlertDialog, as every dialog in this app is: the dialog composes
- * in a window of its own, which re-provides the locale and drops the test-tag flag, and it holds a
- * text field the keyboard would otherwise cover.
+ * in a window of its own, which re-provides the locale and drops the test-tag flag.
  */
 @Composable
-private fun SwitchAccountDialog(viewModel: AppViewModel, onClose: () -> Unit) {
-    var key by remember { mutableStateOf("") }
-
+private fun SignOutDialog(viewModel: AppViewModel, onClose: () -> Unit) {
     BewerboDialog(
         onDismissRequest = onClose,
-        testTag = "settings_switch_dialog",
-        title = { Text(stringResource(R.string.settings_account_switch)) },
+        testTag = "signout_dialog",
+        title = { Text(stringResource(R.string.settings_sign_out_title)) },
         text = {
             Column {
                 Text(
-                    stringResource(R.string.settings_account_switch_body),
+                    stringResource(R.string.settings_sign_out_kept),
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                LabelledField(
-                    label = stringResource(R.string.settings_account_key),
-                    value = key,
-                    onValueChange = { key = it },
-                    testTag = "settings_switch_key",
-                    modifier = Modifier.padding(top = Space.s),
+                Text(
+                    stringResource(R.string.settings_sign_out_leaves),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = Space.m),
                 )
+                listOf(
+                    R.string.settings_sign_out_leaves_cv,
+                    R.string.settings_sign_out_leaves_letter,
+                    R.string.settings_sign_out_leaves_files,
+                ).forEach { line ->
+                    Text(
+                        "— ${stringResource(line)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = Space.xs),
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    viewModel.useAccount(key)
+                    viewModel.signOut()
                     onClose()
                 },
-                modifier = Modifier.testTag("settings_switch_confirm"),
-            ) { Text(stringResource(R.string.settings_account_switch_confirm)) }
+                modifier = Modifier.testTag("signout_btn_confirm"),
+            ) { Text(stringResource(R.string.settings_account_sign_out)) }
         },
         dismissButton = {
-            TextButton(onClick = onClose, modifier = Modifier.testTag("settings_switch_cancel")) {
+            TextButton(onClick = onClose, modifier = Modifier.testTag("signout_btn_cancel")) {
                 Text(stringResource(R.string.action_cancel))
             }
         },

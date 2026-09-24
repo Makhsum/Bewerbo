@@ -10,6 +10,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -18,6 +19,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readBytes
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -63,10 +65,26 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
 
     suspend fun health(): Health = client.get("$baseUrl/api/health").body()
 
-    // -- profile -----------------------------------------------------------------------------
+    // -- the door ----------------------------------------------------------------------------
 
-    suspend fun createProfile(person: Person): ProfileView =
-        client.post("$baseUrl/api/profile") { json(person) }.body()
+    suspend fun register(request: RegisterRequest): Session =
+        client.post("$baseUrl/api/auth/register") { json(request) }.body()
+
+    suspend fun signIn(credentials: Credentials): Session =
+        client.post("$baseUrl/api/auth/sign-in") { json(credentials) }.body()
+
+    /// Who the token names — asked at every launch, before anything is drawn. A refusal means the
+    /// session has ended and the door goes back up; see [AppViewModel.bootstrap].
+    suspend fun session(token: String): Session =
+        client.get("$baseUrl/api/auth/session") { bearer(token) }.body()
+
+    /// Ends this device's session and no other. The same account signed in on another phone stays
+    /// signed in, which is the whole reason the token is per device rather than per account.
+    suspend fun signOut(token: String) {
+        client.post("$baseUrl/api/auth/sign-out") { bearer(token) }
+    }
+
+    // -- profile -----------------------------------------------------------------------------
 
     suspend fun profile(id: String): ProfileView = client.get("$baseUrl/api/profile/$id").body()
 
@@ -188,6 +206,13 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
         setBody(body)
     }
 
+    /// The signed-in device, named on a call that has to know who is asking. Written out here
+    /// rather than installed as a default header: the token is read off the preferences by the
+    /// view model per call, and a client that carried one would go on sending it after a sign-out.
+    private fun io.ktor.client.request.HttpRequestBuilder.bearer(token: String) {
+        header(HttpHeaders.Authorization, "Bearer $token")
+    }
+
     private suspend fun download(response: HttpResponse, into: File): File {
         into.parentFile?.mkdirs()
         into.writeBytes(response.readBytes())
@@ -195,9 +220,13 @@ class BewerboApi(private val baseUrl: String = BuildConfig.API_BASE_URL) {
     }
 }
 
+/// The one folder every produced file lands in. Named here rather than spelled out twice, because
+/// signing out has to empty exactly what writing fills — see [AppViewModel.signOut].
+fun Context.documentsDir(): File = File(filesDir, "bewerbungen")
+
 /// Where a produced PDF lands on the device, under the app's own files so nothing needs a
 /// storage permission.
-fun Context.documentFile(name: String): File = File(File(filesDir, "bewerbungen"), name)
+fun Context.documentFile(name: String): File = File(documentsDir(), name)
 
 /// Where the preview's copy of the Mappe goes. The cache and not [documentFile]: it is re-rendered
 /// every time the chosen parts change and it is not the file the user asked to keep.

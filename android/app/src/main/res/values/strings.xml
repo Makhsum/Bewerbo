@@ -59,7 +59,10 @@
     <string name="error_application_missing">This application is no longer on the server.</string>
     <string name="error_document_missing">This document is no longer on the server.</string>
     <string name="error_unknown">That did not work. Please try again.</string>
-    <string name="error_account_key_invalid">That is not an account key. Copy it from the settings on the other device.</string>
+    <string name="error_email_invalid">That is not an e-mail address. Check it and try again.</string>
+    <string name="error_password_too_short">The password needs at least 8 characters.</string>
+    <string name="error_email_taken">There is already an account for this e-mail address. Sign in instead.</string>
+    <string name="error_credentials_rejected">E-mail or password is not right.</string>
     <string name="error_link_not_an_address">That is not a web address. Check it and try again.</string>
     <string name="error_link_unreachable">The page behind that link did not answer. Try again, or paste the text of the posting.</string>
     <string name="error_link_no_text">There is no posting text on that page. Paste the text instead.</string>
@@ -404,6 +407,25 @@
     <string name="term_impressum">the page on which a German service names who runs it, which the law requires</string>
     <string name="term_dsgvo">the European data-protection law your right to see, take and delete your data comes from</string>
 
+    <!-- The door, which stands in front of everything else. It carries the language chooser and
+         the three legal pages as well, because both are otherwise behind it: somebody who reads
+         no English has to be able to change the language before they can get through it, and what
+         this installation does with what you type is read BEFORE you type it. -->
+    <string name="signin_title">Sign in</string>
+    <string name="signin_body">Everything you have written is in your account, not on this phone.</string>
+    <string name="signin_action">Sign in</string>
+    <string name="signin_create_title">Create an account</string>
+    <string name="signin_create_body">Your profile, your Bewerbungsmappe and every application you send stay in your account. Sign in on a new phone and everything is there.</string>
+    <string name="signin_create_action">Create account</string>
+    <string name="signin_have_account">I already have an account</string>
+    <string name="signin_password">Password</string>
+    <string name="signin_password_rule">At least 8 characters.</string>
+    <string name="signin_adopt_title">Not in an account yet</string>
+    <string name="signin_adopt_body">The Lebenslauf on this phone does not belong to an account yet. Creating an account keeps it.</string>
+    <string name="signin_leave_title">Leave this Lebenslauf behind?</string>
+    <string name="signin_leave_body">The Lebenslauf on this phone belongs to no account, so signing in to another one leaves it here and nothing brings it back. Create an account instead to keep it.</string>
+    <string name="signin_leave_confirm">Sign in anyway</string>
+
     <!-- Settings: the account, the language of the interface, what is held about the user, and the
          legal pages. Reached from the Overview, because it is not a place the user works in. -->
     <string name="settings_title">Settings</string>
@@ -413,11 +435,14 @@
 
     <string name="settings_account">Your account</string>
     <string name="settings_account_unnamed">Not named yet</string>
-    <string name="settings_account_hint">Bewerbo asks for no password and no e-mail address. The key below IS your account: enter it on another device to carry everything there, and keep it to yourself.</string>
-    <string name="settings_account_key">Account key</string>
-    <string name="settings_account_switch">Continue with another account</string>
-    <string name="settings_account_switch_body">Enter the key shown on the other device. This device then works on that account; nothing is deleted from the account you leave.</string>
-    <string name="settings_account_switch_confirm">Continue</string>
+    <string name="settings_account_signed_in_as">You are signed in as</string>
+    <string name="settings_account_sign_out">Sign out</string>
+    <string name="settings_sign_out_title">Sign out?</string>
+    <string name="settings_sign_out_kept">Your profile, your documents and your applications stay in your account. Sign in again and they are back.</string>
+    <string name="settings_sign_out_leaves">This phone keeps nothing:</string>
+    <string name="settings_sign_out_leaves_cv">the Lebenslauf that is open</string>
+    <string name="settings_sign_out_leaves_letter">the posting and the Anschreiben you are working on</string>
+    <string name="settings_sign_out_leaves_files">the Bewerbungsmappe files saved here and the preview</string>
 
     <string name="settings_language">Language of the app</string>
     <string name="settings_language_hint">The language everything you read here is written in. The language you write your PROFILE in belongs to the profile, so it is set there.</string>

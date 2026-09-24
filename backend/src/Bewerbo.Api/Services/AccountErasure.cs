@@ -32,6 +32,13 @@ public static class AccountErasure
         var postings = await db.Postings.Where(p => p.ProfileId == accountId).ToListAsync();
         db.Postings.RemoveRange(postings);
 
+        // The account that owns this profile, for the same reason and one more: leaving it behind
+        // would leave the user's e-mail address on the server after they asked to be erased, and
+        // leave every device still signed in to a profile that is gone. Its sessions go with it
+        // down the cascade the model does declare.
+        var accounts = await db.Accounts.Where(a => a.ProfileId == accountId).ToListAsync();
+        db.Accounts.RemoveRange(accounts);
+
         db.Profiles.Remove(profile);
         await db.SaveChangesAsync();
         return true;

@@ -698,8 +698,13 @@ private fun AtsFinding.arg(index: Int): String = detailArgs.getOrElse(index) { "
 @Composable
 fun errorMessage(error: ErrorMessage): String = when (error.kind) {
     AppViewModel.UNREACHABLE -> stringResource(R.string.error_unreachable)
-    AppViewModel.ACCOUNT_KEY_INVALID -> stringResource(R.string.error_account_key_invalid)
     AppViewModel.PHOTO_UNREADABLE -> stringResource(R.string.error_photo_unreadable)
+    // The door's four refusals. The wrong-credentials one never says which of the two halves was
+    // wrong, because the server does not say either — see AuthController for why.
+    "email_invalid" -> stringResource(R.string.error_email_invalid)
+    "password_too_short" -> stringResource(R.string.error_password_too_short)
+    "email_taken" -> stringResource(R.string.error_email_taken)
+    "credentials_rejected" -> stringResource(R.string.error_credentials_rejected)
     // Three ways a link can fail and three things to do about it: correct the address, try again,
     // or paste the advert by hand after all.
     "link_not_an_address" -> stringResource(R.string.error_link_not_an_address)

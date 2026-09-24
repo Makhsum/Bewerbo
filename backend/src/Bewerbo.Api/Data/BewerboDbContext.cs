@@ -13,9 +13,21 @@ public class BewerboDbContext(DbContextOptions<BewerboDbContext> options) : DbCo
     public DbSet<StoredDocument> Documents => Set<StoredDocument>();
     public DbSet<Posting> Postings => Set<Posting>();
     public DbSet<Application> Applications => Set<Application>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<AuthToken> AuthTokens => Set<AuthToken>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<Account>(e =>
+        {
+            // The address IS the name of the account, so two accounts may not carry the same one.
+            // The check in the controller says which of them came second; this is what makes the
+            // answer true when two registrations arrive at once.
+            e.HasIndex(a => a.Email).IsUnique();
+            e.HasMany(a => a.Tokens).WithOne(t => t.Account!).HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         b.Entity<Profile>(e =>
         {
             e.HasMany(p => p.Experience).WithOne(x => x.Profile!).HasForeignKey(x => x.ProfileId)

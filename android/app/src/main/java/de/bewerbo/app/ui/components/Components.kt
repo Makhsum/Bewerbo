@@ -54,12 +54,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import de.bewerbo.app.ui.LocalUiLanguage
 import de.bewerbo.app.ui.UiLanguageProvider
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -328,6 +332,11 @@ fun LabelledField(
     testTag: String? = null,
     singleLine: Boolean = true,
     minLines: Int = 1,
+    /// A field nobody reading over the shoulder gets to see. The door is the only screen in this
+    /// app that has one, and it is a parameter here rather than a field of its own on that screen
+    /// so that it carries the same label, the same shape and the same keyboard handling as every
+    /// other input the user meets.
+    password: Boolean = false,
 ) {
     val bringIntoView = remember { BringIntoViewRequester() }
     var focused by remember { mutableStateOf(false) }
@@ -346,6 +355,12 @@ fun LabelledField(
         label = { Text(label.uppercase(), style = MaterialTheme.typography.labelSmall) },
         singleLine = singleLine,
         minLines = minLines,
+        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
+        keyboardOptions = if (password) {
+            KeyboardOptions(keyboardType = KeyboardType.Password)
+        } else {
+            KeyboardOptions.Default
+        },
         shape = MaterialTheme.shapes.small,
         textStyle = MaterialTheme.typography.bodyMedium,
         modifier = modifier

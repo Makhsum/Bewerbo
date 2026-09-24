@@ -66,6 +66,7 @@ import de.bewerbo.app.ui.screens.OverviewScreen
 import de.bewerbo.app.ui.screens.PostingScreen
 import de.bewerbo.app.ui.screens.ProfileScreen
 import de.bewerbo.app.ui.screens.SettingsScreen
+import de.bewerbo.app.ui.screens.SignInScreen
 import de.bewerbo.app.ui.theme.BewerboTheme
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -138,13 +139,21 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
     val snackbar = remember { SnackbarHostState() }
     val keyboardOpen = WindowInsets.isImeVisible
 
+    // The door: everything below is reached through it, and a device that is not signed in reaches
+    // none of it. Not a destination of the NavHost on purpose — drawn ABOVE the Scaffold, so the
+    // bottom bar never stands behind it and the three places stay the three places.
+    val door = !state.loading && state.accountEmail == null
+
     // The interface language is the app's own, not the phone's, and it wraps the whole tree for
     // the same reason testTagsAsResourceId does: every screen below reads strings through it.
     UiLanguageProvider(state.uiLanguage) {
         // INSIDE the provider, and that is the whole point: the error text is read out of the
         // resources, so resolving it above this line would draw it in the PHONE's language over an
         // app the user had set to something else. Same boundary BewerboDialog exists for.
-        val errorText = state.error?.let { errorMessage(it) }
+        //
+        // The door writes its own failures under its own form, where the field that caused them is,
+        // and there is no Scaffold to host a snackbar while it is up anyway.
+        val errorText = state.error?.takeUnless { door }?.let { errorMessage(it) }
         LaunchedEffect(errorText) {
             errorText?.let {
                 snackbar.showSnackbar(it)
@@ -163,6 +172,11 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                 .semantics { testTagsAsResourceId = true }
                 .fillMaxSize(),
         ) {
+            if (door) {
+                SignInScreen(state, viewModel)
+                return@Box
+            }
+
             Scaffold(
                 // The bar has nowhere to sit while the keyboard is up: the IME inset lifted it onto
                 // the keyboard, where it ate a row of the little viewport that was left. Nobody

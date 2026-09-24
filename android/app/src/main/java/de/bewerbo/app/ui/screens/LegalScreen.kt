@@ -66,7 +66,7 @@ fun LegalScreen(page: LegalPage, state: AppState, viewModel: AppViewModel, onBac
     // The pages that need the server fetch it themselves. The settings screen has usually done it
     // already, but a page is a destination of its own and must not depend on where it was opened
     // from — and this is also what makes the retry below work.
-    LaunchedEffect(page) { if (state.legal == null) viewModel.loadSettings() }
+    LaunchedEffect(page) { if (state.legal == null) viewModel.loadLegal() }
 
     Column(
         Modifier
@@ -237,7 +237,7 @@ private fun Paragraphs(@StringRes vararg text: Int) {
 /// nothing else will. A legal page that waits for ever is a legal page that is not there.
 @Composable
 private fun Unreachable(state: AppState, viewModel: AppViewModel, tagPrefix: String) {
-    if (state.busy == "settings") return
+    if (state.busy == "legal") return
 
     Callout(
         icon = BewerboIcons.Attention,
@@ -249,7 +249,7 @@ private fun Unreachable(state: AppState, viewModel: AppViewModel, tagPrefix: Str
             .testTag("${tagPrefix}_unreachable"),
     )
     OutlinedButton(
-        onClick = { viewModel.loadSettings() },
+        onClick = { viewModel.loadLegal() },
         modifier = Modifier
             .padding(top = Space.s)
             .fillMaxWidth()

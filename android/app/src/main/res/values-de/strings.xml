@@ -45,7 +45,10 @@
     <string name="error_application_missing">Diese Bewerbung liegt nicht mehr auf dem Server.</string>
     <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
     <string name="error_unknown">Das hat nicht geklappt. Bitte versuchen Sie es erneut.</string>
-    <string name="error_account_key_invalid">Das ist kein Kontoschlüssel. Kopieren Sie ihn aus den Einstellungen des anderen Geräts.</string>
+    <string name="error_email_invalid">Das ist keine E-Mail-Adresse. Bitte prüfen Sie sie.</string>
+    <string name="error_password_too_short">Das Passwort braucht mindestens 8 Zeichen.</string>
+    <string name="error_email_taken">Zu dieser E-Mail-Adresse gibt es schon ein Konto. Melden Sie sich stattdessen an.</string>
+    <string name="error_credentials_rejected">E-Mail-Adresse oder Passwort stimmt nicht.</string>
     <string name="error_link_not_an_address">Das ist keine Web-Adresse. Prüfen Sie sie und versuchen Sie es erneut.</string>
     <string name="error_link_unreachable">Die Seite hinter dem Link hat nicht geantwortet. Versuchen Sie es erneut oder fügen Sie den Text der Anzeige ein.</string>
     <string name="error_link_no_text">Auf dieser Seite steht kein Anzeigentext. Fügen Sie den Text stattdessen ein.</string>
@@ -371,6 +374,21 @@
     <string name="term_impressum">die Seite, auf der ein deutscher Dienst nennt, wer ihn betreibt — gesetzlich verlangt</string>
     <string name="term_dsgvo">das europäische Datenschutzrecht, aus dem Ihr Recht auf Einsicht, Kopie und Löschung kommt</string>
 
+    <string name="signin_title">Anmelden</string>
+    <string name="signin_body">Alles, was Sie geschrieben haben, liegt in Ihrem Konto, nicht auf diesem Telefon.</string>
+    <string name="signin_action">Anmelden</string>
+    <string name="signin_create_title">Konto anlegen</string>
+    <string name="signin_create_body">Ihr Profil, Ihre Bewerbungsmappe und jede Bewerbung, die Sie verschicken, bleiben in Ihrem Konto. Melden Sie sich auf einem neuen Telefon an, und alles ist da.</string>
+    <string name="signin_create_action">Konto anlegen</string>
+    <string name="signin_have_account">Ich habe schon ein Konto</string>
+    <string name="signin_password">Passwort</string>
+    <string name="signin_password_rule">Mindestens 8 Zeichen.</string>
+    <string name="signin_adopt_title">Noch in keinem Konto</string>
+    <string name="signin_adopt_body">Der Lebenslauf auf diesem Telefon gehört noch zu keinem Konto. Ein neues Konto behält ihn.</string>
+    <string name="signin_leave_title">Diesen Lebenslauf zurücklassen?</string>
+    <string name="signin_leave_body">Der Lebenslauf auf diesem Telefon gehört zu keinem Konto. Wenn Sie sich bei einem anderen anmelden, bleibt er hier, und nichts holt ihn zurück. Legen Sie stattdessen ein Konto an, um ihn zu behalten.</string>
+    <string name="signin_leave_confirm">Trotzdem anmelden</string>
+
     <string name="settings_title">Einstellungen</string>
     <string name="settings_subtitle">Ihr Konto, die Sprache der App, Ihre Daten und die rechtlichen Seiten.</string>
     <string name="settings_open">Einstellungen öffnen</string>
@@ -378,11 +396,14 @@
 
     <string name="settings_account">Ihr Konto</string>
     <string name="settings_account_unnamed">Noch ohne Namen</string>
-    <string name="settings_account_hint">Bewerbo verlangt kein Passwort und keine E-Mail-Adresse. Der Schlüssel unten IST Ihr Konto: Geben Sie ihn auf einem anderen Gerät ein, um alles dorthin mitzunehmen, und behalten Sie ihn für sich.</string>
-    <string name="settings_account_key">Kontoschlüssel</string>
-    <string name="settings_account_switch">Mit einem anderen Konto weiterarbeiten</string>
-    <string name="settings_account_switch_body">Geben Sie den Schlüssel ein, der auf dem anderen Gerät steht. Dieses Gerät arbeitet dann an jenem Konto; aus dem Konto, das Sie verlassen, wird nichts gelöscht.</string>
-    <string name="settings_account_switch_confirm">Weiter</string>
+    <string name="settings_account_signed_in_as">Sie sind angemeldet als</string>
+    <string name="settings_account_sign_out">Abmelden</string>
+    <string name="settings_sign_out_title">Abmelden?</string>
+    <string name="settings_sign_out_kept">Ihr Profil, Ihre Unterlagen und Ihre Bewerbungen bleiben in Ihrem Konto. Melden Sie sich wieder an, und sie sind zurück.</string>
+    <string name="settings_sign_out_leaves">Auf diesem Telefon bleibt nichts davon:</string>
+    <string name="settings_sign_out_leaves_cv">der geöffnete Lebenslauf</string>
+    <string name="settings_sign_out_leaves_letter">die Stellenanzeige und das Anschreiben, an dem Sie arbeiten</string>
+    <string name="settings_sign_out_leaves_files">die hier gespeicherten Dateien der Bewerbungsmappe und die Vorschau</string>
 
     <string name="settings_language">Sprache der App</string>
     <string name="settings_language_hint">Die Sprache, in der hier alles steht. Die Sprache, in der Sie Ihr PROFIL schreiben, gehört zum Profil und wird dort eingestellt.</string>

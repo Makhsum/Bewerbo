@@ -78,6 +78,14 @@ data class AppState(
     /// Who runs this installation and whether a model outside it writes the Anschreiben. Fetched
     /// with [accountData]; null while it has not been.
     val legal: LegalInfo? = null,
+    /// The address of the account this device is signed in to, and the ONE thing that says there
+    /// is one: null while [loading] is false is the door. It is also what the settings card shows
+    /// in place of the account key that used to stand there — see the door's own screen.
+    val accountEmail: String? = null,
+    /// The nameless profile this phone was working on before it had an account — what
+    /// "Create an account" keeps and what signing in to another account leaves behind. Null on a
+    /// phone that never ran a build without the door, which is every phone after the first sign-out.
+    val adoptableProfileId: String? = null,
     /// The language the interface is drawn in — a tag from UI_LANGUAGES, kept on the device.
     val uiLanguage: String = "en",
     val showDinGrid: Boolean = false,
@@ -118,27 +126,82 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Opens the profile this device is working on, creating one on first run.
+     * Opens the profile of the account this device is signed in to — or puts the door up.
      *
-     * The id is kept in shared preferences rather than being asked for: the product's user has
-     * enough forms to fill in already, and an account is not what they came for.
+     * A profile used to be created here on first run and kept in shared preferences, which is what
+     * made the app a record of one PHONE: a new device started empty, cleared app data took the
+     * Lebenslauf with it, and whoever picked the phone up opened somebody else's application.
+     * Nothing is created here any more. The token is what this device holds, the server says whose
+     * it is, and a device with no token gets the door.
      */
     private fun bootstrap() = launch("start") {
         val health = runCatching { api.health() }.getOrNull()
         _state.update { it.copy(writer = health?.writer ?: "regeln") }
 
-        val stored = prefs().getString("profileId", null)
+        val token = sessionPrefs().getString("authToken", null)
+        if (token != null) {
+            val session = try {
+                api.session(token)
+            } catch (_: ApiFailure) {
+                // The server ANSWERED and would not have it: the session was ended on another
+                // device, or the account is gone. Only THAT signs the user out — a server that
+                // could not be reached at all must not take the session with it, so a failure
+                // that is not a refusal goes on out of here and lands in the snackbar.
+                sessionPrefs().edit().remove("authToken").apply()
+                null
+            }
 
-        val profile = if (stored != null) {
-            runCatching { api.profile(stored) }.getOrNull() ?: api.createProfile(Person())
-        } else {
-            api.createProfile(Person())
+            if (session != null) {
+                enter(session)
+                return@launch
+            }
         }
-        prefs().edit().putString("profileId", profile.id).apply()
 
-        _state.update { it.copy(profile = profile, loading = false) }
+        _state.update {
+            it.copy(loading = false, accountEmail = null, adoptableProfileId = adoptableProfile())
+        }
+    }
+
+    /**
+     * Arrives on an account: what a register, a sign-in and a launch with a valid token all end in.
+     *
+     * The posting and the letter written down on this device belong to the profile it was on. Where
+     * the account brought that same profile with it — "Create an account" keeping the Lebenslauf
+     * this phone already held — they are still the user's own work and are picked back up. Where it
+     * did not, they name records of another account and are dropped: the account's own work comes
+     * off the server through the Übersicht instead.
+     */
+    private suspend fun enter(session: Session) {
+        val carried = prefs().getString("profileId", null) == session.profileId
+
+        sessionPrefs().edit().putString("authToken", session.token).apply()
+
+        val edit = prefs().edit().putString("profileId", session.profileId)
+        if (!carried) edit.remove("postingId").remove("applicationId")
+        edit.apply()
+
+        val profile = api.profile(session.profileId)
+        _state.update {
+            AppState(
+                uiLanguage = it.uiLanguage, writer = it.writer, loading = false,
+                accountEmail = session.email, profile = profile,
+            )
+        }
         refreshDerived()
-        restoreWorkInProgress()
+        if (carried) restoreWorkInProgress()
+    }
+
+    /**
+     * The nameless profile a build without the door left on this phone — the one the door offers to
+     * keep.
+     *
+     * Confirmed against the server rather than read out of the preferences and believed: that file
+     * outlives the profile it names, and offering to keep something that is no longer there is a
+     * promise the register call cannot hold.
+     */
+    private suspend fun adoptableProfile(): String? {
+        val stored = prefs().getString("profileId", null) ?: return null
+        return runCatching { api.profile(stored) }.getOrNull()?.id
     }
 
     /**
@@ -174,6 +237,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun prefs() = getApplication<Application>()
         .getSharedPreferences("bewerbo", android.content.Context.MODE_PRIVATE)
+
+    /**
+     * The one preference that must never leave this phone: the token that proves the device is
+     * signed in.
+     *
+     * A file of its own for exactly that reason — a backup rule excludes a FILE and not a key, and
+     * allowBackup is on because the interface language is worth restoring. Without this the token
+     * rode into a Google backup and whoever restored it was signed in as somebody else. See
+     * res/xml/backup_rules.xml, which names this file.
+     */
+    private fun sessionPrefs() = getApplication<Application>()
+        .getSharedPreferences("bewerbo-session", android.content.Context.MODE_PRIVATE)
 
     private fun refreshDerived() = launch(null) {
         val id = profileId() ?: return@launch
@@ -224,6 +299,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * Who runs this installation and whether a model outside it writes the Anschreiben — what the
+     * legal pages cannot be written without.
+     *
+     * Its own call, and not a corner of [loadSettings], because the pages are reachable from the
+     * DOOR as well: somebody deciding whether to create an account here has to be able to read the
+     * privacy notice first, and there is no profile to read the categories of yet.
+     */
+    fun loadLegal() = launch("legal") {
+        _state.update { it.copy(legal = api.legal()) }
+    }
+
+    /**
      * Writes the copy of everything held about the account — Art. 15 and Art. 20 DSGVO.
      *
      * It lands where a produced Lebenslauf lands, through the same helper, and is then handed on
@@ -244,52 +331,79 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun exportHandled() = _state.update { it.copy(pendingExport = null) }
 
     /**
-     * Erases the account and everything held under it — Art. 17 DSGVO — and opens an empty one.
+     * Erases the account and everything held under it — Art. 17 DSGVO — and leaves the user at the
+     * door.
      *
-     * A new account straight afterwards, because there is no app without one: every screen reads
-     * from a profile, and leaving the user on a deleted id would look exactly like the start failure
-     * [retryStart] exists for. The interface language is deliberately kept: it is a preference of
-     * this device, not something held about the person.
+     * An empty account used to be opened straight afterwards, because there was no app without one.
+     * There is a door now, and it is the honest place to land: the account the user asked to have
+     * erased is gone, and silently putting them into a new nameless one would hide exactly that.
+     * The interface language is deliberately kept — it is a preference of this device, not
+     * something held about the person.
      */
     fun deleteAccount() = launch("account") {
         val id = profileId() ?: return@launch
         api.deleteAccount(id)
-        prefs().edit().remove("profileId").remove("postingId").remove("applicationId").apply()
-        _state.update { AppState(uiLanguage = it.uiLanguage, writer = it.writer) }
-        bootstrap()
+        forgetTheAccountOnThisDevice()
+    }
+
+    // -- the door ----------------------------------------------------------------------------
+
+    /**
+     * Creates an account and enters it, keeping the Lebenslauf this phone is already holding.
+     *
+     * The profile the door offered to keep is named in the request rather than decided here: the
+     * server binds it only while it belongs to no account, which is what keeps the offer from
+     * becoming a way to claim somebody else's.
+     */
+    fun register(email: String, password: String) = launch("door") {
+        enter(api.register(RegisterRequest(email.trim(), password, _state.value.adoptableProfileId)))
+    }
+
+    /// Comes back to an account that exists. Everything the user wrote is in it; nothing of it was
+    /// ever on this phone.
+    fun signIn(email: String, password: String) = launch("door") {
+        enter(api.signIn(Credentials(email.trim(), password)))
     }
 
     /**
-     * Continues on this device with an account that already exists, named by its key.
+     * Leaves the account, and leaves nothing of it on the phone.
      *
-     * This is what makes it an account of the user's OWN rather than a record of one phone: the key
-     * the settings screen shows is what carries a profile to a new device, and the app has no
-     * password to ask for because it never had one.
-     *
-     * The key is checked here before the call, because a mistyped one is the ordinary case and the
-     * router refuses a non-Guid id before a controller sees it — that answer carries no kind, so the
-     * snackbar would have had nothing to say. The profile is fetched BEFORE anything is written
-     * down: a key for an account that is gone must leave the user on the one they were on.
+     * The server is told first so the session is genuinely revoked rather than merely forgotten —
+     * but a server that cannot be reached must not keep a user signed in on a phone they are
+     * handing over, so the local half runs either way. That is the whole of the promise this card
+     * makes: what stays is in the account, what was on the device is gone.
      */
-    fun useAccount(key: String) = launch("account") {
-        val trimmed = key.trim()
-        if (runCatching { java.util.UUID.fromString(trimmed) }.isFailure) {
-            _state.update { it.copy(error = ErrorMessage(ACCOUNT_KEY_INVALID)) }
-            return@launch
+    fun signOut() = launch("door") {
+        sessionPrefs().getString("authToken", null)?.let { token ->
+            runCatching { api.signOut(token) }
         }
+        forgetTheAccountOnThisDevice()
+    }
 
-        val profile = api.profile(trimmed)
+    /**
+     * Everything of one account that this device had: the four preferences it wrote, the files it
+     * produced, and the whole of the state on screen.
+     *
+     * One place for it, because signing out and erasing the account both have to leave exactly
+     * nothing and a second copy of this list is a second chance to forget one of them. The
+     * interface language survives, and only that — the app has to stay readable to whoever picks
+     * the phone up next.
+     */
+    private fun forgetTheAccountOnThisDevice() {
+        sessionPrefs().edit().remove("authToken").apply()
         prefs().edit()
-            .putString("profileId", profile.id)
+            .remove("profileId")
             .remove("postingId")
             .remove("applicationId")
             .apply()
-        _state.update {
-            AppState(
-                uiLanguage = it.uiLanguage, writer = it.writer, profile = profile, loading = false,
-            )
-        }
-        refreshDerived()
+
+        // The Bewerbungsmappe, the Lebenslauf and the copy of the account data all land in the one
+        // folder documentFile() writes into; the preview is rendered into the cache beside it.
+        val app = getApplication<Application>()
+        app.documentsDir().deleteRecursively()
+        app.previewFile().delete()
+
+        _state.update { AppState(uiLanguage = it.uiLanguage, writer = it.writer, loading = false) }
     }
 
     // -- profile ---------------------------------------------------------------------------
@@ -794,10 +908,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     companion object {
-        /// The kind for a key the user typed that is not an account key at all. Client-side, like
-        /// [UNREACHABLE]: no server answer carries it.
-        const val ACCOUNT_KEY_INVALID = "account_key_invalid"
-
         /// The name the exported copy is saved under. Not localised on purpose: it is a file name
         /// the user may have to name to somebody, and it is the same file whichever language the
         /// interface is in.

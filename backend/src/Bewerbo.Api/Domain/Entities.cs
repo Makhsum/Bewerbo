@@ -205,3 +205,56 @@ public enum LetterTone { Klassisch, Sachlich, Modern }
 /// (<see cref="Data.BewerboDbContext"/> converts it), so this order carries no data.
 /// </summary>
 public enum ApplicationStatus { Entwurf, Versendet, Wartend, Einladung, Absage }
+
+/// <summary>
+/// The person, as opposed to the phone they are holding.
+///
+/// Until this existed a <see cref="Profile"/> was the account: its id was written into one device's
+/// preferences on first run and never left it, so a new phone started empty, cleared app data took
+/// the Lebenslauf with it, and whoever picked the phone up opened somebody else's application. The
+/// account is what makes the profile follow the user instead of the device.
+///
+/// <see cref="Email"/> is stored lower-cased — it is what the user signs in with, and nobody
+/// remembers which letters they capitalised when they registered. The password is never stored;
+/// see <see cref="Services.PasswordHash"/> for what <see cref="Password"/> holds instead.
+/// </summary>
+public class Account
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public string Email { get; set; } = "";
+
+    /// <summary>The PBKDF2 record of the password, in the format <see cref="Services.PasswordHash"/> writes.</summary>
+    public string Password { get; set; } = "";
+
+    /// <summary>
+    /// The one profile this account owns. A plain id and not a navigation property, deliberately:
+    /// a profile outlives the account in no case, but the erasure of one has to be written in one
+    /// place and <see cref="Services.AccountErasure"/> is it.
+    /// </summary>
+    public Guid ProfileId { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public List<AuthToken> Tokens { get; set; } = [];
+}
+
+/// <summary>
+/// One device that is signed in, as the server knows it.
+///
+/// An opaque random token rather than a signed one, and stored HASHED the way the password is. Both
+/// follow from what signing out and erasure have to mean here: a JWT stays valid until it expires
+/// however firmly the user pressed "Sign out", and a token readable in the database is a password
+/// for every account in it. Deleting the row is what actually revokes the session.
+/// </summary>
+public class AuthToken
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid AccountId { get; set; }
+    public Account? Account { get; set; }
+
+    /// <summary>SHA-256 of the token the device holds, hex. The token itself exists only on the device.</summary>
+    public string TokenHash { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}

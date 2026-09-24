@@ -13,8 +13,13 @@
         </intent>
     </queries>
 
+    <!-- A backup still runs, and the two rule files say what it may not take: the session token
+         and the produced documents. Without them the token rode into a Google backup, and whoever
+         restored it was signed in as somebody else. -->
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
