@@ -317,6 +317,10 @@ private fun FileCertificateDialog(
     }
     var note by remember(language) { mutableStateOf("") }
     var pages by remember(language) { mutableStateOf("1") }
+    // Whether the number in the field is the user's own, as in the Mappe's add card. This dialog
+    // has no file to read a count off, but the document it files is one a scan is attached to
+    // later — and without this the upload replaces the number the user typed here.
+    var pagesStated by remember(language) { mutableStateOf(false) }
 
     BewerboDialog(
         onDismissRequest = onDismiss,
@@ -344,7 +348,7 @@ private fun FileCertificateDialog(
                 LabelledField(
                     label = stringResource(R.string.locker_field_pages),
                     value = pages,
-                    onValueChange = { pages = it },
+                    onValueChange = { pages = it; pagesStated = it.isNotBlank() },
                     testTag = "match_file_input_pages",
                 )
             }
@@ -356,6 +360,7 @@ private fun FileCertificateDialog(
                         StoredDocument(
                             title = title, kind = "Sprachnachweis", note = note,
                             pageCount = pages.toIntOrNull() ?: 1,
+                            pageCountStated = pagesStated,
                         ),
                     )
                 },
