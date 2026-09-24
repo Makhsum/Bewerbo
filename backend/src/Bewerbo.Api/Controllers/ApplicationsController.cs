@@ -111,7 +111,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv,
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource,
             profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
             // The whole Mappe, scans included — this check reads the file that is actually sent,
             // and the page count and size it reports are what the export panel then shows. Leaving
@@ -141,7 +141,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv,
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource,
             profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
             chosen, inspector ?? false,
             // Read only when the copies were actually asked for: this is the one query in the API

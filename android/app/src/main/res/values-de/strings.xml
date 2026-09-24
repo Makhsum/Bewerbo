@@ -173,6 +173,13 @@
     <string name="assistant_proposal_keep">Weglassen</string>
     <string name="assistant_proposal_accepted">Steht im Profil, genau in diesen Worten.</string>
     <string name="assistant_proposal_kept">Weggelassen. Ihre eigenen Worte bleiben, wie Sie sie geschrieben haben.</string>
+    <string name="assistant_person">Um wen es im Lebenslauf geht</string>
+    <string name="assistant_person_note">Diese Angaben stehen oben im Dokument. Lesen Sie sie neben Ihrem eigenen Satz und entscheiden Sie darüber; nichts steht im Profil, bevor Sie es übernehmen.</string>
+    <string name="assistant_document">Ihr Lebenslauf</string>
+    <string name="assistant_document_body">Von hier aus ein Schritt. Bewerbo schreibt aus dem, was jetzt im Profil steht, einen deutschen Lebenslauf und gibt Ihnen die Datei zum Behalten.</string>
+    <string name="assistant_document_missing">Dem Dokument fehlt noch: %1$s. Schreiben Sie es unten in einem Satz, dann kommt es hinein.</string>
+    <string name="assistant_document_action">Lebenslauf erzeugen</string>
+    <string name="assistant_document_share">Lebenslauf behalten</string>
     <string name="assistant_you">Sie</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">Kein Assistent in dieser Installation</string>
@@ -318,6 +325,8 @@
     <string name="match_letter_blocked_title">Für ein Anschreiben reicht das noch nicht</string>
     <string name="match_letter_blocked_body">Dem Anschreiben fehlt noch: %1$s. Ohne diese Angaben geht der Brief ohne Absenderadresse und ohne Namen unter dem Gruß hinaus und hat nichts über Sie zu sagen.</string>
     <string name="letter_blocked_item_beruf">eine Position</string>
+    <string name="cv_missing_item_ausbildung">ein Abschluss</string>
+    <string name="cv_missing_item_sprachen">eine Sprache</string>
 
     <string name="tone_klassisch">Klassisch</string>
     <string name="tone_sachlich">Sachlich</string>

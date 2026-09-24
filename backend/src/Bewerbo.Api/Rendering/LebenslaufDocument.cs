@@ -14,8 +14,16 @@ namespace Bewerbo.Api.Rendering;
 ///
 /// The template changes proportions and rules, never the content: the same <see cref="CvContent"/>
 /// renders under all three.
+///
+/// <paramref name="writer"/> is "model" or "regeln" — <see cref="IApplicationWriter.LastSource"/> of
+/// the writer that produced <paramref name="content"/>, and the page says so in one line under the
+/// date. The app already names the writer on screen before a letter is read; a file leaves the app
+/// and is read where no screen goes with it, so the disclosure has to be ON the page. It is passed
+/// in rather than read here because only the caller that just ran the writer knows the truth — the
+/// letter learnt that the hard way, by inventing a value on the reload path.
 /// </summary>
-public class LebenslaufDocument(CvContent content, Profile profile, CvTemplate template) : IDocument
+public class LebenslaufDocument(CvContent content, Profile profile, CvTemplate template, string writer)
+    : IDocument
 {
     private static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
 
@@ -155,5 +163,22 @@ public class LebenslaufDocument(CvContent content, Profile profile, CvTemplate t
             .Text(placeAndDate)
             .FontSize(DocumentTheme.SmallSize + 0.5f)
             .FontColor(DocumentTheme.Muted);
+
+        // Who wrote the German on this page. In German because the page is German — it is read by
+        // an employer and not by the user's interface — and set smaller than the date so it reads
+        // as the footnote it is rather than as part of the Lebenslauf.
+        column.Item().PaddingTop(2, Unit.Millimetre)
+            .Text(WriterNote)
+            .FontSize(DocumentTheme.SmallSize)
+            .FontColor(DocumentTheme.Muted);
     }
+
+    /// <summary>
+    /// The one sentence naming the writer. Two writers, two sentences and no third: an unknown
+    /// value reads as the rule-based one, because that is what runs whenever no model answered.
+    /// </summary>
+    private string WriterNote => writer == "model"
+        ? "Erstellt mit Bewerbo. Die deutschen Formulierungen stammen von einem KI-Sprachmodell."
+        : "Erstellt mit Bewerbo. Die deutschen Formulierungen stammen aus den Textregeln von " +
+          "Bewerbo, nicht von einem KI-Sprachmodell.";
 }

@@ -538,6 +538,30 @@ fun letterBlockerItems(keys: List<String>): String {
     return named.joinToString(", ")
 }
 
+/// What the Lebenslauf still lacks, named in the user's language and joined as a list — the same
+/// shape [letterBlockerItems] takes, over the two further keys the document asks about. The words
+/// are the ones already in use for those fields: the header is the Briefkopf's own three, and the
+/// list has to read as one register, so the sections are named as short phrases here rather than
+/// with the Profil screen's headings.
+///
+/// Nothing here refuses anything, unlike the blockers: these are named beside a document that is
+/// produced either way. A plain loop for the reason [personItems] uses one.
+@Composable
+fun cvMissingItems(keys: List<String>): String {
+    val named = mutableListOf<String>()
+    keys.forEach { key ->
+        named += when (key) {
+            "name" -> stringResource(R.string.step_person_item_name)
+            "anschrift" -> stringResource(R.string.step_person_item_anschrift)
+            "kontakt" -> stringResource(R.string.step_person_item_kontakt)
+            "beruf" -> stringResource(R.string.letter_blocked_item_beruf)
+            "ausbildung" -> stringResource(R.string.cv_missing_item_ausbildung)
+            else -> stringResource(R.string.cv_missing_item_sprachen)
+        }
+    }
+    return named.joinToString(", ")
+}
+
 /// The argument at [index], or an empty string — a step from an older server carries none, and a
 /// missing one must not take the Übersicht down with it.
 private fun NextStep.arg(index: Int): String = args.getOrElse(index) { "" }

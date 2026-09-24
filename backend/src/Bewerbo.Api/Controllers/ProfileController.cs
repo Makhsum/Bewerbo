@@ -239,7 +239,7 @@ public class ProfileController(BewerboDbContext db, ILanguageModel model) : Bewe
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
-        var pdf = new LebenslaufDocument(cv, profile, profile.Template).GeneratePdf();
+        var pdf = new LebenslaufDocument(cv, profile, profile.Template, writer.LastSource).GeneratePdf();
 
         var name = $"Lebenslauf_{profile.FirstName}_{profile.LastName}.pdf";
         return File(pdf, "application/pdf", name);

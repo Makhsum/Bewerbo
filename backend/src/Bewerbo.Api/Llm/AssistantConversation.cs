@@ -77,9 +77,16 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
             System(uiLanguage), Prompt(profile, said),
             OutputSchemas.AssistantSchemaName, OutputSchemas.Assistant, ct);
 
-        // What comes back may propose an entry the profile cannot take. That is filtered here
-        // rather than drawn: see Usable.
-        if (result is { Reply.Length: > 0 }) return result with { Proposals = Usable(result.Proposals) };
+        // What comes back may propose an entry the profile cannot take, or details the profile
+        // already holds. Both are filtered here rather than drawn: see Usable and UsablePerson.
+        if (result is { Reply.Length: > 0 })
+        {
+            return result with
+            {
+                Proposals = Usable(result.Proposals),
+                Person = UsablePerson(profile, result.Person),
+            };
+        }
 
         // An answer with nothing in it is not an answer. The route turns this into the same refusal
         // an unconfigured installation gets, because from where the user stands it is the same
@@ -107,6 +114,39 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
             .Select(p => p with { From = Day(p.From), To = Day(p.To) })
             .Where(p => p.Kind == LanguagesSection || p.From.Length > 0)
             .ToList();
+
+    /// <summary>
+    /// The person's details the profile does not already have, and no others.
+    ///
+    /// A proposal is an ADDITION — the rule <see cref="Usable"/> keeps for a station — and the
+    /// person is the one part of the profile where an addition could otherwise overwrite: a user
+    /// who typed their Anschrift into the form and then mentions an old one in the conversation
+    /// must not be offered a card that silently replaces it. Correcting a field that is filled in
+    /// is the form's job.
+    ///
+    /// Dropping the fields here rather than on the way in is what makes the card honest: the user
+    /// reads exactly what accepting will write, because what is left is exactly what is written.
+    /// </summary>
+    private static AssistantPerson UsablePerson(Profile profile, AssistantPerson person)
+    {
+        var offered = person with
+        {
+            FirstName = Unset(profile.FirstName, person.FirstName),
+            LastName = Unset(profile.LastName, person.LastName),
+            Street = Unset(profile.Street, person.Street),
+            PostalCode = Unset(profile.PostalCode, person.PostalCode),
+            City = Unset(profile.City, person.City),
+            Phone = Unset(profile.Phone, person.Phone),
+            Email = Unset(profile.Email, person.Email),
+        };
+        // Nothing left to offer, so nothing is offered — not even the quoted sentence. A card with
+        // a source and no field under it is a card asking the user to accept nothing.
+        return offered.IsEmpty ? new AssistantPerson() : offered;
+    }
+
+    /// <summary>What the assistant read, or empty where the profile already carries that field.</summary>
+    private static string Unset(string stored, string read) =>
+        string.IsNullOrWhiteSpace(stored) ? read.Trim() : "";
 
     /// <summary>
     /// A date as the section routes take it — <c>yyyy-MM-dd</c> — or empty where what came back is
@@ -149,6 +189,10 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
         "sollen — ohne Klammern, ohne Erklärung, ohne die Sprache der Person daneben. " +
         "»source« zitiert WÖRTLICH die Worte der Person, aus denen du den Eintrag gelesen hast, in " +
         "deren Sprache und unverändert. Was kein Eintrag ist, gehört nicht in »proposals«. " +
+        "»person« ist der Kopf des Lebenslaufs: Name, Anschrift, Telefon, E-Mail — nur was die " +
+        "Person GESAGT hat, Feld für Feld und nichts erraten. Was nicht gesagt wurde, bleibt leer. " +
+        "Diese Felder werden nicht übersetzt; ein Name und eine Straße stehen so da, wie sie " +
+        "geschrieben wurden. Fehlt der Name noch, frag in »missing« danach. " +
         $"»from« und »to« im Format JJJJ-MM; bei {LanguagesSection} bleiben beide leer, bei etwas " +
         "Andauerndem bleibt »to« leer. Eine Station oder ein Abschluss OHNE genanntes Anfangsjahr " +
         "gehört nach »missing« und nicht nach »proposals«. " +
@@ -173,6 +217,9 @@ public class AssistantConversation(ILanguageModel model, ILogger<AssistantConver
             "Was im Profil schon steht:",
             $"- Person: {Filled(profile.FirstName, profile.LastName)}, " +
             $"Ort: {Filled(profile.PostalCode, profile.City)}",
+            // The remaining three fields of the Briefkopf, so a turn does not offer what the form
+            // already holds — the same reason the sections below go in.
+            $"- Anschrift: {Filled(profile.Street, "")}, Kontakt: {Filled(profile.Phone, profile.Email)}",
             $"- Eingabesprache des Profils: {profile.InputLanguage}",
         };
         lines.Add(profile.Experience.Count == 0

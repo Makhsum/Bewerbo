@@ -60,7 +60,9 @@ public static class ReadinessService
             evidenceOnFile, evidenceExpected,
             steps,
             applications,
-            profile.Documents.Select(d => d.ToDto()).ToList());
+            profile.Documents.Select(d => d.ToDto()).ToList(),
+            // What the Lebenslauf still lacks, as keys. It holds nothing back — see CvMissing.
+            CvMissing(profile).Select(m => m.Key).ToList());
     }
 
     /// <summary>
@@ -163,6 +165,29 @@ public static class ReadinessService
         var blockers = PersonMissing(profile);
         if (profile.Experience.Count == 0) blockers.Add(("beruf", "Berufserfahrung"));
         return blockers;
+    }
+
+    /// <summary>
+    /// What the Lebenslauf still lacks — and it BLOCKS NOTHING, which is the difference from
+    /// <see cref="LetterBlockers"/> and the whole reason it is a second list.
+    ///
+    /// An Anschreiben written from an empty profile is a document that costs the applicant the
+    /// position, so it is refused. A Lebenslauf is not: it is the first thing a user can hold, and
+    /// one that names three of the four things an employer looks for is worth more than none at all.
+    /// So these are named beside the document rather than put in front of it.
+    ///
+    /// The person's own fields come from <see cref="PersonMissing"/> so the Briefkopf cannot be
+    /// asked for in two different ways, and the three sections are the three the document is made
+    /// of — which are also the three an assistant proposal can fill, so everything named here can
+    /// be supplied in the conversation.
+    /// </summary>
+    public static List<(string Key, string Label)> CvMissing(Profile profile)
+    {
+        var missing = PersonMissing(profile);
+        if (profile.Experience.Count == 0) missing.Add(("beruf", "Berufserfahrung"));
+        if (profile.Education.Count == 0) missing.Add(("ausbildung", "Ausbildung"));
+        if (profile.Languages.Count == 0) missing.Add(("sprachen", "Sprachen"));
+        return missing;
     }
 
     private static List<NextStepDto> NextSteps(Profile profile, TimelineView timeline)

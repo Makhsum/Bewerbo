@@ -149,6 +149,13 @@ public record AssistantReply
     /// </summary>
     [JsonPropertyName("proposals")]
     public List<AssistantProposal> Proposals { get; init; } = [];
+
+    /// <summary>
+    /// The person themselves, where the conversation named them — the one part of the profile that
+    /// is not a list of entries. All fields empty for a turn that said nothing about who is writing.
+    /// </summary>
+    [JsonPropertyName("person")]
+    public AssistantPerson Person { get; init; } = new();
 }
 
 /// <summary>
@@ -195,4 +202,54 @@ public record AssistantProposal
     /// <summary>The end, empty for something still going on and for a language.</summary>
     [JsonPropertyName("to")]
     public string To { get; init; } = "";
+}
+
+/// <summary>
+/// Who the Lebenslauf is about, as the conversation named them — the header of the document and
+/// nothing else.
+///
+/// It is NOT an <see cref="AssistantProposal"/>, and that is deliberate: a proposal is one entry of
+/// a list and carries a German title with a period beside it, while the person is a set of fields
+/// the profile has exactly one of. Folding it into the proposal's Kind would mean parsing a name
+/// and an Anschrift back out of two free-text lines, and what the user accepted would no longer be
+/// what the profile receives.
+///
+/// The fields are not translated: a name, a street and a postal code read the same in every
+/// language, which is why nothing here has a German half and a source half the way a proposal does.
+/// <see cref="Source"/> quotes the sentence they were read from for the reason
+/// <see cref="AssistantProposal.Source"/> does — the user is deciding about a pair.
+/// </summary>
+public record AssistantPerson
+{
+    /// <summary>The user's own words this was read from, quoted, in their own language.</summary>
+    [JsonPropertyName("source")]
+    public string Source { get; init; } = "";
+
+    [JsonPropertyName("firstName")]
+    public string FirstName { get; init; } = "";
+
+    [JsonPropertyName("lastName")]
+    public string LastName { get; init; } = "";
+
+    [JsonPropertyName("street")]
+    public string Street { get; init; } = "";
+
+    [JsonPropertyName("postalCode")]
+    public string PostalCode { get; init; } = "";
+
+    [JsonPropertyName("city")]
+    public string City { get; init; } = "";
+
+    [JsonPropertyName("phone")]
+    public string Phone { get; init; } = "";
+
+    [JsonPropertyName("email")]
+    public string Email { get; init; } = "";
+
+    /// <summary>Whether this names anything at all. An answer that read nothing about the person
+    /// comes back with every field empty rather than with a null, as every other string here does.</summary>
+    [JsonIgnore]
+    public bool IsEmpty =>
+        new[] { FirstName, LastName, Street, PostalCode, City, Phone, Email }
+            .All(string.IsNullOrWhiteSpace);
 }

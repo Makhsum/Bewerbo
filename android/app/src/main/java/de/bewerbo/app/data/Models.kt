@@ -347,6 +347,10 @@ data class Overview(
     /// letterhead is filled in, the letter cannot be written then. The Abgleich names these and
     /// keeps its button disabled until the list is empty.
     val letterBlockers: List<String> = emptyList(),
+    /// What the Lebenslauf still lacks, as keys — and unlike [letterBlockers] it holds nothing back:
+    /// the document is produced from whatever the profile has and this is what is named beside it.
+    /// The assistant draws these under the document it offers, where they can be said in a sentence.
+    val cvMissing: List<String> = emptyList(),
     val profileCompleteness: Int = 0,
     val gapsExplained: Int = 0,
     val gapsTotal: Int = 0,
@@ -417,6 +421,28 @@ data class AssistantReply(
     val reply: String = "",
     val missing: List<String> = emptyList(),
     val proposals: List<AssistantProposal> = emptyList(),
+    val person: AssistantPerson? = null,
+)
+
+/// Who the Lebenslauf would be about, as the conversation named them — the header of the document.
+///
+/// Not an [AssistantProposal]: the profile has exactly one person and it is a set of fields rather
+/// than a German line with a period beside it. The fields are not translated either — a name and a
+/// street read the same in every language — so there is no German half here, only [source], the
+/// sentence they were read from.
+///
+/// Only the fields the profile does not already hold arrive: the server takes the rest out, so what
+/// the card shows is what accepting writes.
+@Serializable
+data class AssistantPerson(
+    val source: String = "",
+    val firstName: String = "",
+    val lastName: String = "",
+    val street: String = "",
+    val postalCode: String = "",
+    val city: String = "",
+    val phone: String = "",
+    val email: String = "",
 )
 
 /// One thing the assistant understood, as it would stand in the profile.
@@ -452,6 +478,14 @@ data class AssistantProposalChoice(
     val decision: ProposalDecision = ProposalDecision.Pending,
 )
 
+/// The person's details beside the decision made about them, the same shape as
+/// [AssistantProposalChoice] and answered the same way — one card, two answers, nothing stored until
+/// it is taken.
+data class AssistantPersonChoice(
+    val person: AssistantPerson,
+    val decision: ProposalDecision = ProposalDecision.Pending,
+)
+
 /// One turn as the SCREEN holds it: what was said, and — for an answer — what came with it.
 /// Client-side only, like [DutyChoice]: [AssistantMessage] is what travels, and this is what is
 /// drawn.
@@ -460,6 +494,7 @@ data class AssistantTurn(
     val text: String,
     val missing: List<String> = emptyList(),
     val proposals: List<AssistantProposalChoice> = emptyList(),
+    val person: AssistantPersonChoice? = null,
 )
 
 

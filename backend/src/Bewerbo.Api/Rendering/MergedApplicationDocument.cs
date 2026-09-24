@@ -37,6 +37,10 @@ public static class MergedApplicationDocument
         Posting posting,
         LetterContent letter,
         CvContent cv,
+        // Which writer produced cv, for the line the Lebenslauf carries. Beside the content it is
+        // about rather than at the end with the options: a caller that has a CvContent has just
+        // run a writer and knows which one it was.
+        string cvWriter,
         IReadOnlyList<StoredDocument> documents,
         DateOnly date,
         ApplicationParts parts = ApplicationParts.All,
@@ -51,7 +55,7 @@ public static class MergedApplicationDocument
         }
         if (parts.HasFlag(ApplicationParts.Lebenslauf))
         {
-            pieces.Add(new LebenslaufDocument(cv, profile, profile.Template));
+            pieces.Add(new LebenslaufDocument(cv, profile, profile.Template, cvWriter));
         }
         if (parts.HasFlag(ApplicationParts.Anlagenverzeichnis) && documents.Count > 0)
         {

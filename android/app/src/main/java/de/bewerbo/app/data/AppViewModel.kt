@@ -80,6 +80,10 @@ data class AppState(
     /// it to a chooser and clears it — the same handover [pendingEmail] gets, for the same reason:
     /// a file in the app’s own storage is reachable from nowhere else.
     val pendingExport: File? = null,
+    /// Set when the user asked for the Lebenslauf from the conversation. The assistant hands it to a
+    /// chooser and clears it — the same handover [pendingExport] gets, and its own field because the
+    /// two are picked up on different screens and one is a PDF where the other is a JSON copy.
+    val pendingCv: File? = null,
     /// Whether this account has agreed to Bewerbo holding the scans of its documents. Null until
     /// the Documents screen has asked, and treated as "not yet" while it is — the disclosure must
     /// not be skipped because an answer has not arrived.
@@ -640,11 +644,40 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             refreshDerived()
         }
 
-    fun generateCv() = launch("cv") {
-        val id = profileId() ?: return@launch
-        val name = "Lebenslauf.pdf"
-        val file = api.lebenslaufPdf(id, getApplication<Application>().documentFile(name))
+    fun generateCv() = launch("cv") { saveCv() }
+
+    /**
+     * The Lebenslauf from the conversation: produced, saved, and handed out to be kept.
+     *
+     * The one further step the first minutes end in. It is the same document [generateCv] makes —
+     * one route, one file name — and what it adds is [pendingCv]: a file in the app's own folder is
+     * mode 0600 under the app's uid, so a message naming it is the last the user ever sees of it.
+     * The assistant hands it to a chooser, which is where "open it outside Bewerbo" happens.
+     *
+     * Nothing is held back when the profile is short of something. What the document lacks is named
+     * beside the button from [Overview.cvMissing], and a Lebenslauf with three of four sections
+     * filled is worth more to the user than a refusal.
+     */
+    fun exportCv() = launch("cv") {
+        // The file first, the state second. [saveCv] writes to the state itself, and a writer
+        // called from INSIDE an update lambda runs twice: the lambda is retried when the value
+        // changed underneath it, which is exactly what its own inner write does — one tap asked
+        // the server for the Lebenslauf twice.
+        val file = saveCv() ?: return@launch
+        _state.update { it.copy(pendingCv = file) }
+    }
+
+    /// Cleared once the assistant has handed the Lebenslauf to a chooser, so coming back to the
+    /// screen does not open it a second time. Same reason as [exportHandled].
+    fun cvHandled() = _state.update { it.copy(pendingCv = null) }
+
+    /// The Lebenslauf as a file, wherever it was asked for. Null when there is no profile to render
+    /// — the caller then has nothing to hand on either.
+    private suspend fun saveCv(): File? {
+        val id = profileId() ?: return null
+        val file = api.lebenslaufPdf(id, getApplication<Application>().documentFile(CV_FILE))
         _state.update { it.copy(lastSavedFile = describe(file)) }
+        return file
     }
 
     // -- posting ---------------------------------------------------------------------------
@@ -720,6 +753,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     // Every proposal arrives undecided. The user reads the German beside their own
                     // words and answers it one by one — nothing is taken because it was offered.
                     answer.proposals.map { proposal -> AssistantProposalChoice(proposal) },
+                    // The header of the Lebenslauf, where the turn named anything the profile does
+                    // not hold yet. Undecided in the same way, and null where there is nothing.
+                    answer.person?.let { person -> AssistantPersonChoice(person) },
                 ),
             )
         }
@@ -790,6 +826,51 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * Writes the person's details the conversation named into the profile — the header the Lebenslauf
+     * needs before it is a document anybody can send.
+     *
+     * Through [api.savePerson], the form's own route, as an accepted proposal goes through the
+     * section routes. Only the fields that arrived are set, and each only where the profile has
+     * nothing: the server already took out everything it holds, and this is the second half of the
+     * same rule, because the profile may have gained a field while the card stood on screen.
+     * Accepting is an ADDITION here as everywhere else — correcting a field that is filled in is
+     * the form's job.
+     */
+    fun acceptPerson(turn: Int) = launch(PROPOSAL) {
+        val id = profileId() ?: return@launch
+        val choice = state.value.assistant.getOrNull(turn)?.person ?: return@launch
+        if (choice.decision != ProposalDecision.Pending) return@launch
+        val current = state.value.profile?.person ?: return@launch
+        val read = choice.person
+
+        val saved = api.savePerson(
+            id,
+            current.copy(
+                firstName = current.firstName.ifBlank { read.firstName },
+                lastName = current.lastName.ifBlank { read.lastName },
+                street = current.street.ifBlank { read.street },
+                postalCode = current.postalCode.ifBlank { read.postalCode },
+                city = current.city.ifBlank { read.city },
+                phone = current.phone.ifBlank { read.phone },
+                email = current.email.ifBlank { read.email },
+            ),
+        )
+        _state.update {
+            it.copy(
+                profile = saved,
+                assistant = it.assistant.personDecided(turn, ProposalDecision.Accepted),
+            )
+        }
+        refreshDerived()
+    }
+
+    /// The user left the details out. Nothing was stored, so nothing is undone — the same bargain
+    /// [refuseProposal] strikes, and the card stays and says so for the same reason.
+    fun refusePerson(turn: Int) = _state.update {
+        it.copy(assistant = it.assistant.personDecided(turn, ProposalDecision.Kept))
+    }
+
+    /**
      * The conversation with ONE proposal's decision changed.
      *
      * By position and not by an id, unlike [dutyOutcomes]: a proposal has no id to key a map with —
@@ -797,6 +878,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * belongs beside the proposal it is about. Positions are stable here for the same reason: a
      * turn is only ever appended, and none is ever removed.
      */
+    /// The conversation with the person card of ONE turn decided. By position, as [decided] is, and
+    /// separate from it because there is at most one of these per turn and it has no index.
+    private fun List<AssistantTurn>.personDecided(turn: Int, decision: ProposalDecision) =
+        mapIndexed { t, one ->
+            if (t != turn) one else one.copy(person = one.person?.copy(decision = decision))
+        }
+
     private fun List<AssistantTurn>.decided(turn: Int, index: Int, decision: ProposalDecision) =
         mapIndexed { t, one ->
             if (t != turn) {
@@ -1313,6 +1401,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// the user may have to name to somebody, and it is the same file whichever language the
         /// interface is in.
         private const val ACCOUNT_DATA_FILE = "Bewerbo-Daten.json"
+
+        /// The name the Lebenslauf is saved under, and not localised for the reason above. One name,
+        /// so producing it a second time replaces the first rather than leaving the user to work out
+        /// which of two files is the current one.
+        private const val CV_FILE = "Lebenslauf.pdf"
 
         /// The name of the assistant's busy state. Named rather than spelled out at both ends:
         /// the screen draws the "preparing an answer" row off exactly this string.

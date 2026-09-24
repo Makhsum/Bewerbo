@@ -4,6 +4,7 @@ using Bewerbo.Api.Llm;
 using Bewerbo.Api.Rendering;
 using Bewerbo.Api.Services;
 using Bewerbo.Api.Text;
+using QuestPDF.Fluent;
 using UglyToad.PdfPig;
 using Xunit;
 
@@ -935,6 +936,64 @@ public class DomainRuleTests
         Assert.Equal(["beruf"], ReadinessService.LetterBlockers(profile).Select(b => b.Key));
     }
 
+    // -- what the Lebenslauf still lacks, which is a different question -----------------------------
+
+    [Fact]
+    public void What_the_Lebenslauf_lacks_is_named_and_none_of_it_holds_the_document_back()
+    {
+        // The three sections the document is made of, beside the three fields of its header — and
+        // these are keys, because the screen writes the sentence. All three sections are also what
+        // an assistant proposal can fill, which is what makes every one of them answerable in the
+        // conversation the document is produced from.
+        Assert.Equal(["name", "anschrift", "kontakt", "beruf", "ausbildung", "sprachen"],
+            ReadinessService.CvMissing(new Domain.Profile()).Select(m => m.Key));
+
+        // And a Lebenslauf comes out of that same empty profile all the same. Naming what is
+        // missing is the opposite of withholding the document: this is the whole difference from
+        // LetterBlockers, which really does hold the Anschreiben back.
+        var writer = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var empty = new Domain.Profile();
+        var timeline = TimelineService.Build(empty, new DateOnly(2026, 9, 24));
+        var cv = writer.WriteCvAsync(empty, timeline).Result;
+
+        var pdf = new LebenslaufDocument(cv, empty, CvTemplate.Klassisch, writer.LastSource)
+            .GeneratePdf();
+
+        Assert.NotEmpty(pdf);
+    }
+
+    [Fact]
+    public void A_section_the_profile_carries_is_not_named_as_missing()
+    {
+        // SampleProfile has two positions and one language, and no Ausbildung. The header fields it
+        // does not carry are still named — they are the same three PersonMissing produces for the
+        // letter, which is why the two lists cannot drift apart.
+        Assert.Equal(["anschrift", "kontakt", "ausbildung"],
+            ReadinessService.CvMissing(SampleProfile()).Select(m => m.Key));
+    }
+
+    [Theory]
+    [InlineData("model", "einem KI-Sprachmodell")]
+    [InlineData("regeln", "den Textregeln von Bewerbo")]
+    public void The_Lebenslauf_says_on_the_page_which_writer_produced_it(string writer, string expected)
+    {
+        // Read back out of the rendered file rather than asserted on what was handed to the
+        // renderer, for the reason the sender address is: the page is what leaves the app, and it
+        // leaves without a screen beside it to carry the disclosure.
+        var profile = SampleProfile();
+        var content = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>())
+            .WriteCvAsync(profile, TimelineService.Build(profile, new DateOnly(2026, 9, 24))).Result;
+
+        var pdf = new LebenslaufDocument(content, profile, profile.Template, writer).GeneratePdf();
+
+        using var document = PdfDocument.Open(pdf);
+        var compact = Regex.Replace(
+            string.Join("\n", document.GetPages().Select(p => p.Text)), @"\s+", "");
+
+        Assert.Contains("ErstelltmitBewerbo", compact);
+        Assert.Contains(Regex.Replace(expected, @"\s+", ""), compact);
+    }
+
     // -- gaps ------------------------------------------------------------------------------------------
 
     [Fact]
@@ -1488,7 +1547,7 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var result = AtsTextCheck.Run(pdf, profile);
@@ -1520,7 +1579,7 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22), ApplicationParts.Anschreiben);
 
         using var document = PdfDocument.Open(pdf);
@@ -1549,7 +1608,7 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var result = AtsTextCheck.Run(pdf, profile);
@@ -1583,7 +1642,7 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var finding = AtsTextCheck.Run(pdf, profile).Findings.Single(f => f.Key == "name");

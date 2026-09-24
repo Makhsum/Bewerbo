@@ -170,6 +170,13 @@
     <string name="assistant_proposal_keep">Не добавлять</string>
     <string name="assistant_proposal_accepted">В профиле, ровно этими словами.</string>
     <string name="assistant_proposal_kept">Не добавлено. Ваши собственные слова остаются как есть.</string>
+    <string name="assistant_person">О ком этот Lebenslauf</string>
+    <string name="assistant_person_note">Эти данные стоят в начале документа. Прочитайте их рядом со своей фразой и решите: в профиль ничего не попадает, пока вы это не примете.</string>
+    <string name="assistant_document">Ваш Lebenslauf</string>
+    <string name="assistant_document_body">Отсюда один шаг. Bewerbo напишет немецкий Lebenslauf из того, что уже есть в профиле, и отдаст вам файл, чтобы вы его сохранили.</string>
+    <string name="assistant_document_missing">В документе пока не хватает: %1$s. Напишите об этом ниже одной фразой, и это войдёт в него.</string>
+    <string name="assistant_document_action">Создать Lebenslauf</string>
+    <string name="assistant_document_share">Сохранить свой Lebenslauf</string>
     <string name="assistant_you">Вы</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">В этой установке помощника нет</string>
@@ -315,6 +322,8 @@
     <string name="match_letter_blocked_title">Для письма данных пока мало</string>
     <string name="match_letter_blocked_body">Для Anschreiben ещё не хватает: %1$s. Без этого письмо уйдёт без адреса отправителя и без имени под прощальной строкой, и ему нечего сказать о вас.</string>
     <string name="letter_blocked_item_beruf">должности</string>
+    <string name="cv_missing_item_ausbildung">образования</string>
+    <string name="cv_missing_item_sprachen">языка</string>
 
     <string name="tone_klassisch">Классический</string>
     <string name="tone_sachlich">Деловой</string>

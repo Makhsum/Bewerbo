@@ -191,6 +191,13 @@
     <string name="assistant_proposal_keep">Leave it out</string>
     <string name="assistant_proposal_accepted">In your profile, in exactly these words.</string>
     <string name="assistant_proposal_kept">Left out. Your own words stand as you wrote them.</string>
+    <string name="assistant_person">Who the Lebenslauf is about</string>
+    <string name="assistant_person_note">These stand at the top of the document. Read them beside your own sentence and decide; nothing reaches your profile until you take it.</string>
+    <string name="assistant_document">Your Lebenslauf</string>
+    <string name="assistant_document_body">One step from here. Bewerbo writes a German Lebenslauf out of what your profile now holds and gives you the file to keep.</string>
+    <string name="assistant_document_missing">The document is still without: %1$s. Write it in a sentence below and it can go in.</string>
+    <string name="assistant_document_action">Produce the Lebenslauf</string>
+    <string name="assistant_document_share">Keep your Lebenslauf</string>
     <string name="assistant_you">You</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">No assistant on this installation</string>
@@ -340,6 +347,8 @@
     <string name="match_letter_blocked_title">Not enough for a letter yet</string>
     <string name="match_letter_blocked_body">The Anschreiben still needs: %1$s. Without them the letter goes out with no sender address and no name under the closing, and has nothing to say about you.</string>
     <string name="letter_blocked_item_beruf">one position</string>
+    <string name="cv_missing_item_ausbildung">a qualification</string>
+    <string name="cv_missing_item_sprachen">a language</string>
 
     <!-- The tone of the letter. The value keeps the backend's spelling. -->
     <string name="tone_klassisch">Classic</string>

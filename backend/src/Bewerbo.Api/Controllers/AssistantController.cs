@@ -48,7 +48,16 @@ public class AssistantController(BewerboDbContext db, ILanguageModel model) : Be
                 reply.Proposals
                     .Select(p => new AssistantProposalDto(
                         p.Kind, p.Source, p.Title, p.Detail, p.From, p.To))
-                    .ToList()));
+                    .ToList(),
+                // Null rather than an object with nothing in it: the screen draws a card per thing
+                // to decide, and AssistantConversation.UsablePerson has already taken out every
+                // field the profile holds already.
+                reply.Person.IsEmpty
+                    ? null
+                    : new AssistantPersonDto(
+                        reply.Person.Source, reply.Person.FirstName, reply.Person.LastName,
+                        reply.Person.Street, reply.Person.PostalCode, reply.Person.City,
+                        reply.Person.Phone, reply.Person.Email)));
     }
 
     internal const string AssistantUnavailable =

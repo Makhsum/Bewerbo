@@ -171,6 +171,96 @@ public class AssistantTurnTests
     }
 
     /// <summary>
+    /// The header of the Lebenslauf is the one thing the conversation could not supply before, and
+    /// a document with no name on it is not one the user can keep. It travels beside the sentence it
+    /// was read from, as a proposal does — the user is deciding about a pair here too.
+    /// </summary>
+    [Fact]
+    public async Task The_person_the_conversation_named_reaches_the_client_with_that_sentence()
+    {
+        await using var db = NewDatabase();
+        var model = new StubModel(new AssistantReply
+        {
+            Reply = "Записала адресу.",
+            Person = new AssistantPerson
+            {
+                Source = "живу на Hauptstraße 12 у Штутгарті, мій телефон 0711 445566",
+                Street = "Hauptstraße 12", PostalCode = "70173", Phone = "0711 445566",
+            },
+        });
+        var controller = Routes(db, model);
+
+        var result = await controller.Turn(
+            Turn("Живу на Hauptstraße 12 у Штутгарті, мій телефон 0711 445566."),
+            Conversation(model), default);
+
+        var reply = Assert.IsType<AssistantReplyDto>(Assert.IsType<OkObjectResult>(result).Value);
+        var person = Assert.IsType<AssistantPersonDto>(reply.Person);
+        Assert.StartsWith("живу на Hauptstraße 12", person.Source);
+        Assert.Equal("Hauptstraße 12", person.Street);
+        Assert.Equal("70173", person.PostalCode);
+        Assert.Equal("0711 445566", person.Phone);
+    }
+
+    /// <summary>
+    /// A field the form already holds is not offered again. Accepting appends everywhere else in
+    /// this API; for the person it would OVERWRITE, and a card that quietly replaced the Anschrift
+    /// the user typed would be a card they had no reason to read carefully.
+    /// </summary>
+    [Fact]
+    public async Task A_person_field_the_profile_already_holds_is_not_offered_back()
+    {
+        await using var db = NewDatabase();
+        // The profile in the database is Olena Kovalchuk in Nürnberg, with no street and no e-mail.
+        var model = new StubModel(new AssistantReply
+        {
+            Reply = "ok",
+            Person = new AssistantPerson
+            {
+                Source = "Олена Ковальчук, Київ, olena@example.ua",
+                FirstName = "Olena", LastName = "Kovalchuk", City = "Kyjiw",
+                Street = "Chreschtschatyk 1", Email = "olena@example.ua",
+            },
+        });
+        var controller = Routes(db, model);
+
+        var result = await controller.Turn(Turn("Олена Ковальчук, Київ."), Conversation(model), default);
+
+        var reply = Assert.IsType<AssistantReplyDto>(Assert.IsType<OkObjectResult>(result).Value);
+        var person = Assert.IsType<AssistantPersonDto>(reply.Person);
+        Assert.Equal("", person.FirstName);
+        Assert.Equal("", person.LastName);
+        // The city on file is Nürnberg; the one in the sentence is where the user came FROM.
+        Assert.Equal("", person.City);
+        Assert.Equal("Chreschtschatyk 1", person.Street);
+        Assert.Equal("olena@example.ua", person.Email);
+    }
+
+    /// <summary>
+    /// Nothing left to decide, so no card at all — not an empty one. A card with a quoted sentence
+    /// and no field under it asks the user to accept nothing.
+    /// </summary>
+    [Fact]
+    public async Task A_turn_that_names_nothing_the_profile_lacks_offers_no_person_at_all()
+    {
+        await using var db = NewDatabase();
+        var model = new StubModel(new AssistantReply
+        {
+            Reply = "ok",
+            Person = new AssistantPerson
+            {
+                Source = "мене звати Олена Ковальчук", FirstName = "Olena", LastName = "Kovalchuk",
+            },
+        });
+        var controller = Routes(db, model);
+
+        var result = await controller.Turn(Turn("Мене звати Олена Ковальчук."), Conversation(model), default);
+
+        var reply = Assert.IsType<AssistantReplyDto>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.Null(reply.Person);
+    }
+
+    /// <summary>
     /// The prompt has to say that title and detail are German and that source is the user's own
     /// words, because nothing downstream can tell the two apart — a proposal whose German half
     /// came back in Ukrainian would be saved into the profile exactly as it arrived.

@@ -120,15 +120,37 @@ public static class OutputSchemas
     /// they are the strings a profile entry is made of, and "source" quotes the user's own words
     /// back so the two can be read side by side. "kind" lists the profile sections by the names
     /// their PATCH routes carry.
+    ///
+    /// "person" is the header of the Lebenslauf — a name, an Anschrift, a way to be reached. It is
+    /// its own object rather than a fourth "kind" because the profile has exactly one of it and it
+    /// is a set of fields, not a German line with a period beside it. Every field is required and
+    /// empty is the answer for "not said": a null would be the only null in this file.
     /// </summary>
     public const string Assistant = """
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reply", "missing", "proposals"],
+      "required": ["reply", "missing", "proposals", "person"],
       "properties": {
         "reply":   { "type": "string" },
         "missing": { "type": "array", "items": { "type": "string" }, "maxItems": 6 },
+        "person": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "firstName", "lastName", "street", "postalCode", "city",
+                       "phone", "email"],
+          "properties": {
+            "source":     { "type": "string",
+                            "description": "The user's own words these details were read from, quoted." },
+            "firstName":  { "type": "string" },
+            "lastName":   { "type": "string" },
+            "street":     { "type": "string", "description": "Street and house number." },
+            "postalCode": { "type": "string" },
+            "city":       { "type": "string" },
+            "phone":      { "type": "string" },
+            "email":      { "type": "string" }
+          }
+        },
         "proposals": {
           "type": "array", "maxItems": 8,
           "items": {

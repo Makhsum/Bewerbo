@@ -1,5 +1,7 @@
 package de.bewerbo.app.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,12 +26,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.AssistantPersonChoice
 import de.bewerbo.app.data.AssistantProposalChoice
 import de.bewerbo.app.data.AssistantTurn
 import de.bewerbo.app.data.ProposalDecision
@@ -41,10 +46,12 @@ import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.StatusPill
+import de.bewerbo.app.ui.components.cvMissingItems
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
+import java.io.File
 
 /// The openers offered on an empty screen, in the order they are drawn. Three, because what they
 /// are for is showing the SHAPE of an answer — a short line about one station of a life — and a
@@ -64,10 +71,15 @@ private val EXAMPLES = listOf(
  * their own language, or photograph the Lebenslauf they already have, and what comes back names
  * what was understood and what is still missing.
  *
- * Nothing here writes into the profile. The assistant produces prose, and the form remains the one
- * place a profile is written — which is also why this screen sends the user there where no model is
- * configured: a chat backed by regular expressions would be the exact dishonesty this screen is the
- * answer to. See [AppState.hasAssistant].
+ * Nothing reaches the profile unaccepted: what the assistant understood stands as cards the user
+ * answers one by one, and each accepted one is written through the form's own routes. The form
+ * itself remains the way in that always works — which is why this screen sends the user there where
+ * no model is configured: a chat backed by regular expressions would be the exact dishonesty this
+ * screen is the answer to. See [AppState.hasAssistant].
+ *
+ * And it ends in something to keep. One tap under the conversation produces the German Lebenslauf as
+ * a file and hands it out of the app — see [AssistantDocumentCard], which also names what the
+ * document is still without rather than withholding it.
  *
  * [onOpenProfile] goes to the profile the way the bar goes there, because it is a place and not a
  * step — see MainActivity.
@@ -78,6 +90,18 @@ fun AssistantScreen(state: AppState, viewModel: AppViewModel, onOpenProfile: () 
     val turns = state.assistant
     val thinking = state.busy == AppViewModel.ASSISTANT
     val listState = rememberLazyListState()
+
+    // The finished Lebenslauf on its way out of the app. Started from here and not from the view
+    // model, because an Intent needs a context that can start an activity — the settings screen
+    // hands the data copy on in exactly the same three lines.
+    val context = LocalContext.current
+    val chooserTitle = stringResource(R.string.assistant_document_share)
+    LaunchedEffect(state.pendingCv) {
+        state.pendingCv?.let { file ->
+            context.startActivity(cvChooser(context, file, chooserTitle))
+            viewModel.cvHandled()
+        }
+    }
 
     // The system photo picker, as the Stellenanzeige uses it: it asks for no storage permission and
     // hands back the one picture that was chosen. The words are read on the device and land in the
@@ -227,6 +251,14 @@ fun AssistantScreen(state: AppState, viewModel: AppViewModel, onOpenProfile: () 
                     )
                 }
             }
+
+            // The end of the first minutes: one tap from the conversation to a Lebenslauf the user
+            // keeps. Offered once the assistant has answered, because before that there is nothing
+            // the conversation has added to the profile and the Profil screen's own button is the
+            // honest place to produce a document from a form.
+            if (turns.any { !it.fromUser }) {
+                item { AssistantDocumentCard(state, viewModel) }
+            }
         }
 
         // The composer stands still while the conversation scrolls past it, which is what a
@@ -272,6 +304,11 @@ private fun AssistantTurnCard(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = Space.xs),
         )
+
+        // The header of the Lebenslauf before the entries under it, which is the order the document
+        // itself is read in — and the order that makes the name the first thing the user is asked
+        // to confirm, since a Lebenslauf without one is not a document anybody can send.
+        turn.person?.let { person -> AssistantPersonSection(index, person, state, viewModel) }
 
         if (turn.proposals.isNotEmpty()) {
             AssistantProposalSection(index, turn.proposals, state, viewModel)
@@ -441,6 +478,208 @@ private fun AssistantProposalCard(
             )
         }
     }
+}
+
+/**
+ * Who the Lebenslauf is about, as the conversation named them — and the same bargain a proposal
+ * strikes, over the one part of the profile that is not a list.
+ *
+ * It is drawn as its own block rather than as a fourth proposal because there is nothing German to
+ * put beside the user's words here: a name, a street and a postal code are not translated, so what
+ * the card shows is simply what would be written. Only the fields the profile is without arrive —
+ * the server takes the rest out — so the card is never an offer to replace something.
+ *
+ * The header comes before the entries, which is the order the document is read in.
+ */
+@Composable
+private fun AssistantPersonSection(
+    turn: Int,
+    choice: AssistantPersonChoice,
+    state: AppState,
+    viewModel: AppViewModel,
+) {
+    val colors = LocalSemanticColors.current
+    val person = choice.person
+    val tag = "assistant_person_$turn"
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = Space.s)
+            .testTag(tag),
+    ) {
+        SectionLabel(stringResource(R.string.assistant_person))
+        Text(
+            stringResource(R.string.assistant_person_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.xs),
+        )
+
+        Text(
+            stringResource(R.string.assistant_proposal_source),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.s),
+        )
+        Text(
+            person.source,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.testTag("${tag}_source"),
+        )
+
+        val name = listOf(person.firstName, person.lastName)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        if (name.isNotEmpty()) {
+            Text(
+                name,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("${tag}_name"),
+            )
+        }
+        // The contact line as the document's own header sets it: the parts that were named, in the
+        // order a German Lebenslauf prints them, and nothing standing in for one that was not.
+        val detail = listOf(
+            person.street,
+            listOf(person.postalCode, person.city).filter { it.isNotBlank() }.joinToString(" "),
+            person.phone,
+            person.email,
+        ).filter { it.isNotBlank() }.joinToString("  ·  ")
+        if (detail.isNotEmpty()) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier
+                    .padding(top = if (name.isEmpty()) Space.s else 0.dp)
+                    .testTag("${tag}_detail"),
+            )
+        }
+
+        when (choice.decision) {
+            ProposalDecision.Pending -> Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = Space.s),
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                Button(
+                    onClick = { viewModel.acceptPerson(turn) },
+                    // One save at a time, as the proposals' own buttons are gated: two writes onto
+                    // the same profile would each send it as it stood before the other.
+                    enabled = state.busy == null,
+                    modifier = Modifier.testTag("${tag}_accept"),
+                ) {
+                    Text(stringResource(R.string.assistant_proposal_accept))
+                }
+                OutlinedButton(
+                    onClick = { viewModel.refusePerson(turn) },
+                    modifier = Modifier.testTag("${tag}_keep"),
+                ) {
+                    Text(stringResource(R.string.assistant_proposal_keep))
+                }
+            }
+
+            ProposalDecision.Accepted -> Text(
+                stringResource(R.string.assistant_proposal_accepted),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.success,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("${tag}_accepted"),
+            )
+
+            ProposalDecision.Kept -> Text(
+                stringResource(R.string.assistant_proposal_kept),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("${tag}_kept"),
+            )
+        }
+    }
+}
+
+/**
+ * The Lebenslauf: the one further step the first minutes end in.
+ *
+ * What the card this screen was built for objects to is effort that does not pay off — a form that
+ * yields a form. This is where it pays: three or four sentences, the proposals taken, one tap, and
+ * the user holds a German Lebenslauf as a file. It goes out through a chooser rather than into the
+ * app's own folder, because a file nothing else can open is not a file the user has.
+ *
+ * What the document is still without is NAMED and never withheld. The keys come from the server's
+ * one list for it — [de.bewerbo.app.data.Overview.cvMissing] — and every one of them is something
+ * the composer below can supply, which is why the line says so instead of pointing at the form. A
+ * Lebenslauf with three of its four parts filled is worth more than a refusal to write one.
+ */
+@Composable
+private fun AssistantDocumentCard(state: AppState, viewModel: AppViewModel) {
+    val colors = LocalSemanticColors.current
+    val missing = state.overview?.cvMissing.orEmpty()
+
+    BewerboCard(Modifier.testTag("assistant_document")) {
+        SectionLabel(stringResource(R.string.assistant_document))
+        Text(
+            stringResource(R.string.assistant_document_body),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.muted,
+            modifier = Modifier.padding(top = Space.xs),
+        )
+
+        if (missing.isNotEmpty()) {
+            IconRow(
+                icon = BewerboIcons.Attention,
+                title = stringResource(
+                    R.string.assistant_document_missing, cvMissingItems(missing),
+                ),
+                tone = PillTone.Attention,
+                modifier = Modifier
+                    .padding(top = Space.s)
+                    .testTag("assistant_document_missing"),
+            )
+        }
+
+        Button(
+            onClick = { viewModel.exportCv() },
+            enabled = state.busy == null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Space.s)
+                .testTag("assistant_btn_export"),
+        ) {
+            Icon(BewerboIcons.Document, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.assistant_document_action),
+                modifier = Modifier.padding(start = Space.s),
+            )
+        }
+    }
+}
+
+/**
+ * The Lebenslauf on its way to another app.
+ *
+ * A GENERAL chooser, as the data copy and a stored scan get and unlike the Mappe's mail-app one: a
+ * Lebenslauf produced in the first minute is not being sent to an employer yet — it is the thing
+ * the user keeps, so it goes wherever they keep things.
+ *
+ * FLAG_ACTIVITY_NEW_TASK is not optional: every screen runs under the configuration context
+ * [de.bewerbo.app.ui.UiLanguageProvider] provides, so LocalContext.current is never the Activity.
+ */
+private fun cvChooser(context: Context, file: File, title: String): Intent {
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "application/pdf"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, file.name)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    return Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 /// The name of the profile section a proposal would land in, in the user's language — the same

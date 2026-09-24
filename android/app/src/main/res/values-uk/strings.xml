@@ -172,6 +172,13 @@
     <string name="assistant_proposal_keep">Не додавати</string>
     <string name="assistant_proposal_accepted">У профілі, саме цими словами.</string>
     <string name="assistant_proposal_kept">Не додано. Ваші власні слова залишаються як є.</string>
+    <string name="assistant_person">Про кого цей Lebenslauf</string>
+    <string name="assistant_person_note">Ці дані стоять на початку документа. Прочитайте їх поруч зі власною фразою й вирішіть: до профілю нічого не потрапляє, доки ви це не приймете.</string>
+    <string name="assistant_document">Ваш Lebenslauf</string>
+    <string name="assistant_document_body">Звідси один крок. Bewerbo напише німецький Lebenslauf із того, що вже є в профілі, і віддасть вам файл, щоб ви його зберегли.</string>
+    <string name="assistant_document_missing">У документі поки бракує: %1$s. Напишіть про це нижче однією фразою, і воно ввійде до нього.</string>
+    <string name="assistant_document_action">Створити Lebenslauf</string>
+    <string name="assistant_document_share">Зберегти свій Lebenslauf</string>
     <string name="assistant_you">Ви</string>
     <string name="assistant_it">Bewerbo</string>
     <string name="assistant_unavailable_title">У цій установці помічника немає</string>
@@ -317,6 +324,8 @@
     <string name="match_letter_blocked_title">Для листа даних поки замало</string>
     <string name="match_letter_blocked_body">Для Anschreiben ще бракує: %1$s. Без цього лист піде без адреси відправника та без імені під прощальним рядком, і йому нічого сказати про вас.</string>
     <string name="letter_blocked_item_beruf">посади</string>
+    <string name="cv_missing_item_ausbildung">освіти</string>
+    <string name="cv_missing_item_sprachen">мови</string>
 
     <string name="tone_klassisch">Класичний</string>
     <string name="tone_sachlich">Діловий</string>

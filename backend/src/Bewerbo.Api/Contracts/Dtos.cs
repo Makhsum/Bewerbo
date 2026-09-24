@@ -116,7 +116,20 @@ public record AssistantMessageDto(bool FromUser, string Text);
 /// arguments. See <see cref="Llm.AssistantConversation"/> for why that is not the rule breaking.
 /// </summary>
 public record AssistantReplyDto(
-    string Reply, IReadOnlyList<string> Missing, IReadOnlyList<AssistantProposalDto> Proposals);
+    string Reply, IReadOnlyList<string> Missing, IReadOnlyList<AssistantProposalDto> Proposals,
+    AssistantPersonDto? Person);
+
+/// <summary>
+/// Who the Lebenslauf would be about, where the conversation named them — and only the fields the
+/// profile does not already hold, so what the user reads on the card is what accepting writes.
+///
+/// Null where the turn named nothing the profile lacks. Not an empty object: the app draws a card
+/// per thing to decide, and a card with no field under it is a card asking for nothing. See
+/// <see cref="Llm.AssistantPerson"/>.
+/// </summary>
+public record AssistantPersonDto(
+    string Source, string FirstName, string LastName, string Street, string PostalCode,
+    string City, string Phone, string Email);
 
 /// <summary>
 /// One thing the assistant understood, as it would stand in the profile: the German beside the
@@ -262,6 +275,11 @@ public record ActiveApplicationDto(
 /// keys of what is still missing before it may be written, empty when it may. Keys, not words, for
 /// the reason <see cref="NextStepDto"/> carries a Kind: the server never learns the interface
 /// language. See <see cref="Services.ReadinessService.LetterBlockers"/>.
+///
+/// <paramref name="CvMissing"/> is the same shape for the Lebenslauf, and the difference between the
+/// two is the whole point: these keys NAME what the document still lacks and hold nothing back. A
+/// Lebenslauf is produced from whatever the profile has — see
+/// <see cref="Services.ReadinessService.CvMissing"/>.
 /// </summary>
 public record OverviewDto(
     string DisplayName, string City, int ApplicationCount,
@@ -270,7 +288,8 @@ public record OverviewDto(
     int EvidenceOnFile, int EvidenceExpected,
     IReadOnlyList<NextStepDto> NextSteps,
     IReadOnlyList<ActiveApplicationDto> Applications,
-    IReadOnlyList<DocumentDto> Documents);
+    IReadOnlyList<DocumentDto> Documents,
+    IReadOnlyList<string> CvMissing);
 
 public static class DtoMapping
 {
