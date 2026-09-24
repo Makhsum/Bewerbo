@@ -38,6 +38,11 @@ class GenderFreeStringsTest {
 
     /// Forms only a person ever takes, both genders, for the actions a sign-in, a profile and a
     /// document list reach for. A thing is never "забыл", "уверена" or "зареєструвався".
+    ///
+    /// A verb is not the only way in. A NOUN that names the reader carries a gender too — the
+    /// Abgleich's Anschreiben guard called the user "иностранца" / "іноземця", the masculine, while
+    /// the English and German of the same sentence only say "foreign". Such a noun is listed here
+    /// in both genders and in the case the sentence uses it in, since nothing here declines.
     private val GENDERED_SELF_FORMS = setOf(
         // ru — the past tense of what the user does
         "забыл", "забыла", "помнил", "помнила", "вошёл", "вошел", "вошла", "вышел", "вышла",
@@ -46,6 +51,9 @@ class GenderFreeStringsTest {
         "зарегистрировался", "зарегистрировалась", "согласился", "согласилась",
         // ru — the short adjectives and participles said about a person
         "уверен", "уверена", "согласен", "согласна", "авторизован", "авторизована",
+        // ru — the nouns that name the reader and pick a gender by naming them
+        "иностранец", "иностранка", "иностранца", "иностранку",
+        "новичок", "новичка", "заявитель", "заявительница", "пользователь", "пользовательница",
         // uk — the past tense of what the user does
         "забув", "забула", "пам'ятав", "пам'ятала", "увійшов", "увійшла", "вийшов", "вийшла",
         "ввів", "вибрав", "вибрала", "завантажив", "завантажила",
@@ -53,6 +61,9 @@ class GenderFreeStringsTest {
         "зареєструвався", "зареєструвалася", "погодився", "погодилася",
         // uk — the short adjectives and participles said about a person
         "впевнений", "впевнена", "згоден", "згодна", "авторизований", "авторизована",
+        // uk — the nouns that name the reader and pick a gender by naming them
+        "іноземець", "іноземка", "іноземця", "іноземку",
+        "новачок", "новачка", "заявник", "заявниця", "користувач", "користувачка",
     )
 
     /// Both locales this scans are translations, so both live in values-<tag>/.
@@ -155,6 +166,14 @@ class GenderFreeStringsTest {
             "The escaped Ukrainian apostrophe breaks the word apart",
             cyrillicWordsIn("Я не пам\\'ятав пароль").any { it in GENDERED_SELF_FORMS },
         )
+        assertTrue(
+            "A noun that names the reader is not detected",
+            cyrillicWordsIn("он сразу выдаёт в вас иностранца").any { it in GENDERED_SELF_FORMS },
+        )
+        assertTrue(
+            "The Ukrainian noun that names the reader is not detected",
+            cyrillicWordsIn("він одразу видає у вас іноземця").any { it in GENDERED_SELF_FORMS },
+        )
 
         // And what the app legitimately says must not be flagged: the wording that replaced it,
         // the formal plural, and a past tense about a thing rather than about the reader.
@@ -173,6 +192,10 @@ class GenderFreeStringsTest {
         assertTrue(
             "A past tense about a thing is flagged",
             cyrillicWordsIn("Это письмо написала языковая модель").none { it in GENDERED_SELF_FORMS },
+        )
+        assertTrue(
+            "The wording that replaced the gendered noun is flagged",
+            cyrillicWordsIn("он сразу выдаёт, что вы не отсюда").none { it in GENDERED_SELF_FORMS },
         )
     }
 }

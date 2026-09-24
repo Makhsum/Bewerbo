@@ -275,7 +275,7 @@
     <string name="match_file_title">Добавить Nachweis</string>
     <string name="match_file_body">Документ попадёт в ваши документы, и это требование будет засчитано как подтверждённое.</string>
     <string name="match_guard_title">Anschreiben, а не Motivationsschreiben</string>
-    <string name="match_guard_body">Вы вставили объявление о вакансии, поэтому Bewerbo пишет Anschreiben. Motivationsschreiben пишут для учёбы и стипендии — присланный сюда, он сразу выдаёт в вас иностранца.</string>
+    <string name="match_guard_body">Вы вставили объявление о вакансии, поэтому Bewerbo пишет Anschreiben. Motivationsschreiben пишут для учёбы и стипендии — присланный сюда, он сразу выдаёт, что вы не отсюда.</string>
     <string name="match_tone">Тон письма Anschreiben</string>
     <string name="match_generate_letter">Написать Anschreiben</string>
     <string name="match_letter_blocked_title">Для письма данных пока мало</string>
