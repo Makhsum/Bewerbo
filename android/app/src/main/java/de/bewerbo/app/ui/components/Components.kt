@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.WindowInsets
@@ -241,6 +242,12 @@ fun Meter(
 
 /// A segmented control. One choice out of a small fixed set, shown in full rather than hidden in
 /// a dropdown — which is the point when the choice changes what the document says.
+///
+/// The options share the width in equal columns, and the number of columns is what the longest
+/// label needs, not the number of options: four document kinds in a phone-width card gave
+/// "Arbeitszeugnis" and "Sprachnachweis" a quarter of the row each and broke them mid-word. What
+/// does not fit on one line goes to the next, the way the Profil section rail and the export
+/// chips wrap — a word a user has to recognise from a job advert is not shrunk and not cut.
 @Composable
 fun SegmentedControl(
     options: List<String>,
@@ -259,47 +266,98 @@ fun SegmentedControl(
         shape = MaterialTheme.shapes.small,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(Modifier.padding(3.dp)) {
-            options.forEachIndexed { index, option ->
-                val isSelected = index == selectedIndex
-                Surface(
-                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    shadowElevation = if (isSelected) 1.dp else 0.dp,
-                    modifier = Modifier
-                        .weight(1f)
-                        .then(
-                            if (tagPrefix != null) {
-                                Modifier.testTag("${tagPrefix}_${option.lowercase()}")
-                            } else Modifier,
-                        )
-                        // Which option is chosen was said only in colour, weight and elevation, so
-                        // a screen reader read the options as equal labels and could not tell the
-                        // user which template, tone, employer type or document kind was selected.
-                        // selectable() carries the state and the role, which is the one channel
-                        // that does not depend on seeing the control.
-                        .selectable(
-                            selected = isSelected,
-                            role = Role.RadioButton,
-                            onClick = { onSelect(index) },
-                        ),
-                ) {
-                    Text(
-                        label(option),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            LocalSemanticColors.current.muted
-                        },
-                        modifier = Modifier.padding(vertical = Space.s),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
+        val labels = options.map { label(it) }
+        val measurer = rememberTextMeasurer()
+        // Measured bold: the chosen option is written bold, so a column sized for the others is
+        // the column the selection then overflows.
+        val widestStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+        BoxWithConstraints(Modifier.padding(3.dp)) {
+            // The width the longest label needs to stay one piece, and nothing on top of it: a
+            // control whose options fit today is meant to render exactly as it did, and the five
+            // application states leave barely a dozen pixels between them.
+            val widest = labels.maxOf {
+                measurer.measure(it, widestStyle, softWrap = false).size.width
+            }
+            val perLine = segmentsPerLine(constraints.maxWidth, widest, options.size)
+            Column {
+                options.indices.chunked(perLine).forEach { line ->
+                    Row {
+                        line.forEach { index ->
+                            val option = options[index]
+                            val isSelected = index == selectedIndex
+                            Surface(
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.surface
+                                } else {
+                                    Color.Transparent
+                                },
+                                shape = MaterialTheme.shapes.extraSmall,
+                                shadowElevation = if (isSelected) 1.dp else 0.dp,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .then(
+                                        if (tagPrefix != null) {
+                                            Modifier.testTag("${tagPrefix}_${option.lowercase()}")
+                                        } else Modifier,
+                                    )
+                                    // Which option is chosen was said only in colour, weight and
+                                    // elevation, so a screen reader read the options as equal
+                                    // labels and could not tell the user which template, tone,
+                                    // employer type or document kind was selected. selectable()
+                                    // carries the state and the role, which is the one channel
+                                    // that does not depend on seeing the control.
+                                    .selectable(
+                                        selected = isSelected,
+                                        role = Role.RadioButton,
+                                        onClick = { onSelect(index) },
+                                    ),
+                            ) {
+                                Text(
+                                    labels[index],
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) {
+                                        FontWeight.Bold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
+                                    color = if (isSelected) {
+                                        MaterialTheme.colorScheme.onSurface
+                                    } else {
+                                        LocalSemanticColors.current.muted
+                                    },
+                                    modifier = Modifier.padding(vertical = Space.s),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                )
+                            }
+                        }
+                        // A last line that does not fill its columns keeps them empty rather than
+                        // widening the options on it: every segment of the control stays the same
+                        // width as every other.
+                        repeat(perLine - line.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * How many segments of a [SegmentedControl] share one line: as many equal columns of [widest] as
+ * [available] holds, and never more than [count].
+ *
+ * The lines are filled EVENLY, not greedily. Three of the four document kinds fit one
+ * phone-width line, and a 3 + 1 control reads as a row with something stuck under it; the same
+ * four read as 2 + 2. So the number of lines is settled first, and the columns follow from it.
+ *
+ * A label wider than the whole control still gets its own line — one column is the floor, and
+ * there the text wraps as it always did rather than being clipped.
+ */
+internal fun segmentsPerLine(available: Int, widest: Int, count: Int): Int {
+    if (count <= 0) return 1
+    if (available <= 0 || widest <= 0) return count
+    val fitting = (available / widest).coerceIn(1, count)
+    val lines = (count + fitting - 1) / fitting
+    return (count + lines - 1) / lines
 }
 
 /**
