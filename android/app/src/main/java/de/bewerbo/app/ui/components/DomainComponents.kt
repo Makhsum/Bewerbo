@@ -449,12 +449,17 @@ fun DinOverlay(modifier: Modifier = Modifier) {
 /// what the status endpoint takes — so the Übersicht and the Bewerbung screen both have to look
 /// the name up rather than print it. Same shape as `partLabel` on the Bewerbung screen; shared
 /// because two screens draw the same five states.
+///
+/// Every state is named, and `else` is a NEUTRAL word rather than the last of them. It used to end
+/// `else -> status_absage`, so a state this build does not know would have been shown to the user
+/// as a rejection — the one label here that no application should ever carry by accident.
 fun applicationStatusLabel(status: String) = when (status) {
     "Entwurf" -> R.string.status_entwurf
     "Versendet" -> R.string.status_versendet
     "Wartend" -> R.string.status_wartend
     "Einladung" -> R.string.status_einladung
-    else -> R.string.status_absage
+    "Absage" -> R.string.status_absage
+    else -> R.string.status_unbekannt
 }
 
 // ---------------------------------------------------------------------------------------------

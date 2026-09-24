@@ -319,6 +319,7 @@
     <string name="status_wartend">Очікування</string>
     <string name="status_einladung">Запрошення</string>
     <string name="status_absage">Відмова</string>
+    <string name="status_unbekannt">Невідомо</string>
 
     <string name="template_klassisch">Класичний</string>
     <string name="template_modern">Сучасний</string>

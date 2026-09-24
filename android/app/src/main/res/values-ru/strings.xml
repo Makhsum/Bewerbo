@@ -317,6 +317,7 @@
     <string name="status_wartend">Ожидание</string>
     <string name="status_einladung">Приглашение</string>
     <string name="status_absage">Отказ</string>
+    <string name="status_unbekannt">Неизвестно</string>
 
     <string name="template_klassisch">Классический</string>
     <string name="template_modern">Современный</string>

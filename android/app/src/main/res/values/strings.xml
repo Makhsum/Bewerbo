@@ -349,6 +349,7 @@
     <string name="status_wartend">Waiting</string>
     <string name="status_einladung">Invitation</string>
     <string name="status_absage">Rejection</string>
+    <string name="status_unbekannt">Unknown</string>
 
     <!-- How the Lebenslauf is laid out. The value keeps the backend's spelling. -->
     <string name="template_klassisch">Classic</string>
