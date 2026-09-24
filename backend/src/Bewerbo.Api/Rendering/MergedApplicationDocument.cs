@@ -36,6 +36,10 @@ public static class MergedApplicationDocument
         Profile profile,
         Posting posting,
         LetterContent letter,
+        // Which writer produced letter, for the line the Anschreiben carries. Two of them and not
+        // one: the letter is the stored one and the Lebenslauf is written on the way in here, so a
+        // Mappe really can carry a letter written by rule beside a Lebenslauf from the model.
+        string letterWriter,
         CvContent cv,
         // Which writer produced cv, for the line the Lebenslauf carries. Beside the content it is
         // about rather than at the end with the options: a caller that has a CvContent has just
@@ -51,7 +55,7 @@ public static class MergedApplicationDocument
 
         if (parts.HasFlag(ApplicationParts.Anschreiben))
         {
-            pieces.Add(new Din5008LetterDocument(letter, profile, posting, date, showInspector));
+            pieces.Add(new Din5008LetterDocument(letter, profile, posting, date, letterWriter, showInspector));
         }
         if (parts.HasFlag(ApplicationParts.Lebenslauf))
         {

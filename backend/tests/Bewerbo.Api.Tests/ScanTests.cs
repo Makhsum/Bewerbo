@@ -282,7 +282,8 @@ public class ScanTests
         var letter = writer.WriteLetterAsync(
             profile, posting, RequirementMatcher.Match(profile, []), LetterTone.Sachlich).Result;
 
-        return MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, documents,
+        return MergedApplicationDocument.Render(profile, posting, letter, writer.LastSource,
+            cv, writer.LastSource, documents,
             new DateOnly(2026, 9, 24), parts, showInspector: false, scans: scans);
     }
 

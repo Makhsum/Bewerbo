@@ -13,12 +13,19 @@ namespace Bewerbo.Api.Rendering;
 /// This class is the only thing that decides where anything sits. What it receives is
 /// <see cref="LetterContent"/> — a salutation, a subject line and paragraphs — and there is no
 /// field in that type through which a model could ask for a different margin, font or page break.
+///
+/// <paramref name="writer"/> is "model" or "regeln" — <see cref="IApplicationWriter.LastSource"/> of
+/// the writer that produced <paramref name="letter"/>, and the page says so in one line at its foot,
+/// the way the Lebenslauf says it under the date. It is passed in rather than read from a writer
+/// here because the letter is the STORED one: the writer that ran last is the Lebenslauf's, and
+/// taking it would have the Anschreiben name a writer that never saw it.
 /// </summary>
 public class Din5008LetterDocument(
     LetterContent letter,
     Profile profile,
     Posting posting,
     DateOnly date,
+    string writer,
     bool showInspector = false) : IDocument
 {
     private static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
@@ -125,6 +132,14 @@ public class Din5008LetterDocument(
                             row.RelativeItem().Text(string.Join(", ", letter.Attachments));
                         });
                     }
+
+                    // Who wrote the German on THIS page. Below the Anlagen, which is the last thing
+                    // the norm puts on a letter, and set smaller than the body so it reads as the
+                    // footnote it is rather than as a closing sentence of the letter.
+                    text.Item().PaddingTop(Din.Line * 2, Unit.Millimetre)
+                        .Text(WriterNote.For(writer))
+                        .FontSize(DocumentTheme.SmallSize)
+                        .FontColor(DocumentTheme.Muted);
                 });
         });
     }

@@ -107,11 +107,15 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     {
         var loaded = await LoadAsync(id);
         if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
-        var (_, profile, posting, letter) = loaded.Value;
+        var (application, profile, posting, letter) = loaded.Value;
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
+        // The letter names the writer it was STORED with; LastSource below is the Lebenslauf's,
+        // because WriteCvAsync is what just ran. Reading the letter's from the writer would make
+        // the Anschreiben claim whatever produced the CV.
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource,
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, application.Source,
+            cv, writer.LastSource,
             profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
             // The whole Mappe, scans included — this check reads the file that is actually sent,
             // and the page count and size it reports are what the export panel then shows. Leaving
@@ -131,7 +135,7 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
     {
         var loaded = await LoadAsync(id);
         if (loaded is null) return NotFoundProblem(ApplicationMissing, ApplicationMissingKind);
-        var (_, profile, posting, letter) = loaded.Value;
+        var (application, profile, posting, letter) = loaded.Value;
 
         // The parts are the user's choice now, so an empty one is reachable — and the renderer
         // throws on it. Said here, where it is an answer, rather than as a 500.
@@ -139,9 +143,12 @@ public class ApplicationsController(BewerboDbContext db) : BewerboController
         if (chosen == ApplicationParts.None) return InvalidRequest("parts", "Keine Mappenteile gewählt.");
 
         var timeline = TimelineService.Build(profile, DateOnly.FromDateTime(DateTime.Today));
+        // Each document names its own writer: the letter the one it was stored with, the Lebenslauf
+        // the one that just wrote it. On an installation with no model key the two really differ.
         var cv = await writer.WriteCvAsync(profile, timeline, ct);
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource,
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, application.Source,
+            cv, writer.LastSource,
             profile.Documents.ToList(), DateOnly.FromDateTime(DateTime.Today),
             chosen, inspector ?? false,
             // Read only when the copies were actually asked for: this is the one query in the API

@@ -1547,7 +1547,8 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, writer.LastSource,
+            cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var result = AtsTextCheck.Run(pdf, profile);
@@ -1579,7 +1580,8 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, writer.LastSource,
+            cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22), ApplicationParts.Anschreiben);
 
         using var document = PdfDocument.Open(pdf);
@@ -1595,6 +1597,67 @@ public class DomainRuleTests
         Assert.Equal(2, Regex.Matches(compact, "OlenaKovalchuk").Count);
     }
 
+    [Theory]
+    [InlineData("model", "einem KI-Sprachmodell")]
+    [InlineData("regeln", "den Textregeln von Bewerbo")]
+    public void The_Anschreiben_says_on_the_page_which_writer_produced_it(string writer, string expected)
+    {
+        // The same disclosure the Lebenslauf carries, and read back out of the rendered file for the
+        // same reason: the Anschreiben leaves the app inside the Mappe, where no screen goes with it.
+        var profile = SampleProfile();
+        var posting = new Posting
+        {
+            JobTitle = "Bilanzbuchhalter (m/w/d)", Company = "Schwarzwald Technik GmbH",
+            CompanyAddress = "Industriestraße 8, 70563 Stuttgart",
+        };
+        var rules = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var content = rules.WriteLetterAsync(
+            profile, posting, RequirementMatcher.Match(profile, []), LetterTone.Sachlich).Result;
+
+        var pdf = new Din5008LetterDocument(content, profile, posting, new DateOnly(2026, 9, 24), writer)
+            .GeneratePdf();
+
+        using var document = PdfDocument.Open(pdf);
+        var compact = Regex.Replace(
+            string.Join("\n", document.GetPages().Select(p => p.Text)), @"\s+", "");
+
+        Assert.Contains("ErstelltmitBewerbo", compact);
+        Assert.Contains(Regex.Replace(expected, @"\s+", ""), compact);
+    }
+
+    [Fact]
+    public void In_a_Mappe_each_document_names_the_writer_that_produced_that_document()
+    {
+        // The case the disclosure exists for: the letter is the STORED one and the Lebenslauf is
+        // written afresh on the way into the export, so one Mappe can carry two writers. One line
+        // for both pages would name a writer that never saw one of them.
+        var profile = SampleProfile();
+        var posting = new Posting
+        {
+            JobTitle = "Bilanzbuchhalter (m/w/d)", Company = "Schwarzwald Technik GmbH",
+            CompanyAddress = "Industriestraße 8, 70563 Stuttgart",
+        };
+        var rules = new ApplicationWriter(new NoModel(), new NullLogger<ApplicationWriter>());
+        var timeline = TimelineService.Build(profile, new DateOnly(2026, 9, 24));
+        var cv = rules.WriteCvAsync(profile, timeline).Result;
+        var letter = rules.WriteLetterAsync(
+            profile, posting, RequirementMatcher.Match(profile, []), LetterTone.Sachlich).Result;
+
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, "regeln",
+            cv, "model", [],
+            new DateOnly(2026, 9, 24),
+            ApplicationParts.Anschreiben | ApplicationParts.Lebenslauf);
+
+        using var document = PdfDocument.Open(pdf);
+        var pages = document.GetPages()
+            .Select(p => Regex.Replace(p.Text, @"\s+", "")).ToList();
+
+        // The Anschreiben is the first page of a Mappe, the Lebenslauf follows it.
+        Assert.Contains("denTextregelnvonBewerbo", pages[0]);
+        Assert.DoesNotContain("stammenvoneinemKI-Sprachmodell", pages[0]);
+        Assert.Contains(pages.Skip(1), p => p.Contains("stammenvoneinemKI-Sprachmodell"));
+    }
+
     [Fact]
     public void An_empty_profile_is_not_reported_as_a_fault_of_the_document()
     {
@@ -1608,7 +1671,8 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, writer.LastSource,
+            cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var result = AtsTextCheck.Run(pdf, profile);
@@ -1642,7 +1706,8 @@ public class DomainRuleTests
         var match = RequirementMatcher.Match(profile, []);
         var letter = writer.WriteLetterAsync(profile, posting, match, LetterTone.Sachlich).Result;
 
-        var pdf = MergedApplicationDocument.Render(profile, posting, letter, cv, writer.LastSource, [],
+        var pdf = MergedApplicationDocument.Render(profile, posting, letter, writer.LastSource,
+            cv, writer.LastSource, [],
             new DateOnly(2026, 9, 22));
 
         var finding = AtsTextCheck.Run(pdf, profile).Findings.Single(f => f.Key == "name");

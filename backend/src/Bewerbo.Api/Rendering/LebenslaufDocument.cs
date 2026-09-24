@@ -168,17 +168,8 @@ public class LebenslaufDocument(CvContent content, Profile profile, CvTemplate t
         // an employer and not by the user's interface — and set smaller than the date so it reads
         // as the footnote it is rather than as part of the Lebenslauf.
         column.Item().PaddingTop(2, Unit.Millimetre)
-            .Text(WriterNote)
+            .Text(WriterNote.For(writer))
             .FontSize(DocumentTheme.SmallSize)
             .FontColor(DocumentTheme.Muted);
     }
-
-    /// <summary>
-    /// The one sentence naming the writer. Two writers, two sentences and no third: an unknown
-    /// value reads as the rule-based one, because that is what runs whenever no model answered.
-    /// </summary>
-    private string WriterNote => writer == "model"
-        ? "Erstellt mit Bewerbo. Die deutschen Formulierungen stammen von einem KI-Sprachmodell."
-        : "Erstellt mit Bewerbo. Die deutschen Formulierungen stammen aus den Textregeln von " +
-          "Bewerbo, nicht von einem KI-Sprachmodell.";
 }
