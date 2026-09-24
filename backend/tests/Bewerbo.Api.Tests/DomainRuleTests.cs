@@ -866,6 +866,37 @@ public class DomainRuleTests
         Assert.DoesNotContain(overview.NextSteps, s => s.Key == "beruf");
     }
 
+    [Fact]
+    public void An_application_waiting_for_an_answer_is_listed_as_such_and_is_not_told_to_send_itself()
+    {
+        // Versendet is the act; waiting is the state the applicant is in afterwards and sits in
+        // longest. Until Wartend existed the two could not be told apart, so a user with several
+        // employers could not see which ones they were still owed an answer by. Only a draft is
+        // still to be sent, so this one carries no versand step.
+        var profile = SampleProfile();
+        var posting = new Posting
+        {
+            ProfileId = profile.Id, Company = "Agrosvit GmbH",
+            JobTitle = "Buchhalterin (m/w/d)", Reference = "2026-4711",
+        };
+        profile.Applications =
+        [
+            new Application
+            {
+                ProfileId = profile.Id, PostingId = posting.Id,
+                Status = ApplicationStatus.Wartend,
+            },
+        ];
+
+        var listed = Assert.Single(ReadinessService.Build(
+            profile, TimelineService.Build(profile, new DateOnly(2026, 9, 23)), [posting]).Applications);
+
+        Assert.Equal("Wartend", listed.Status);
+        Assert.Equal("Agrosvit GmbH", listed.Company);
+        Assert.Equal("2026-4711", listed.Reference);
+        Assert.DoesNotContain(listed.OpenSteps, s => s.Kind == "versand");
+    }
+
     // -- what has to be there before an Anschreiben may be written ---------------------------------
 
     [Fact]

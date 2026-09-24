@@ -316,6 +316,7 @@
 
     <string name="status_entwurf">Чернетка</string>
     <string name="status_versendet">Надіслана</string>
+    <string name="status_wartend">Очікування</string>
     <string name="status_einladung">Запрошення</string>
     <string name="status_absage">Відмова</string>
 

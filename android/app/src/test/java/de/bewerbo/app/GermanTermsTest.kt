@@ -43,7 +43,7 @@ class GermanTermsTest {
         "Zeitstrahl", "Abgleich", "Berufserfahrung", "Ausbildung", "Maschinenlesbarkeit",
         "Textprüfung", "Betreffzeile", "Pensum", "Unternehmen", "Arbeitgebertyp", "Eintritt",
         "Anerkennung", "Vorlage", "Lücke", "Beruf", "Konzern", "Mittelstand", "Entwurf",
-        "Versendet", "Einladung", "Absage", "Klassisch", "Fachlich", "Sachlich",
+        "Versendet", "Wartend", "Einladung", "Absage", "Klassisch", "Fachlich", "Sachlich",
     )
 
     private fun localeTags(): List<String> = UI_LANGUAGES.map { it.first }

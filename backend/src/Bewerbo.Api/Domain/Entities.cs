@@ -198,4 +198,10 @@ public class Application
 
 public enum LetterTone { Klassisch, Sachlich, Modern }
 
-public enum ApplicationStatus { Entwurf, Versendet, Einladung, Absage }
+/// <summary>
+/// Where one application stands, in the order it passes through. <c>Wartend</c> is the stretch
+/// after the employer has the Mappe and before they answer — "sent" is the act, waiting is the
+/// state the applicant is actually in, and it is the one they sit in longest. Stored by NAME
+/// (<see cref="Data.BewerboDbContext"/> converts it), so this order carries no data.
+/// </summary>
+public enum ApplicationStatus { Entwurf, Versendet, Wartend, Einladung, Absage }

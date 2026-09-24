@@ -317,6 +317,7 @@
 
     <string name="status_entwurf">Entwurf</string>
     <string name="status_versendet">Versendet</string>
+    <string name="status_wartend">Wartend</string>
     <string name="status_einladung">Einladung</string>
     <string name="status_absage">Absage</string>
 

@@ -67,9 +67,9 @@ import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
 
-/// The four states an application passes through, in that order. They keep the backend's spelling
+/// The five states an application passes through, in that order. They keep the backend's spelling
 /// because that is the value the status endpoint takes.
-private val STATUSES = listOf("Entwurf", "Versendet", "Einladung", "Absage")
+private val STATUSES = listOf("Entwurf", "Versendet", "Wartend", "Einladung", "Absage")
 
 /// The Lebenslauf layouts, in the order the SegmentedControl shows them. Like the statuses, these
 /// are backend values, not words for the user — `templateLabel` says how they are written.

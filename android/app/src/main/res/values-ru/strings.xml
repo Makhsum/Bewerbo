@@ -314,6 +314,7 @@
 
     <string name="status_entwurf">Черновик</string>
     <string name="status_versendet">Отправлена</string>
+    <string name="status_wartend">Ожидание</string>
     <string name="status_einladung">Приглашение</string>
     <string name="status_absage">Отказ</string>
 

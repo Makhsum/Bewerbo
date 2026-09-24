@@ -346,6 +346,7 @@
     <!-- What happened to an application. The value keeps the backend's spelling. -->
     <string name="status_entwurf">Draft</string>
     <string name="status_versendet">Sent</string>
+    <string name="status_wartend">Waiting</string>
     <string name="status_einladung">Invitation</string>
     <string name="status_absage">Rejection</string>
 

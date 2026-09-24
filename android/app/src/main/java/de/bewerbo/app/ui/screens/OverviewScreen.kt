@@ -370,7 +370,9 @@ fun OverviewScreen(
                         when (application.status) {
                             "Einladung" -> PillTone.Success
                             "Absage" -> PillTone.Danger
-                            "Versendet" -> PillTone.Accent
+                            // Versendet and Wartend are the same fact to the eye — the Mappe is
+                            // with the employer and nothing is owed here — so they read alike.
+                            "Versendet", "Wartend" -> PillTone.Accent
                             else -> PillTone.Neutral
                         },
                     )
