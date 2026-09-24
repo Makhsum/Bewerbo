@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -29,10 +33,13 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import de.bewerbo.app.R
 import de.bewerbo.app.ui.icons.BewerboIcons
@@ -289,8 +296,27 @@ fun SegmentedControl(
     }
 }
 
-/// A labelled field with its value and a focus ring — the app's text input, rather than a bare
-/// OutlinedTextField with a floating label.
+/**
+ * A labelled field with its value and a focus ring — the app's text input, rather than a bare
+ * OutlinedTextField with a floating label.
+ *
+ * It also keeps ITSELF in view while it is being typed into, and that is not something the scroll
+ * container above it does on its own. A scroll container brings a field into view at the moment
+ * the field takes focus — one moment too early: the keyboard opens AFTERWARDS, the viewport
+ * shrinks under a field that already has focus, and nothing asks a second time. In "Correct the
+ * fields" that left the last field clipped to a sliver with the typed value invisible, and no
+ * amount of typing brought it back; only a manual scroll did. Tapping a field while the keyboard
+ * is already up failed the same way, because the sliver counts as in view.
+ *
+ * So the field asks again itself, whenever the keyboard comes or goes while it holds the focus.
+ * The request waits one frame: the inset changes a frame before the layout that follows from it,
+ * and asked any earlier it measures the viewport the keyboard has not shrunk yet and finds
+ * nothing to do.
+ */
+@OptIn(
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class,
+)
 @Composable
 fun LabelledField(
     label: String,
@@ -301,6 +327,17 @@ fun LabelledField(
     singleLine: Boolean = true,
     minLines: Int = 1,
 ) {
+    val bringIntoView = remember { BringIntoViewRequester() }
+    var focused by remember { mutableStateOf(false) }
+    val keyboardOpen = WindowInsets.isImeVisible
+
+    LaunchedEffect(focused, keyboardOpen) {
+        if (focused) {
+            withFrameNanos { }
+            bringIntoView.bringIntoView()
+        }
+    }
+
     androidx.compose.material3.OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -311,6 +348,8 @@ fun LabelledField(
         textStyle = MaterialTheme.typography.bodyMedium,
         modifier = modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(bringIntoView)
+            .onFocusChanged { focused = it.isFocused }
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     )
 }
