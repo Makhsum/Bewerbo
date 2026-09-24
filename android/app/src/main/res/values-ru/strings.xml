@@ -76,7 +76,6 @@
     <string name="evidence_period_since">с %1$s</string>
     <string name="evidence_ausbildung">%1$s, %2$s</string>
     <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis приложен</string>
-    <string name="evidence_sprache_offen">Указано в профиле, сертификат не приложен</string>
     <string name="evidence_sprache_niveau">В профиле указан %1$s</string>
     <string name="action_file_nachweis">Добавить Nachweis</string>
 
@@ -258,6 +257,7 @@
     <string name="match_covered">Подтверждено %1$d из %2$d требований</string>
     <string name="match_proven">Подтверждено профилем · %1$d</string>
     <string name="match_open">Ещё открыто · %1$d</string>
+    <string name="match_open_note">Всё это указано в вашем профиле; не хватает только сертификата.</string>
     <string name="match_not_proven">Не подтверждено · %1$d</string>
     <string name="match_not_proven_note">Ничего из этого в Anschreiben не утверждается.</string>
     <string name="match_file_title">Добавить Nachweis</string>

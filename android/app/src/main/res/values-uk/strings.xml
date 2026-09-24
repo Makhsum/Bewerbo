@@ -78,7 +78,6 @@
     <string name="evidence_period_since">з %1$s</string>
     <string name="evidence_ausbildung">%1$s, %2$s</string>
     <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis додано</string>
-    <string name="evidence_sprache_offen">Указано в профілі, сертифікат не додано</string>
     <string name="evidence_sprache_niveau">У профілі вказано %1$s</string>
     <string name="action_file_nachweis">Додати Nachweis</string>
 
@@ -260,6 +259,7 @@
     <string name="match_covered">Підтверджено %1$d із %2$d вимог</string>
     <string name="match_proven">Підтверджено профілем · %1$d</string>
     <string name="match_open">Ще відкрито · %1$d</string>
+    <string name="match_open_note">Усе це вказано у вашому профілі; бракує лише сертифіката.</string>
     <string name="match_not_proven">Не підтверджено · %1$d</string>
     <string name="match_not_proven_note">Нічого з цього в Anschreiben не стверджується.</string>
     <string name="match_file_title">Додати Nachweis</string>

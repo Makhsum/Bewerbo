@@ -10,7 +10,11 @@ public enum RequirementState { Belegt, Offen, NichtBelegt }
 public record MatchedRequirement(
     string Text,
     RequirementState State,
-    /// <summary>For belegt: the entry that proves it, named so the reader can check it.</summary>
+    /// <summary>
+    /// For belegt: the entry that proves it, named so the reader can check it. Empty where this
+    /// requirement has nothing of its own to say — what holds for every offen requirement alike
+    /// ("Zertifikat fehlt") is said once by the screen that groups them, like <see cref="Action"/>.
+    /// </summary>
     string Evidence,
     /// <summary>
     /// For offen: the one action that would close it. Empty where this requirement has nothing of
@@ -167,9 +171,14 @@ public static class RequirementMatcher
             // Stated but not evidenced: the app can close this, so it asks rather than dropping it
             // — and names the language, because the asking is only worth anything if the Abgleich
             // can then file the right Nachweis without the user hunting for it.
+            //
+            // No Evidence: "Im Profil angegeben, Zertifikat fehlt" was true of every offen row
+            // alike, so two unproven languages printed it twice. The screen says it once for the
+            // group, like the nicht_belegt note. The ACTION stays on the row — it is a button that
+            // files a different language's Nachweis each time, not a sentence.
             : new MatchedRequirement(requirement, RequirementState.Offen,
-                "Im Profil angegeben, Zertifikat fehlt in den Anlagen", "Nachweis hochladen",
-                skill.Language, "sprache_offen", null, "nachweis_ablegen");
+                "", "Nachweis hochladen",
+                skill.Language, "", null, "nachweis_ablegen");
     }
 
     private static readonly string[] Levels = ["A1", "A2", "B1", "B2", "C1", "C2"];

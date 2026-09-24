@@ -595,6 +595,35 @@ public class DomainRuleTests
         Assert.Equal("Nachweis hochladen", requirement.Action);
     }
 
+    [Fact]
+    public void What_holds_for_every_offen_requirement_alike_is_left_to_the_group_not_repeated_per_row()
+    {
+        // Two unproven languages used to print "Im Profil angegeben, Zertifikat fehlt" twice, once
+        // under each row. The sentence is true of every offen row by definition, so the screen says
+        // it once for the group. The action stays on the row: it files a different Nachweis each
+        // time, and a button is not a sentence.
+        var profile = SampleProfile();
+        profile.Languages.Add(new LanguageSkill
+        {
+            Language = "Englisch", Level = "B2", CertificateOnFile = false,
+        });
+
+        var match = RequirementMatcher.Match(profile,
+        [
+            new ExtractedRequirement { Text = "Deutschkenntnisse auf Niveau B2" },
+            new ExtractedRequirement { Text = "Englischkenntnisse auf Niveau B1" },
+        ]);
+
+        var offen = match.Requirements.Where(r => r.State == RequirementState.Offen).ToList();
+        Assert.Equal(2, offen.Count);
+        Assert.All(offen, r => Assert.Equal("", r.Evidence));
+        Assert.All(offen, r => Assert.Equal("", r.EvidenceKind));
+        Assert.All(offen, r => Assert.Equal("nachweis_ablegen", r.ActionKind));
+
+        // The language is what makes the action row-specific, and it must survive.
+        Assert.Equal(["Deutsch", "Englisch"], offen.Select(r => r.Language));
+    }
+
     [Theory]
     [InlineData("Deutsch B2")]
     [InlineData("Deutsch mindestens B2")]

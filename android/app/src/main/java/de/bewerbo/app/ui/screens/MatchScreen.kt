@@ -150,6 +150,16 @@ fun MatchScreen(
             item { SectionLabel(stringResource(R.string.match_open, offen.size)) }
             item {
                 BewerboCard(Modifier.testTag("match_group_offen")) {
+                    // What holds for the whole group is said here once, like the note under the
+                    // unproven one below. Every row here is a level the profile states with no
+                    // certificate behind it, so "Zertifikat fehlt" under each of them was the same
+                    // sentence printed as many times as the posting named languages.
+                    Text(
+                        stringResource(R.string.match_open_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                        modifier = Modifier.testTag("match_open_note"),
+                    )
                     offen.forEach { requirement ->
                         // "Nachweis hochladen" files the document HERE. It used to navigate to the
                         // Mappe, which left the user to work out which document had been meant —

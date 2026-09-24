@@ -93,7 +93,6 @@
     <string name="evidence_period_since">since %1$s</string>
     <string name="evidence_ausbildung">%1$s, %2$s</string>
     <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis on file</string>
-    <string name="evidence_sprache_offen">Stated in the profile, no certificate on file</string>
     <string name="evidence_sprache_niveau">The profile says %1$s</string>
     <string name="action_file_nachweis">File the Nachweis</string>
 
@@ -283,6 +282,7 @@
     <string name="match_covered">%1$d of %2$d requirements proven</string>
     <string name="match_proven">Proven by your profile · %1$d</string>
     <string name="match_open">Still open · %1$d</string>
+    <string name="match_open_note">Each of these is stated in your profile; only the certificate is missing.</string>
     <string name="match_not_proven">Not proven · %1$d</string>
     <string name="match_not_proven_note">None of these is claimed in the Anschreiben.</string>
     <string name="match_file_title">File the Nachweis</string>

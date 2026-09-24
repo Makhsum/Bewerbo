@@ -79,7 +79,6 @@
     <string name="evidence_period_since">seit %1$s</string>
     <string name="evidence_ausbildung">%1$s, %2$s</string>
     <string name="evidence_sprache_belegt">%1$s %2$s · Nachweis abgelegt</string>
-    <string name="evidence_sprache_offen">Im Profil angegeben, Zertifikat fehlt</string>
     <string name="evidence_sprache_niveau">Im Profil steht %1$s</string>
     <string name="action_file_nachweis">Nachweis ablegen</string>
 
@@ -261,6 +260,7 @@
     <string name="match_covered">%1$d von %2$d Anforderungen belegt</string>
     <string name="match_proven">Durch Ihr Profil belegt · %1$d</string>
     <string name="match_open">Noch offen · %1$d</string>
+    <string name="match_open_note">Jedes davon steht in Ihrem Profil; es fehlt nur der Nachweis.</string>
     <string name="match_not_proven">Nicht belegt · %1$d</string>
     <string name="match_not_proven_note">Nichts davon wird im Anschreiben behauptet.</string>
     <string name="match_file_title">Nachweis ablegen</string>

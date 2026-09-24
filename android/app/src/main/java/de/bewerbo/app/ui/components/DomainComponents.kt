@@ -354,8 +354,14 @@ fun RequirementRow(
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
             Column(Modifier.padding(start = Space.s)) {
                 Text(requirement.text, style = MaterialTheme.typography.titleMedium)
+                // The action stands in as the detail line only where it is NOT a button: a
+                // nicht_belegt row whose "action" is a fact about the profile ("Im Profil steht
+                // B1") has nowhere else to say it. Where the action IS a button, printing it
+                // above the button says the same words twice.
+                val actionIsButton =
+                    requirement.state == "offen" && requirement.action.isNotBlank() && onAction != null
                 val detail = requirementEvidence(requirement)
-                    .ifBlank { requirementAction(requirement) }
+                    .ifBlank { if (actionIsButton) "" else requirementAction(requirement) }
                 if (detail.isNotBlank()) {
                     Text(
                         detail,
@@ -364,7 +370,7 @@ fun RequirementRow(
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
-                if (requirement.state == "offen" && requirement.action.isNotBlank() && onAction != null) {
+                if (actionIsButton) {
                     Box(
                         Modifier
                             .padding(top = Space.s)
@@ -547,7 +553,6 @@ fun requirementEvidence(requirement: Requirement): String = when (requirement.ev
     "sprache_belegt" -> stringResource(
         R.string.evidence_sprache_belegt, requirement.arg(0), requirement.arg(1),
     )
-    "sprache_offen" -> stringResource(R.string.evidence_sprache_offen)
     else -> requirement.evidence
 }
 
