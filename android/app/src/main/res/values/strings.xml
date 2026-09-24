@@ -26,6 +26,7 @@
     <string name="nav_posting">Posting</string>
     <string name="nav_application">Application</string>
     <string name="nav_locker">Documents</string>
+    <string name="nav_assistant">Assistant</string>
 
     <!-- The flow that produces one application: posting, requirement check, application. The steps
          are named by the nav_* strings above, which is what they were when they were still tabs. -->
@@ -59,6 +60,7 @@
     <string name="error_application_missing">This application is no longer on the server.</string>
     <string name="error_document_missing">This document is no longer on the server.</string>
     <string name="error_unknown">That did not work. Please try again.</string>
+    <string name="error_assistant_unavailable">There is no assistant on this installation. Fill in the profile instead.</string>
     <string name="error_email_invalid">That is not an e-mail address. Check it and try again.</string>
     <string name="error_password_too_short">The password needs at least 8 characters.</string>
     <string name="error_email_taken">There is already an account for this e-mail address. Sign in instead.</string>
@@ -162,6 +164,30 @@
     <string name="overview_flow_continue">Continue the application</string>
     <string name="overview_flow_another">Begin another application</string>
     <string name="overview_first_profile">Start with your profile</string>
+    <string name="overview_first_assistant">Tell the assistant about yourself</string>
+
+    <!-- The assistant. The first minutes of Bewerbo are a conversation; the profile form is the second way in, and the only one where no model is configured. -->
+    <string name="assistant_subtitle">Write a few sentences in your own language, or photograph an old Lebenslauf. Bewerbo names what it could make out and what is still missing.</string>
+    <string name="assistant_writer_pill">Language model</string>
+    <string name="assistant_writer_note">The answers here are written by a language model outside Bewerbo, from what you send it. Nothing you write here reaches your profile on its own.</string>
+    <string name="assistant_empty_title">Begin anywhere</string>
+    <string name="assistant_empty_body">Three or four sentences are enough: what you did, where, and for how long. Write them in the language you think in.</string>
+    <string name="assistant_examples">Or begin with one of these</string>
+    <string name="assistant_example_1">Six years in nursing at a hospital.</string>
+    <string name="assistant_example_2">A degree in economics, then a small shop of my own.</string>
+    <string name="assistant_example_3">Two years here, learning German.</string>
+    <string name="assistant_composer">What you want to say</string>
+    <string name="assistant_send">Send</string>
+    <string name="assistant_photo">Photograph an old Lebenslauf</string>
+    <string name="assistant_photo_hint">A photo or a screenshot. The words are read on this device, and you can correct them before anything is sent.</string>
+    <string name="assistant_thinking_title">Preparing an answer</string>
+    <string name="assistant_thinking_body">Reading what you wrote. This takes a few seconds.</string>
+    <string name="assistant_missing">Still missing</string>
+    <string name="assistant_you">You</string>
+    <string name="assistant_it">Bewerbo</string>
+    <string name="assistant_unavailable_title">No assistant on this installation</string>
+    <string name="assistant_unavailable_body">The assistant needs a language model, and none is configured here. Fill in the profile form instead: it asks the same things and produces the same Lebenslauf.</string>
+    <string name="assistant_unavailable_action">Go to the profile</string>
     <string name="overview_next_steps_empty_title">Nothing outstanding</string>
     <string name="overview_next_steps_empty_body">The profile carries everything a Lebenslauf needs. What a single application still needs is written below in its own row.</string>
     <string name="overview_mappe_empty_title">Nothing to measure yet</string>

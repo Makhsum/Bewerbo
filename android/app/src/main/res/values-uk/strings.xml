@@ -12,6 +12,7 @@
     <string name="nav_posting">Вакансія</string>
     <string name="nav_application">Заявка</string>
     <string name="nav_locker">Документи</string>
+    <string name="nav_assistant">Помічник</string>
 
     <!-- «із» rather than the shorter «з»: the caption is set in capitals, and a lone
          uppercase З between two figures is read as another digit — «КРОК 2 З 3» looks like «2 3 3». -->
@@ -44,6 +45,7 @@
     <string name="error_application_missing">Цієї заявки більше немає на сервері.</string>
     <string name="error_document_missing">Цього документа більше немає на сервері.</string>
     <string name="error_unknown">Не вийшло. Спробуйте ще раз.</string>
+    <string name="error_assistant_unavailable">У цій установці помічника немає. Заповніть замість цього профіль.</string>
     <string name="error_email_invalid">Це не адреса електронної пошти. Перевірте її та спробуйте ще раз.</string>
     <string name="error_password_too_short">Пароль має бути не коротшим за 8 знаків.</string>
     <string name="error_email_taken">Для цієї адреси обліковий запис уже є. Увійдіть до нього.</string>
@@ -143,6 +145,30 @@
     <string name="overview_flow_continue">Продовжити заявку</string>
     <string name="overview_flow_another">Почати ще одну заявку</string>
     <string name="overview_first_profile">Почніть із профілю</string>
+    <string name="overview_first_assistant">Розкажіть помічнику про себе</string>
+
+    <!-- The assistant. The first minutes of Bewerbo are a conversation; the profile form is the second way in, and the only one where no model is configured. -->
+    <string name="assistant_subtitle">Напишіть кілька речень своєю мовою або сфотографуйте старий Lebenslauf. Bewerbo назве, що вдалося зрозуміти і чого ще бракує.</string>
+    <string name="assistant_writer_pill">Мовна модель</string>
+    <string name="assistant_writer_note">Відповіді тут пише мовна модель поза Bewerbo — з того, що ви їй надсилаєте. Ніщо з цього не потрапляє до вашого профілю саме собою.</string>
+    <string name="assistant_empty_title">Почніть із будь-чого</string>
+    <string name="assistant_empty_body">Достатньо трьох-чотирьох речень: чим ви займалися, де і як довго. Пишіть тією мовою, якою думаєте.</string>
+    <string name="assistant_examples">Або почніть з одного з цих</string>
+    <string name="assistant_example_1">Шість років у догляді за хворими в лікарні.</string>
+    <string name="assistant_example_2">Економічна освіта, потім власна невелика крамниця.</string>
+    <string name="assistant_example_3">Тут два роки, вчу німецьку.</string>
+    <string name="assistant_composer">Що ви хочете сказати</string>
+    <string name="assistant_send">Надіслати</string>
+    <string name="assistant_photo">Сфотографувати старий Lebenslauf</string>
+    <string name="assistant_photo_hint">Фото або знімок екрана. Слова читаються на цьому пристрої, і їх можна виправити, перш ніж щось буде надіслано.</string>
+    <string name="assistant_thinking_title">Готується відповідь</string>
+    <string name="assistant_thinking_body">Ваш текст читається. Це триває кілька секунд.</string>
+    <string name="assistant_missing">Чого ще бракує</string>
+    <string name="assistant_you">Ви</string>
+    <string name="assistant_it">Bewerbo</string>
+    <string name="assistant_unavailable_title">У цій установці помічника немає</string>
+    <string name="assistant_unavailable_body">Помічникові потрібна мовна модель, а тут її не налаштовано. Заповніть замість цього форму профілю: вона питає те саме й дає той самий Lebenslauf.</string>
+    <string name="assistant_unavailable_action">До профілю</string>
     <string name="overview_next_steps_empty_title">Нічого не залишилося</string>
     <string name="overview_next_steps_empty_body">У профілі є все, що потрібно для Lebenslauf. Що залишилося за окремою заявкою, написано нижче в її рядку.</string>
     <string name="overview_mappe_empty_title">Поки нема чого вимірювати</string>

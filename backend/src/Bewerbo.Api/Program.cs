@@ -77,6 +77,11 @@ builder.Services.AddSingleton(new LlmOptions
     ApiKey = builder.Configuration["Anthropic:ApiKey"]
              ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"),
     Model = builder.Configuration["Anthropic:Model"] ?? "claude-opus-5",
+    // The endpoint, configurable for the reason the two above are: a deployment that reaches the
+    // model through a gateway of its own is the same installation with a different address, and it
+    // is also the only way a machine with no key can exercise the model path at all. Unset means
+    // Anthropic's own, which is what every installation has done so far.
+    BaseUrl = builder.Configuration["Anthropic:BaseUrl"] ?? new LlmOptions().BaseUrl,
 });
 // Who runs this installation, for the Impressum. Configuration and not a resource string, because
 // an address compiled into the app would be wrong for every deployment but one — see LegalOptions.
@@ -133,6 +138,10 @@ builder.Services.AddHttpClient(Bewerbo.Api.Controllers.PostingsController.LinkCl
     client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
 });
 builder.Services.AddScoped<IApplicationWriter, ApplicationWriter>();
+// The assistant, beside the writer and registered the same way. No second implementation stands
+// behind it: with no key there is no assistant, and AssistantController says so — see
+// AssistantConversation for why a rule-based chat would be worse than none.
+builder.Services.AddScoped<IAssistantConversation, AssistantConversation>();
 
 var app = builder.Build();
 

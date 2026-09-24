@@ -14,6 +14,7 @@
     <string name="nav_posting">Stellenanzeige</string>
     <string name="nav_application">Bewerbung</string>
     <string name="nav_locker">Unterlagen</string>
+    <string name="nav_assistant">Assistent</string>
 
     <string name="flow_step_of">Schritt %1$d von %2$d</string>
 
@@ -45,6 +46,7 @@
     <string name="error_application_missing">Diese Bewerbung liegt nicht mehr auf dem Server.</string>
     <string name="error_document_missing">Dieses Dokument liegt nicht mehr auf dem Server.</string>
     <string name="error_unknown">Das hat nicht geklappt. Bitte versuchen Sie es erneut.</string>
+    <string name="error_assistant_unavailable">In dieser Installation gibt es keinen Assistenten. Füllen Sie stattdessen das Profil aus.</string>
     <string name="error_email_invalid">Das ist keine E-Mail-Adresse. Bitte prüfen Sie sie.</string>
     <string name="error_password_too_short">Das Passwort braucht mindestens 8 Zeichen.</string>
     <string name="error_email_taken">Zu dieser E-Mail-Adresse gibt es schon ein Konto. Melden Sie sich stattdessen an.</string>
@@ -144,6 +146,30 @@
     <string name="overview_flow_continue">Bewerbung fortsetzen</string>
     <string name="overview_flow_another">Weitere Bewerbung beginnen</string>
     <string name="overview_first_profile">Mit dem Profil beginnen</string>
+    <string name="overview_first_assistant">Dem Assistenten erzählen</string>
+
+    <!-- The assistant. The first minutes of Bewerbo are a conversation; the profile form is the second way in, and the only one where no model is configured. -->
+    <string name="assistant_subtitle">Schreiben Sie ein paar Sätze in Ihrer Sprache oder fotografieren Sie einen alten Lebenslauf. Bewerbo benennt, was es verstehen konnte und was noch fehlt.</string>
+    <string name="assistant_writer_pill">Sprachmodell</string>
+    <string name="assistant_writer_note">Die Antworten hier schreibt ein Sprachmodell außerhalb von Bewerbo, aus dem, was Sie ihm senden. Nichts davon gelangt von selbst in Ihr Profil.</string>
+    <string name="assistant_empty_title">Fangen Sie irgendwo an</string>
+    <string name="assistant_empty_body">Drei oder vier Sätze genügen: was Sie gemacht haben, wo und wie lange. Schreiben Sie sie in der Sprache, in der Sie denken.</string>
+    <string name="assistant_examples">Oder beginnen Sie mit einem davon</string>
+    <string name="assistant_example_1">Sechs Jahre in der Pflege in einem Krankenhaus.</string>
+    <string name="assistant_example_2">Studium der Wirtschaft, danach ein eigener kleiner Laden.</string>
+    <string name="assistant_example_3">Seit zwei Jahren hier, lerne Deutsch.</string>
+    <string name="assistant_composer">Was Sie sagen möchten</string>
+    <string name="assistant_send">Senden</string>
+    <string name="assistant_photo">Alten Lebenslauf fotografieren</string>
+    <string name="assistant_photo_hint">Ein Foto oder eine Bildschirmaufnahme. Die Wörter werden auf diesem Gerät gelesen, und Sie können sie berichtigen, bevor etwas gesendet wird.</string>
+    <string name="assistant_thinking_title">Antwort wird vorbereitet</string>
+    <string name="assistant_thinking_body">Ihr Text wird gelesen. Das dauert einige Sekunden.</string>
+    <string name="assistant_missing">Fehlt noch</string>
+    <string name="assistant_you">Sie</string>
+    <string name="assistant_it">Bewerbo</string>
+    <string name="assistant_unavailable_title">Kein Assistent in dieser Installation</string>
+    <string name="assistant_unavailable_body">Der Assistent braucht ein Sprachmodell, und hier ist keines konfiguriert. Füllen Sie stattdessen das Profilformular aus: es fragt dasselbe und erzeugt denselben Lebenslauf.</string>
+    <string name="assistant_unavailable_action">Zum Profil</string>
     <string name="overview_next_steps_empty_title">Nichts offen</string>
     <string name="overview_next_steps_empty_body">Das Profil trägt alles, was ein Lebenslauf braucht. Was an einer einzelnen Bewerbung noch offen ist, steht unten in ihrer Zeile.</string>
     <string name="overview_mappe_empty_title">Noch nichts zu messen</string>

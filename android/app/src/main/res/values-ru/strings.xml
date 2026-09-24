@@ -12,6 +12,7 @@
     <string name="nav_posting">Вакансия</string>
     <string name="nav_application">Заявка</string>
     <string name="nav_locker">Документы</string>
+    <string name="nav_assistant">Помощник</string>
 
     <string name="flow_step_of">Шаг %1$d из %2$d</string>
 
@@ -42,6 +43,7 @@
     <string name="error_application_missing">Этой заявки больше нет на сервере.</string>
     <string name="error_document_missing">Этого документа больше нет на сервере.</string>
     <string name="error_unknown">Не получилось. Попробуйте ещё раз.</string>
+    <string name="error_assistant_unavailable">В этой установке помощника нет. Заполните вместо этого профиль.</string>
     <string name="error_email_invalid">Это не адрес электронной почты. Проверьте его и попробуйте снова.</string>
     <string name="error_password_too_short">Пароль должен быть не короче 8 знаков.</string>
     <string name="error_email_taken">Для этого адреса аккаунт уже есть. Войдите в него.</string>
@@ -141,6 +143,30 @@
     <string name="overview_flow_continue">Продолжить заявку</string>
     <string name="overview_flow_another">Начать ещё одну заявку</string>
     <string name="overview_first_profile">Начните с профиля</string>
+    <string name="overview_first_assistant">Расскажите помощнику о себе</string>
+
+    <!-- The assistant. The first minutes of Bewerbo are a conversation; the profile form is the second way in, and the only one where no model is configured. -->
+    <string name="assistant_subtitle">Напишите несколько предложений на своём языке или сфотографируйте старый Lebenslauf. Bewerbo назовёт, что удалось понять и чего пока не хватает.</string>
+    <string name="assistant_writer_pill">Языковая модель</string>
+    <string name="assistant_writer_note">Ответы здесь пишет языковая модель вне Bewerbo — из того, что вы ей отправляете. Ничего из этого не попадает в ваш профиль само собой.</string>
+    <string name="assistant_empty_title">Начните с чего угодно</string>
+    <string name="assistant_empty_body">Хватит трёх-четырёх предложений: чем вы занимались, где и сколько времени. Пишите на том языке, на котором думаете.</string>
+    <string name="assistant_examples">Или начните с одного из этих</string>
+    <string name="assistant_example_1">Шесть лет в уходе за больными в больнице.</string>
+    <string name="assistant_example_2">Экономическое образование, потом свой небольшой магазин.</string>
+    <string name="assistant_example_3">Здесь два года, учу немецкий.</string>
+    <string name="assistant_composer">Что вы хотите сказать</string>
+    <string name="assistant_send">Отправить</string>
+    <string name="assistant_photo">Сфотографировать старый Lebenslauf</string>
+    <string name="assistant_photo_hint">Фото или снимок экрана. Слова читаются на этом устройстве, и их можно поправить до того, как что-то будет отправлено.</string>
+    <string name="assistant_thinking_title">Готовится ответ</string>
+    <string name="assistant_thinking_body">Ваш текст читается. Это занимает несколько секунд.</string>
+    <string name="assistant_missing">Чего ещё не хватает</string>
+    <string name="assistant_you">Вы</string>
+    <string name="assistant_it">Bewerbo</string>
+    <string name="assistant_unavailable_title">В этой установке помощника нет</string>
+    <string name="assistant_unavailable_body">Помощнику нужна языковая модель, а здесь она не настроена. Заполните вместо этого форму профиля: она спрашивает то же самое и даёт тот же Lebenslauf.</string>
+    <string name="assistant_unavailable_action">К профилю</string>
     <string name="overview_next_steps_empty_title">Ничего не осталось</string>
     <string name="overview_next_steps_empty_body">В профиле есть всё, что нужно для Lebenslauf. Что осталось по отдельной заявке, написано ниже в её строке.</string>
     <string name="overview_mappe_empty_title">Пока нечего измерять</string>

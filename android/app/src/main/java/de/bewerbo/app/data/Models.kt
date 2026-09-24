@@ -395,6 +395,35 @@ data class DutyChoice(val original: String, val outcome: String, val taken: Bool
     val chosen: String get() = if (taken) outcome else original
 }
 
+/// One thing said in the conversation with the assistant, as the server is told it. [fromUser]
+/// false is the assistant's own earlier turn — nothing is stored on the server, so the app sends
+/// back what it has on screen and that is the whole of the memory a turn gets.
+@Serializable
+data class AssistantMessage(val fromUser: Boolean, val text: String)
+
+/// One turn the app sends. [uiLanguage] is the interface language, and the only thing the server is
+/// ever told about it besides the reset mail: the answer is prose written for this reader, and the
+/// assistant falls back to this language where the user's own wording cannot say which — a
+/// photographed Lebenslauf.
+@Serializable
+data class AssistantTurnRequest(val uiLanguage: String, val messages: List<AssistantMessage>)
+
+/// What the assistant answered. [reply] is prose in the language the user wrote in — the one answer
+/// of this API that is a finished sentence rather than a kind and its arguments. [missing] is what
+/// it says is still needed for a Lebenslauf, one short line each and in the same language.
+@Serializable
+data class AssistantReply(val reply: String = "", val missing: List<String> = emptyList())
+
+/// One turn as the SCREEN holds it: what was said, and — for an answer — what came with it.
+/// Client-side only, like [DutyChoice]: [AssistantMessage] is what travels, and this is what is
+/// drawn.
+data class AssistantTurn(
+    val fromUser: Boolean,
+    val text: String,
+    val missing: List<String> = emptyList(),
+)
+
+
 /// A ProblemDetails, as the API answers every failure. [kind] says WHICH failure it is, so the
 /// snackbar can be written in the user's language; [detail] is the German the server sent, kept as
 /// the fallback for a kind this build does not know. Same division as [NextStep].

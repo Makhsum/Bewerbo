@@ -52,12 +52,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
+import de.bewerbo.app.data.hasAssistant
 import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.errorMessage
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.screens.ApplicationScreen
+import de.bewerbo.app.ui.screens.AssistantScreen
 import de.bewerbo.app.ui.screens.LegalPage
 import de.bewerbo.app.ui.screens.LegalScreen
 import de.bewerbo.app.ui.screens.LockerScreen
@@ -88,13 +90,19 @@ class MainActivity : ComponentActivity() {
  * The PLACES — and the bottom bar is nothing else.
  *
  * A place is somewhere the user goes back to whenever they like, in whatever order: how ready the
- * Mappe is, what the profile says, what is filed in the Mappe. That is exactly the freedom a tab
- * promises, so these three are the only things allowed on the bar.
+ * Mappe is, the conversation with the assistant, what the profile says, what is filed in the Mappe.
+ * That is exactly the freedom a tab promises, so these four are the only things allowed on the bar.
+ *
+ * The assistant is a place by that same definition and not an exception to it: a user comes back to
+ * it to add a station, to ask what is still missing, to read an answer again. What was wrong before
+ * was never the NUMBER of items — it was that three of five were flow STEPS, which promised an order
+ * the product does not have.
  *
  * Producing an application is not a place and never was — see [FlowStep].
  */
 enum class Destination(val route: String, val tag: String, val label: Int, val icon: ImageVector) {
     Overview("uebersicht", "nav_uebersicht", R.string.nav_overview, BewerboIcons.Overview),
+    Assistant("assistent", "nav_assistent", R.string.nav_assistant, BewerboIcons.Assistant),
     Profile("profil", "nav_profil", R.string.nav_profile, BewerboIcons.Person),
     Locker("mappe", "nav_mappe", R.string.nav_locker, BewerboIcons.Anlagen),
 }
@@ -231,6 +239,15 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                                 R.string.overview_flow_continue
                             },
                             onOpenFlow = { navController.openFromOverview(step.route) },
+                            // The first minutes are a conversation where there is one to have. Null
+                            // means this installation has no model behind it, and the Übersicht then
+                            // offers the form as the first step exactly as it did before — the same
+                            // "null is not applicable" idiom onBeginAnother uses below.
+                            onOpenAssistant = if (state.hasAssistant) {
+                                { navController.openFromOverview(Destination.Assistant.route) }
+                            } else {
+                                null
+                            },
                             // A path that can be walked once is not a path the user moves along: with
                             // one application under way the action above leads back INTO it, and the
                             // next employer had nowhere to start from at all once the Stellenanzeige
@@ -247,6 +264,11 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                                 }
                             },
                         ) { route -> navController.openFromOverview(route) }
+                    }
+                    composable(Destination.Assistant.route) {
+                        AssistantScreen(state, viewModel) {
+                            navController.openFromOverview(Destination.Profile.route)
+                        }
                     }
                     composable(Destination.Profile.route) { ProfileScreen(state, viewModel) }
                     composable(Destination.Locker.route) { LockerScreen(state, viewModel) }
@@ -527,7 +549,7 @@ private fun BottomBar(navController: NavHostController) {
                     Icon(destination.icon, contentDescription = stringResource(destination.label))
                 },
                 label = {
-                    // Five destinations share the screen width, so a long word — "Application",
+                    // The destinations share the screen width, so a long word — "Application",
                     // "Bewerbung", "Вакансия" — met the edge of its item and wrapped onto a
                     // second line. The label shrinks to fit instead; its own tag lets a driver
                     // read the line back and see that it is still one line.

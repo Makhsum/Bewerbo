@@ -62,6 +62,11 @@ import de.bewerbo.app.ui.theme.Space
  * longer on the bottom bar: [flowLabel] says whether the path is being begun or picked up,
  * [onOpenFlow] leads to the step the user actually got to, and [onBeginAnother] — null while there
  * is nothing under way — begins the next employer's application beside it.
+ *
+ * On a profile with nothing in it the first step is the ASSISTANT, and the form stands beneath it:
+ * a user who has just arrived does not yet know which parts of their life a Lebenslauf wants, and a
+ * form asks them to know. [onOpenAssistant] is null where this installation has no model behind it —
+ * the form is then the first step again, as it was before there was an assistant.
  */
 @Composable
 fun OverviewScreen(
@@ -69,6 +74,7 @@ fun OverviewScreen(
     viewModel: AppViewModel,
     flowLabel: Int,
     onOpenFlow: () -> Unit,
+    onOpenAssistant: (() -> Unit)?,
     onBeginAnother: (() -> Unit)?,
     onOpenSettings: () -> Unit,
     navigate: (String) -> Unit,
@@ -180,16 +186,50 @@ fun OverviewScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (profileFirst) {
-                    Button(
-                        onClick = { navigate(Destination.Profile.route) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("overview_btn_profile"),
-                    ) {
+                    // The conversation goes first where there is one to have, and the form is
+                    // demoted rather than removed: it is the way a user who knows what they want
+                    // gets there fastest, and the only way at all on an installation with no model.
+                    // The form KEEPS its tag across the demotion — it is the same action.
+                    if (onOpenAssistant != null) {
+                        Button(
+                            onClick = onOpenAssistant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("overview_btn_assistant"),
+                        ) {
+                            Icon(
+                                BewerboIcons.Assistant, contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                stringResource(R.string.overview_first_assistant),
+                                modifier = Modifier.padding(start = Space.s),
+                            )
+                        }
+                    }
+
+                    val profileContent: @Composable RowScope.() -> Unit = {
                         Icon(BewerboIcons.Person, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(
                             stringResource(R.string.overview_first_profile),
                             modifier = Modifier.padding(start = Space.s),
+                        )
+                    }
+                    val profileModifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("overview_btn_profile")
+
+                    if (onOpenAssistant != null) {
+                        OutlinedButton(
+                            onClick = { navigate(Destination.Profile.route) },
+                            modifier = profileModifier,
+                            content = profileContent,
+                        )
+                    } else {
+                        Button(
+                            onClick = { navigate(Destination.Profile.route) },
+                            modifier = profileModifier,
+                            content = profileContent,
                         )
                     }
                 }

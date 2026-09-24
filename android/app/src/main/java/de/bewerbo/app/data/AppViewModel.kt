@@ -42,6 +42,14 @@ data class AppState(
     /// choosing a picture opens the system picker, and a Compose state that the activity's
     /// recreation takes with it would lose the advert the user just photographed.
     val postingDraft: String = "",
+    /// The conversation with the assistant, oldest first — what the screen draws and what the
+    /// next turn is sent as. Client-side and nothing else: the server keeps no conversation, so this
+    /// list IS the assistant's memory, and it lives no longer than the process does.
+    val assistant: List<AssistantTurn> = emptyList(),
+    /// What is in the assistant's composer. State and not the screen's own `remember`, for the
+    /// reason [postingDraft] is: choosing a picture of an old Lebenslauf opens the system picker and
+    /// leaves the app, and the text read out of it would go with a recreated activity.
+    val assistantDraft: String = "",
     val match: MatchView? = null,
     val application: ApplicationView? = null,
     val review: Review? = null,
@@ -119,6 +127,16 @@ data class AppState(
     val lastSavedFile: String? = null,
     val busy: String? = null,
 )
+
+/**
+ * Whether this installation HAS an assistant.
+ *
+ * The writer the backend named at launch decides it, and nothing else: with no key configured the
+ * rule-based writer produces a correct German Lebenslauf, but a conversation it cannot have. So the
+ * bar item stays and the screen says so — see the assistant's own screen — and the Übersicht goes
+ * on offering the form as the first step rather than something that is not there.
+ */
+val AppState.hasAssistant: Boolean get() = writer == "model"
 
 /**
  * What the app hands to a mail app: the file to attach, the Betreffzeile as the subject and the
@@ -664,6 +682,55 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(postingDraft = text) }
     }
 
+    // -- the assistant -----------------------------------------------------------------------
+
+    /// What is in the assistant's composer. Held on the state rather than in the composable for the
+    /// reason [setPostingDraft] is.
+    fun setAssistantDraft(text: String) = _state.update { it.copy(assistantDraft = text) }
+
+    /**
+     * Sends what is in the composer and puts the answer under it.
+     *
+     * The user's own turn is appended and the composer cleared BEFORE the call, which is the one
+     * place in this app that shows something before the server has confirmed it: a chat that hides
+     * what was just sent until the answer arrives has nothing for the "preparing an answer" row to
+     * sit under, and the message is the user's own words rather than a claim about stored data. A
+     * call that fails leaves the turn standing — the snackbar says why, and sending again is the
+     * only thing to do about it either way.
+     *
+     * The whole conversation goes with every turn: the server stores none of it.
+     */
+    fun askAssistant() = launch(ASSISTANT) {
+        val said = _state.value.assistantDraft.trim()
+        if (said.isEmpty()) return@launch
+
+        val conversation = _state.value.assistant + AssistantTurn(fromUser = true, text = said)
+        _state.update { it.copy(assistant = conversation, assistantDraft = "") }
+
+        val answer = api.assistantTurn(
+            AssistantTurnRequest(
+                uiLanguage = _state.value.uiLanguage,
+                messages = conversation.map { AssistantMessage(it.fromUser, it.text) },
+            ),
+        )
+        _state.update {
+            it.copy(assistant = it.assistant + AssistantTurn(false, answer.reply, answer.missing))
+        }
+    }
+
+    /**
+     * Reads an old Lebenslauf out of a photo into the composer.
+     *
+     * The same on-device reading a photographed advert gets — see [readPostingImage] — and it lands
+     * in the composer rather than being sent, because a recogniser reading a document at an angle
+     * comes back with plausible lines in the wrong order and the user is the only one who can see it.
+     */
+    fun readAssistantImage(uri: android.net.Uri) = launch("photo") {
+        val text = readTextFromImage(getApplication(), uri)
+        if (text.isBlank()) throw ApiFailure(PHOTO_UNREADABLE, "")
+        _state.update { it.copy(assistantDraft = text) }
+    }
+
     fun parsePosting(text: String) = launch("posting") {
         val id = profileId() ?: return@launch
         val posting = api.parsePosting(ParsePostingRequest(id, text))
@@ -1154,6 +1221,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// the user may have to name to somebody, and it is the same file whichever language the
         /// interface is in.
         private const val ACCOUNT_DATA_FILE = "Bewerbo-Daten.json"
+
+        /// The name of the assistant's busy state. Named rather than spelled out at both ends:
+        /// the screen draws the "preparing an answer" row off exactly this string.
+        const val ASSISTANT = "assistant"
 
         /// The kind for "the server was not reached at all", which no ProblemDetails can carry.
         const val UNREACHABLE = "unreachable"

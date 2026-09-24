@@ -15,6 +15,7 @@ public static class OutputSchemas
     public const string LetterSchemaName = "anschreiben_inhalt";
     public const string CvSchemaName = "lebenslauf_inhalt";
     public const string PostingSchemaName = "stellenanzeige_auszug";
+    public const string AssistantSchemaName = "assistent_antwort";
 
     public const string Letter = """
     {
@@ -110,6 +111,24 @@ public static class OutputSchemas
     """;
 
     /// <summary>
+    /// The assistant's turn. Prose, and therefore the one schema here whose strings are NOT German:
+    /// what goes in them is written in the language the user wrote in. The shape is still closed,
+    /// for the reason every schema in this file is — an answer with a field nobody drew is an
+    /// answer nobody reads.
+    /// </summary>
+    public const string Assistant = """
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reply", "missing"],
+      "properties": {
+        "reply":   { "type": "string" },
+        "missing": { "type": "array", "items": { "type": "string" }, "maxItems": 6 }
+      }
+    }
+    """;
+
+    /// <summary>
     /// Anything that would let the model decide how the document looks. If one of these ever turns
     /// up as a property name in a schema above, the build of the running process stops here rather
     /// than shipping a renderer that takes layout orders from a language model.
@@ -129,6 +148,7 @@ public static class OutputSchemas
         foreach (var (name, json) in new[]
                  {
                      (LetterSchemaName, Letter), (CvSchemaName, Cv), (PostingSchemaName, Posting),
+                     (AssistantSchemaName, Assistant),
                  })
         {
             using var doc = JsonDocument.Parse(json);

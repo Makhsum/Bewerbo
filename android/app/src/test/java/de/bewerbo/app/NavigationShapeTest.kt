@@ -10,13 +10,17 @@ import org.junit.Test
  * This is the rule the flow was built to establish, and a rule that is only written in a comment is
  * a rule the next destination added to the bar quietly breaks — so it gets a gate, the same way the
  * emoji rule does in [EmojiFreeStringsTest] and the interface languages do in [UiLanguagesTest].
+ *
+ * The assistant joined the bar as a fourth place, and this test was EXTENDED rather than weakened:
+ * a place is somewhere the user returns to in any order, which the assistant is, and the one thing
+ * the rule forbids — a step of the flow posing as a place — is still checked below.
  */
 class NavigationShapeTest {
 
     @Test
-    fun `the bar holds the three places and nothing else`() {
+    fun `the bar holds the four places, in order, and nothing else`() {
         assertEquals(
-            listOf("uebersicht", "profil", "mappe"),
+            listOf("uebersicht", "assistent", "profil", "mappe"),
             Destination.entries.map { it.route },
         )
     }

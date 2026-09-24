@@ -89,6 +89,35 @@ public record TimelineDto(
     IReadOnlyList<TimelinePeriodDto> Periods,
     IReadOnlyList<GapDto> Gaps);
 
+/// <summary>
+/// One turn the user is sending to the assistant, with the conversation it belongs to.
+///
+/// The conversation is NOT stored: the client sends back what it has on screen, so a turn is
+/// self-contained and nothing has to be cleaned up when a user walks away from one. The profile is
+/// not named here either — the server knows which one is the caller's, and who a record belongs to
+/// is never the client's claim. See <see cref="Controllers.AssistantController"/>.
+///
+/// <paramref name="UiLanguage"/> is the interface language of the app that is asking, and the
+/// SECOND place in this API where the server is told it (the first is
+/// <see cref="ForgotPasswordRequest"/>). The answer is prose written for this user, and prose has to
+/// be in a language; the assistant answers in the language the user wrote in and falls back to this
+/// one where there is nothing to tell it from — a photographed Lebenslauf.
+/// </summary>
+public record AssistantTurnRequest(string? UiLanguage, IReadOnlyList<AssistantMessageDto> Messages);
+
+/// <summary>One thing already said in the conversation. <paramref name="FromUser"/> false is the
+/// assistant's own earlier turn.</summary>
+public record AssistantMessageDto(bool FromUser, string Text);
+
+/// <summary>
+/// What the assistant answered: the prose, and what it says is still missing.
+///
+/// The one answer of this API that carries a finished sentence rather than a kind and its
+/// arguments. See <see cref="Llm.AssistantConversation"/> for why that is not the rule breaking.
+/// </summary>
+public record AssistantReplyDto(string Reply, IReadOnlyList<string> Missing);
+
+
 public record ParsePostingRequest(Guid ProfileId, string Text, string? EmployerType);
 
 /// <summary>The address of a page the advert is on.</summary>

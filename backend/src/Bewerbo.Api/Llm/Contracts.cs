@@ -121,3 +121,25 @@ public record ExtractedRequirement
     [JsonPropertyName("quote")]
     public string Quote { get; init; } = "";
 }
+
+/// <summary>
+/// One turn of the assistant: what it understood, and what it still needs.
+///
+/// The one record here that is PROSE rather than content for a document, and that is deliberate.
+/// Everything else in this file is written in German for a German reader; this is written for the
+/// user, in the language they wrote in, and it never reaches a page — see
+/// <see cref="AssistantConversation"/> for why the rule about finished sentences does not reach it.
+/// </summary>
+public record AssistantReply
+{
+    /// <summary>The answer itself: what was understood, said back in the user's own language.</summary>
+    [JsonPropertyName("reply")]
+    public string Reply { get; init; } = "";
+
+    /// <summary>
+    /// What is still missing before a Lebenslauf can be produced, one short line each and in the
+    /// same language as <see cref="Reply"/>. Empty when nothing is outstanding.
+    /// </summary>
+    [JsonPropertyName("missing")]
+    public List<string> Missing { get; init; } = [];
+}

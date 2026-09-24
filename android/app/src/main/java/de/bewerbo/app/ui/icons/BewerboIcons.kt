@@ -48,6 +48,13 @@ object BewerboIcons {
         "M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z",
     )
 
+    val Assistant: ImageVector = icon(
+        "assistant",
+        "M12 4.8c4.4 0 8 2.9 8 6.5s-3.6 6.5-8 6.5c-.8 0-1.6-.1-2.4-.3l-4.2 1.7 1.3-3.4C4.9 14.6 4 13 4 11.3c0-3.6 3.6-6.5 8-6.5z",
+        "M8.9 11.3h6.2",
+    )
+
+
     val Person: ImageVector = icon(
         "person",
         "M12 4a3.6 3.6 0 1 1 0 7.2 3.6 3.6 0 0 1 0-7.2z",
@@ -251,6 +258,12 @@ object BewerboIcons {
         "mail",
         "M4.4 5.8h15.2c.6 0 1 .5 1 1.1v10.2c0 .6-.4 1.1-1 1.1H4.4c-.6 0-1-.5-1-1.1V6.9c0-.6.4-1.1 1-1.1z",
         "M3.8 7 12 12.6 20.2 7",
+    )
+
+    val Send: ImageVector = icon(
+        "send",
+        "M4.4 11.2 19.6 4.4l-6.8 15.2-2.2-6.2z",
+        "M10.6 13.4 19.6 4.4",
     )
 
     val Search: ImageVector = icon(

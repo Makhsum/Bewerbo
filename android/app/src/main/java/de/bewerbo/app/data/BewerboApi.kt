@@ -179,6 +179,15 @@ class BewerboApi(
     suspend fun lebenslaufPdf(id: String, into: File): File =
         download(client.post("$baseUrl/api/profile/$id/lebenslauf"), into)
 
+    // -- the assistant -----------------------------------------------------------------------
+
+    /// One turn of the conversation. The whole conversation goes with it: the server keeps none of
+    /// it, so what is on screen is what the assistant knows. The profile is not named — the session
+    /// says which one is this account's, and the server answers that question itself.
+    suspend fun assistantTurn(request: AssistantTurnRequest): AssistantReply =
+        client.post("$baseUrl/api/assistant/turn") { json(request) }.body()
+
+
     // -- posting -----------------------------------------------------------------------------
 
     suspend fun parsePosting(request: ParsePostingRequest): PostingView =
