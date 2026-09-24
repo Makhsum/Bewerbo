@@ -1,0 +1,12 @@
+# Every text file LF in the working tree, on every machine.
+#
+# Several Android unit tests read the project's own sources and resources off disk and search
+# them line by line — NoCopyWordingTest for the body of noCopyReason(), AddDocumentPickTest and
+# DocumentTitleRequiredTest for the body of a function. Git for Windows installs with
+# core.autocrlf=true, so without a word from the repository a fresh clone hands those searches
+# \r\n and they stop matching. The test then fails on a checkout in which nothing is wrong, and
+# its message names a rule about the product, which sends the reader looking in the wrong place.
+#
+# text=auto rather than text: the repository is all text today, and a binary added later (a
+# screenshot, a keystore, the Gradle wrapper jar) must not be rewritten by this line.
+* text=auto eol=lf

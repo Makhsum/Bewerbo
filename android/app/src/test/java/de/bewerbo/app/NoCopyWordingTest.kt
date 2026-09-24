@@ -88,7 +88,7 @@ class NoCopyWordingTest {
         assertEquals("Only noCopyReason() may show this sentence", listOf("LockerScreen.kt"), uses)
 
         val reason = Regex("""private fun noCopyReason\((.*?)\n\n""", RegexOption.DOT_MATCHES_ALL)
-            .find(File("src/main/java/de/bewerbo/app/ui/screens/LockerScreen.kt").readText())
+            .find(source("ui/screens/LockerScreen.kt"))
             ?.value
             .orEmpty()
 
@@ -103,4 +103,10 @@ class NoCopyWordingTest {
     // The test runs with the module directory as the working directory.
     private fun sources(): Sequence<File> =
         File("src/main/java").walkTopDown().filter { it.isFile && it.extension == "kt" }
+
+    /// One source as text, with its line endings levelled — the search above is for a blank line,
+    /// and a checkout that wrote \r\n would find none and report the function missing instead.
+    /// The same reading [AddDocumentPickTest] and [DocumentTitleRequiredTest] do.
+    private fun source(path: String): String =
+        File("src/main/java/de/bewerbo/app/$path").readText().replace("\r\n", "\n")
 }
