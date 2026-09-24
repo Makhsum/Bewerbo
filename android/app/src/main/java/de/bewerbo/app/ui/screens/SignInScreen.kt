@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -496,19 +497,34 @@ private fun Wordmark(state: AppState, viewModel: AppViewModel) {
 }
 
 /// The three pages a service has to carry, on the screen that stands in front of everything else.
-/// One row, because they are a footer and not a menu.
+/// A footer and not a menu, so it stays centred and on as few lines as the language allows.
+///
+/// It WRAPS, for the reason the Profil screen's section rail does: the three labels fit one
+/// phone-width row in English and in none of the other languages the picker offers. The Russian and
+/// Ukrainian labels for the terms and the privacy notice are twice the length of the English ones,
+/// and a fixed row answered that by squeezing the third one against the right edge until
+/// "Impressum" broke into a stack of syllables - 96 px wide in Russian against 162 in English. The
+/// Impressum is the page German law requires of a published service and this screen is where a
+/// signed-out user has to find it, so it is the last label that may be made unreadable to fit the
+/// others in.
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun LegalFooter(onOpen: (LegalPage) -> Unit) {
-    Row(
+    FlowRow(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = Space.s, vertical = Space.xs),
+            .padding(horizontal = Space.s, vertical = Space.xs)
+            .testTag("signin_legal_footer"),
         horizontalArrangement = Arrangement.Center,
     ) {
         LegalPage.entries.forEach { page ->
             TextButton(
                 onClick = { onOpen(page) },
                 modifier = Modifier.testTag("signin_${page.tag}"),
+                // The default 24 dp each side spends a third of the row on empty space, which on
+                // this footer buys nothing: the three labels stand far enough apart without it, and
+                // in German the saving is what keeps them on one line at all.
+                contentPadding = PaddingValues(horizontal = Space.s, vertical = Space.xs),
             ) {
                 Text(stringResource(page.label), style = MaterialTheme.typography.bodySmall)
             }
