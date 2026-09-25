@@ -249,7 +249,16 @@ fun LockerScreen(state: AppState, viewModel: AppViewModel) {
  * user reads. A row without a copy also says what is missing, because the absence looks like a
  * fault of this screen otherwise, and offers the one action that fixes it — WHY it is missing is
  * only said where the record answers it, see [noCopyReason].
+ *
+ * Everything under the two text lines WRAPS, for the reason the add card's button rows do. The kind
+ * pill and Löschen used to stand in a column of their own BESIDE the text, and a Row measures an
+ * unweighted child at the width it asks for and leaves the weighted one the remainder: at the
+ * accessibility maximum of the system font size that remainder was narrower than a word, and "Scan
+ * ablegen" — the one action a row without a copy offers — arrived as "Sc / an / abl / eg / en", in
+ * front of exactly the reader who raised the font size in order to read. The two pills and the two
+ * actions now share the card's whole width and take a second line where they need one.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun DocumentRow(
     document: StoredDocument,
@@ -295,24 +304,27 @@ private fun DocumentRow(
                     color = colors.muted,
                 )
 
-                Row(
-                    Modifier.padding(top = Space.xs),
-                    verticalAlignment = Alignment.CenterVertically,
+                // What the document IS and whether its copy is here. The kind came out of the
+                // column that used to squeeze this one, and the two facts belong on one line
+                // anyway: they are read together.
+                FlowRow(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.xs)
+                        .testTag("locker_item_states_$index"),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
+                    StatusPill(
+                        stringResource(documentKindLabel(document.kind)),
+                        PillTone.Success,
+                        Modifier.testTag("locker_item_kind_$index"),
+                    )
                     StatusPill(
                         stringResource(if (stored) R.string.locker_copy_stored else R.string.locker_no_copy),
                         if (stored) PillTone.Success else PillTone.Attention,
                         Modifier.testTag("locker_item_copy_$index"),
                     )
-                    if (stored) {
-                        TextButton(
-                            onClick = onOpenScan,
-                            enabled = !busy,
-                            modifier = Modifier.testTag("locker_item_open_scan_$index"),
-                        ) {
-                            Text(stringResource(R.string.locker_open_scan))
-                        }
-                    }
                 }
 
                 if (!stored) {
@@ -324,24 +336,43 @@ private fun DocumentRow(
                             .padding(top = Space.xs)
                             .testTag("locker_item_no_copy_reason_$index"),
                     )
-                    OutlinedButton(
-                        onClick = onAddScan,
-                        enabled = !busy,
-                        modifier = Modifier
-                            .padding(top = Space.xs)
-                            .testTag("locker_item_add_scan_$index"),
-                    ) {
-                        Text(stringResource(R.string.locker_add_scan))
-                    }
                 }
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                StatusPill(stringResource(documentKindLabel(document.kind)), PillTone.Success)
-                TextButton(
-                    onClick = onDelete,
-                    modifier = Modifier.testTag("locker_item_delete_$index"),
+
+                // What the reader can do with this document: the one action the state above asks
+                // for, then the delete. Löschen was the other half of the trailing column and is
+                // the row's most consequential button — it belongs where the row is read, not at an
+                // edge that kept its full width while everything else lost theirs.
+                FlowRow(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.xs)
+                        .testTag("locker_item_actions_$index"),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
-                    Text(stringResource(R.string.action_delete))
+                    if (stored) {
+                        TextButton(
+                            onClick = onOpenScan,
+                            enabled = !busy,
+                            modifier = Modifier.testTag("locker_item_open_scan_$index"),
+                        ) {
+                            Text(stringResource(R.string.locker_open_scan))
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = onAddScan,
+                            enabled = !busy,
+                            modifier = Modifier.testTag("locker_item_add_scan_$index"),
+                        ) {
+                            Text(stringResource(R.string.locker_add_scan))
+                        }
+                    }
+                    TextButton(
+                        onClick = onDelete,
+                        modifier = Modifier.testTag("locker_item_delete_$index"),
+                    ) {
+                        Text(stringResource(R.string.action_delete))
+                    }
                 }
             }
         }
