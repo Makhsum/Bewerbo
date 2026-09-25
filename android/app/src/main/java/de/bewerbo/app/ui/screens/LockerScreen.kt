@@ -518,11 +518,19 @@ private fun AddDocumentCard(
             )
         }
 
-        Row(
+        // Save and Cancel WRAP for the same reason the scan buttons above do: a fixed row measures
+        // the first button at the width it asks for and leaves the second whatever is over, and at
+        // the accessibility maximum of the system font size that remainder is narrower than the
+        // word — "Abbrechen" arrived broken into "Abbreche" and a lone "n" beneath it, and this is
+        // the row a reader has to find to get back out of the form. Given a line of its own each
+        // label is a whole word in every interface language.
+        FlowRow(
             Modifier
                 .fillMaxWidth()
-                .padding(top = Space.m),
+                .padding(top = Space.m)
+                .testTag("locker_form_actions"),
             horizontalArrangement = Arrangement.spacedBy(Space.s),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Button(
                 onClick = {
