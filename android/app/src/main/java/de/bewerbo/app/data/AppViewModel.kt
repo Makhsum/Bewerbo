@@ -77,6 +77,11 @@ data class AppState(
     /// The pages could not be fetched. Kept as state rather than left to the error snackbar: that
     /// one is gone in seconds and the preview would go on standing there empty with no way back.
     val previewFailed: Boolean = false,
+    /// The chosen parts the preview currently in hand was asked for — what [refreshPreview] checks
+    /// its finished pages against before publishing them, the way the scan viewer checks the id of
+    /// the document it is showing. The drawing happens off the main thread, so the chosen parts can
+    /// have changed by the time it ends.
+    val previewParts: String? = null,
     /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
     val pendingEmail: EmailDraft? = null,
     /// Set when the user asked for the copy of what is held about them. The settings screen hands
@@ -1109,7 +1114,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // selection are a picture of a file the chips no longer describe, and if this call fails
         // they stay there: the screen then shows a three-page Mappe under a Lebenslauf the user
         // has just taken out, and the export button sends the other one.
-        _state.update { it.copy(previewPages = emptyList(), previewFailed = false) }
+        _state.update {
+            it.copy(previewPages = emptyList(), previewFailed = false, previewParts = parts)
+        }
 
         val file = runCatching {
             api.applicationPdf(application.id, parts, getApplication<Application>().previewFile())
@@ -1117,7 +1124,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { state -> state.copy(previewFailed = true) }
         }.getOrThrow()
 
-        _state.update { it.copy(previewPages = renderPdfPages(file)) }
+        // Rasterising is the one step in here that is neither a call nor a state change, and this
+        // is the same misplacement [showScan] had: on the main thread the whole app stands still
+        // for as long as the drawing takes. The Mappe is longer than a scan — Anschreiben,
+        // Lebenslauf and Anlagenverzeichnis — and this is the last screen before the user sends
+        // it, so Android offered them the "Bewerbo isn't responding" dialog there of all places.
+        // Only the drawing moves off; the update below stays where a state change belongs, and for
+        // as long as it takes the screen says the pages are being made.
+        val pages = withContext(Dispatchers.Default) { renderPdfPages(file) }
+
+        // The chips can be changed while the pages are still being drawn, and the render that was
+        // started for the selection before belongs to nothing: put into the state anyway it is
+        // exactly the picture of a file the chips no longer describe that the clearing above
+        // exists to prevent.
+        if (_state.value.previewParts == parts) _state.update { it.copy(previewPages = pages) }
     }
 
     fun savePdf(parts: String? = null) = launch("pdf") {
