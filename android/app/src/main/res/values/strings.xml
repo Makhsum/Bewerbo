@@ -383,6 +383,8 @@
     <string name="application_preview_pending">The pages are being rendered.</string>
     <string name="application_preview_failed_title">The pages could not be fetched</string>
     <string name="application_preview_failed_body">The Bewerbungsmappe is put together on the server, so the preview cannot show what this selection would produce until it answers. Nothing about the application itself is lost.</string>
+    <string name="application_preview_undrawn_title">The pages could not be shown</string>
+    <string name="application_preview_undrawn_body">The Bewerbungsmappe arrived, but this phone could not draw its pages. Nothing about the application itself is lost: it can still be saved and sent.</string>
     <string name="application_preview_retry">Show the pages again</string>
     <string name="application_send_email">Send by e-mail</string>
     <!-- The covering note of the e-mail. It goes to a German employer whatever language the

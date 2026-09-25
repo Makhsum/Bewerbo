@@ -359,6 +359,8 @@
     <string name="application_preview_pending">Die Seiten werden erzeugt.</string>
     <string name="application_preview_failed_title">Die Seiten konnten nicht geladen werden</string>
     <string name="application_preview_failed_body">Die Bewerbungsmappe wird auf dem Server zusammengestellt. Solange er nicht antwortet, kann die Vorschau nicht zeigen, was diese Auswahl ergibt. An der Bewerbung selbst geht nichts verloren.</string>
+    <string name="application_preview_undrawn_title">Die Seiten konnten nicht angezeigt werden</string>
+    <string name="application_preview_undrawn_body">Die Bewerbungsmappe ist angekommen, dieses Telefon konnte ihre Seiten aber nicht zeichnen. An der Bewerbung selbst geht nichts verloren: Sie lässt sich weiterhin speichern und senden.</string>
     <string name="application_preview_retry">Seiten erneut laden</string>
     <string name="application_send_email">Per E-Mail senden</string>
     <string name="application_why_german_title">Warum es deutsch klingt</string>

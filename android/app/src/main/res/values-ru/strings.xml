@@ -356,6 +356,8 @@
     <string name="application_preview_pending">Страницы формируются.</string>
     <string name="application_preview_failed_title">Не удалось загрузить страницы</string>
     <string name="application_preview_failed_body">Bewerbungsmappe собирается на сервере. Пока он не отвечает, предпросмотр не может показать, что даст этот выбор. Сама заявка при этом не теряется.</string>
+    <string name="application_preview_undrawn_title">Не удалось показать страницы</string>
+    <string name="application_preview_undrawn_body">Bewerbungsmappe получена, но этот телефон не смог отрисовать её страницы. Сама заявка при этом не теряется: её по-прежнему можно сохранить и отправить.</string>
     <string name="application_preview_retry">Загрузить страницы снова</string>
     <string name="application_send_email">Отправить по электронной почте</string>
     <string name="application_why_german_title">Почему это звучит по-немецки</string>

@@ -210,19 +210,34 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         // the Anschriftenfeld and the date exactly where the renderer put them — which is what lets
         // the inspector overlay, drawn at fractions of the sheet, mean anything.
         //
-        // When they could not be fetched, this place says SO and offers the way back rather than
+        // When there are no pages to show, this place says SO and offers the way back rather than
         // showing pages — the same shape the Übersicht uses when the start itself could not reach
         // the server, and for the same reason: the snackbar that said so is long gone. Everything
         // below stays reachable; it is the preview that failed, not the application.
-        if (state.previewFailed) {
+        //
+        // Two things can leave the preview without pages and they are not the same statement: the
+        // Mappe never arrived, or it arrived and this device could not draw it. The second one used
+        // to say nothing at all and left the screen on "the pages are being made" for good. The way
+        // back is the one button either way — asking again is all the user can do about both.
+        val previewFailure = state.previewFailure
+        if (previewFailure != null) {
+            val notDrawn = previewFailure == AppViewModel.PREVIEW_NOT_DRAWN
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     Callout(
                         icon = BewerboIcons.Attention,
-                        title = stringResource(R.string.application_preview_failed_title),
-                        body = stringResource(R.string.application_preview_failed_body),
+                        title = stringResource(
+                            if (notDrawn) R.string.application_preview_undrawn_title
+                            else R.string.application_preview_failed_title,
+                        ),
+                        body = stringResource(
+                            if (notDrawn) R.string.application_preview_undrawn_body
+                            else R.string.application_preview_failed_body,
+                        ),
                         tone = PillTone.Attention,
-                        modifier = Modifier.testTag("application_preview_failed"),
+                        modifier = Modifier.testTag(
+                            if (notDrawn) "application_preview_undrawn" else "application_preview_failed",
+                        ),
                     )
                     OutlinedButton(
                         onClick = { viewModel.refreshPreview(selectedParts.joinToString(",")) },

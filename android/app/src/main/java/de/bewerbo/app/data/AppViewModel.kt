@@ -74,9 +74,12 @@ data class AppState(
     /// The exported file rendered page by page — what the Bewerbung screen's preview pages through.
     /// Empty until it has been fetched, and re-fetched whenever the chosen parts change.
     val previewPages: List<android.graphics.Bitmap> = emptyList(),
-    /// The pages could not be fetched. Kept as state rather than left to the error snackbar: that
-    /// one is gone in seconds and the preview would go on standing there empty with no way back.
-    val previewFailed: Boolean = false,
+    /// Why there are no pages, or null while nothing has failed: [AppViewModel.PREVIEW_NOT_FETCHED]
+    /// when the file never arrived, [AppViewModel.PREVIEW_NOT_DRAWN] when it did and could not be
+    /// rasterised. A kind and not a flag, because the screen says a different sentence for each —
+    /// the same shape [busy] has. Kept as state rather than left to the error snackbar: that one is
+    /// gone in seconds and the preview would go on standing there empty with no way back.
+    val previewFailure: String? = null,
     /// The chosen parts the preview currently in hand was asked for — what [refreshPreview] checks
     /// its finished pages against before publishing them, the way the scan viewer checks the id of
     /// the document it is showing. The drawing happens off the main thread, so the chosen parts can
@@ -210,6 +213,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // anonymous as a call from a phone that never signed in. See [sessionPrefs].
     private val api = BewerboApi { sessionPrefs().getString("authToken", null) }
     private val _state = MutableStateFlow(AppState())
+
+    /// How many previews have been asked for. Counts the cache file of each render apart from the
+    /// next one's — see [previewFile] and [refreshPreview]. Not in [AppState]: no screen reads it,
+    /// and a number that changes on every chip tap would recompose the Bewerbung screen for nothing.
+    private var previewRenders = 0
     val state: StateFlow<AppState> = _state.asStateFlow()
 
     init {
@@ -550,10 +558,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .apply()
 
         // The Bewerbungsmappe, the Lebenslauf and the copy of the account data all land in the one
-        // folder documentFile() writes into; the preview is rendered into the cache beside it.
+        // folder documentFile() writes into; the previews are rendered into the cache beside it.
         val app = getApplication<Application>()
         app.documentsDir().deleteRecursively()
-        app.previewFile().delete()
+        app.previewDir().deleteRecursively()
 
         _state.update { AppState(uiLanguage = it.uiLanguage, writer = it.writer, loading = false) }
     }
@@ -1131,29 +1139,65 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // they stay there: the screen then shows a three-page Mappe under a Lebenslauf the user
         // has just taken out, and the export button sends the other one.
         _state.update {
-            it.copy(previewPages = emptyList(), previewFailed = false, previewParts = parts)
+            it.copy(previewPages = emptyList(), previewFailure = null, previewParts = parts)
         }
 
-        val file = runCatching {
-            api.applicationPdf(application.id, parts, getApplication<Application>().previewFile())
-        }.onFailure {
-            _state.update { state -> state.copy(previewFailed = true) }
-        }.getOrThrow()
+        // A cache file of this render's OWN. All of them went into "vorschau.pdf", and since the
+        // drawing moved off the main thread two renders can be in flight at once: the download of
+        // the second truncated the file the first was still reading, so the preview the user was
+        // waiting for was drawn from a file that had been cut off under it. The file is deleted
+        // when this render is over, whichever way it ends.
+        val file = getApplication<Application>().previewFile(++previewRenders)
+        try {
+            runCatching {
+                api.applicationPdf(application.id, parts, file)
+            }.onFailure {
+                previewFailed(parts, PREVIEW_NOT_FETCHED)
+            }.getOrThrow()
 
-        // Rasterising is the one step in here that is neither a call nor a state change, and this
-        // is the same misplacement [showScan] had: on the main thread the whole app stands still
-        // for as long as the drawing takes. The Mappe is longer than a scan — Anschreiben,
-        // Lebenslauf and Anlagenverzeichnis — and this is the last screen before the user sends
-        // it, so Android offered them the "Bewerbo isn't responding" dialog there of all places.
-        // Only the drawing moves off; the update below stays where a state change belongs, and for
-        // as long as it takes the screen says the pages are being made.
-        val pages = withContext(Dispatchers.Default) { renderPdfPages(file) }
+            // Rasterising is the one step in here that is neither a call nor a state change, and
+            // this is the same misplacement [showScan] had: on the main thread the whole app stands
+            // still for as long as the drawing takes. The Mappe is longer than a scan — Anschreiben,
+            // Lebenslauf and Anlagenverzeichnis — and this is the last screen before the user sends
+            // it, so Android offered them the "Bewerbo isn't responding" dialog there of all places.
+            // Only the drawing moves off; the update below stays where a state change belongs, and
+            // for as long as it takes the screen says the pages are being made.
+            //
+            // Caught the way [renderScanPages] catches its own: a file that cannot be read is a
+            // file with no pages, and there is nothing a caller could do with the exception that
+            // the empty list does not say.
+            val pages = runCatching {
+                withContext(Dispatchers.Default) { renderPdfPages(file) }
+            }.getOrDefault(emptyList())
 
-        // The chips can be changed while the pages are still being drawn, and the render that was
-        // started for the selection before belongs to nothing: put into the state anyway it is
-        // exactly the picture of a file the chips no longer describe that the clearing above
-        // exists to prevent.
-        if (_state.value.previewParts == parts) _state.update { it.copy(previewPages = pages) }
+            // Only the fetching was ever guarded, so a Mappe that arrived and could not be drawn
+            // left the screen saying the pages were being made — with no page, and with no way to
+            // ask for them again: the retry button is composed under a failure. This is that
+            // failure. Not raised through [launch] as well, the way the download above is: the
+            // snackbar would say Bewerbo could not be reached, and it was — the file is here. The
+            // screen says this one itself, and goes on saying it.
+            if (pages.isEmpty()) {
+                previewFailed(parts, PREVIEW_NOT_DRAWN)
+                return@launch
+            }
+
+            // The chips can be changed while the pages are still being drawn, and the render that
+            // was started for the selection before belongs to nothing: put into the state anyway it
+            // is exactly the picture of a file the chips no longer describe that the clearing above
+            // exists to prevent.
+            if (_state.value.previewParts == parts) _state.update { it.copy(previewPages = pages) }
+        } finally {
+            file.delete()
+        }
+    }
+
+    /// Says why the preview has no pages — unless the chips have moved on while this render ran, in
+    /// which case a newer one is already on its way and this failure describes a selection the user
+    /// has left. The same check the finished pages go through in [refreshPreview].
+    private fun previewFailed(parts: String, reason: String) {
+        if (_state.value.previewParts == parts) {
+            _state.update { it.copy(previewFailure = reason) }
+        }
     }
 
     fun savePdf(parts: String? = null) = launch("pdf") {
@@ -1590,5 +1634,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// may be. Client-side as well: the file is looked at on the device before it is offered,
         /// so the user hears about a .docx now rather than after the upload.
         const val SCAN_UNREADABLE = "scan_unreadable"
+
+        /// The two ways the preview ends up with no pages: the Mappe never arrived, or it arrived
+        /// and could not be drawn. Named rather than spelled out at both ends, for the reason the
+        /// busy states above are: the Bewerbung screen picks its sentence off exactly these
+        /// strings. They are not error kinds: nothing looks them up in [errorOf], because this is
+        /// said on the screen and not in a snackbar — see [AppState.previewFailure].
+        const val PREVIEW_NOT_FETCHED = "not_fetched"
+
+        const val PREVIEW_NOT_DRAWN = "not_drawn"
     }
 }

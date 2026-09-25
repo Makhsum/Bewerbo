@@ -316,9 +316,16 @@ fun scanExtension(contentType: String) = when (contentType) {
     else -> "pdf"
 }
 
-/// Where the preview's copy of the Mappe goes. The cache and not [documentFile]: it is re-rendered
-/// every time the chosen parts change and it is not the file the user asked to keep.
-fun Context.previewFile(): File = File(cacheDir, "vorschau.pdf")
+/// The folder the preview's copies of the Mappe go in. The cache and not [documentsDir]: a preview
+/// is fetched again every time the chosen parts change and it is not a file the user asked to keep.
+/// A folder of its own so signing out can empty it with one call, the way [documentsDir] is emptied.
+fun Context.previewDir(): File = File(cacheDir, "vorschau")
+
+/// Where ONE render of the preview lands — [render] is the number [AppViewModel.refreshPreview]
+/// counts out. Every preview used to be written into the same "vorschau.pdf", and since the drawing
+/// moved off the main thread two of them can overlap: the download of the second truncated the very
+/// file the first was still reading page by page. A name per render is what keeps them apart.
+fun Context.previewFile(render: Int): File = File(previewDir(), "vorschau-$render.pdf")
 
 /// A call the server refused. [kind] is what to say about it in the user's language; [detail] is
 /// the German the server sent, kept as the message so a log line still says what happened and as
