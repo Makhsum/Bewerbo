@@ -55,6 +55,7 @@ import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.hasAssistant
 import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
+import de.bewerbo.app.ui.components.FitOneLineTextGroup
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.errorMessage
 import de.bewerbo.app.ui.icons.BewerboIcons
@@ -530,49 +531,66 @@ private fun BottomBar(navController: NavHostController) {
     val current = entry?.destination?.route
 
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        Destination.entries.forEach { destination ->
-            NavigationBarItem(
-                // The tag goes on the item itself — the clickable wrapper — not on the label
-                // inside it, so a driver taps a node that is actually clickable.
-                modifier = Modifier.testTag(destination.tag),
-                // Inside the flow no item is selected, and that is the point: the user is on a step
-                // of a path, not at one of the places, and the bar should not claim otherwise.
-                selected = current == destination.route,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    Icon(destination.icon, contentDescription = stringResource(destination.label))
-                },
-                label = {
-                    // The destinations share the screen width, so a long word — "Application",
-                    // "Bewerbung", "Вакансия" — met the edge of its item and wrapped onto a
-                    // second line. The label shrinks to fit instead; its own tag lets a driver
-                    // read the line back and see that it is still one line.
-                    //
-                    // The margin is what makes a whole word LOOK whole: shrunk to the last pixel
-                    // of its item, "Unterlagen" ran into the screen edge, and a tab that ends at
-                    // the edge reads as one that was cut off there. Four dp on each side cost one
-                    // step of the ladder and give the word an end the reader can see.
-                    FitOneLineText(
-                        text = stringResource(destination.label),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Space.xs)
-                            .testTag("${destination.tag}_label"),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
-            )
+        // All four labels, resolved once: every one of them is measured against every item, so that
+        // the bar settles on ONE size instead of four. See the label slot below.
+        val labels = Destination.entries.map { stringResource(it.label) }
+        FitOneLineTextGroup {
+            Destination.entries.forEach { destination ->
+                NavigationBarItem(
+                    // The tag goes on the item itself — the clickable wrapper — not on the label
+                    // inside it, so a driver taps a node that is actually clickable.
+                    modifier = Modifier.testTag(destination.tag),
+                    // Inside the flow no item is selected, and that is the point: the user is on a
+                    // step of a path, not at one of the places, and the bar should not claim
+                    // otherwise.
+                    selected = current == destination.route,
+                    onClick = {
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            destination.icon,
+                            contentDescription = stringResource(destination.label),
+                        )
+                    },
+                    label = {
+                        // The destinations share the screen width, so a long word — "Application",
+                        // "Bewerbung", "Вакансия" — met the edge of its item and wrapped onto a
+                        // second line. The label shrinks to fit instead; its own tag lets a driver
+                        // read the line back and see that it is still one line.
+                        //
+                        // The margin is what makes a whole word LOOK whole: shrunk to the last
+                        // pixel of its item, "Unterlagen" ran into the screen edge, and a tab that
+                        // ends at the edge reads as one that was cut off there. Four dp on each
+                        // side cost one step of the ladder and give the word an end the reader can
+                        // see.
+                        //
+                        // Every label is handed all four words, and the four are one group, and
+                        // that is what makes the bar ONE row: shrinking each word only as far as
+                        // its own item needed left "Profil" at full size beside a much smaller
+                        // "Übersicht" at a raised font size, and four sizes in a row of four items
+                        // read as four separate controls.
+                        FitOneLineText(
+                            text = stringResource(destination.label),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Space.xs)
+                                .testTag("${destination.tag}_label"),
+                            style = MaterialTheme.typography.labelMedium,
+                            peers = labels,
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                )
+            }
         }
     }
 }

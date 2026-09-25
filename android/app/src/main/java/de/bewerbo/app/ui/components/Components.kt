@@ -34,8 +34,12 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -634,6 +638,16 @@ fun BewerboDialog(
  * Below [minFontSize] the text stops shrinking and is ellipsised rather than made illegible, and
  * a style whose size is not given in sp is rendered unshrunk on one line — there is no sensible
  * ladder to walk for an em size.
+ *
+ * [peers] is the row this text is one of, and naming it is what keeps a row LETTERED IN ONE SIZE.
+ * Shrinking each word only as far as its own place needs is right for a label that stands alone and
+ * wrong for four beside each other: at a raised font size "Profil" stayed at full size next to a
+ * visibly smaller "Übersicht", and the bottom bar read as four separate controls instead of one
+ * row. The size handed back is the one that fits the longest of [peers] too — the same decision
+ * [SegmentedControl] takes when it sizes every column from its widest label.
+ *
+ * Inside a [FitOneLineTextGroup] the row also agrees on the result, which is what makes it exact;
+ * see there for the one pixel that makes the agreement necessary.
  */
 @Composable
 fun FitOneLineText(
@@ -642,18 +656,29 @@ fun FitOneLineText(
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
     minFontSize: Dp = 9.dp,
+    peers: List<String> = emptyList(),
 ) {
     val measurer = rememberTextMeasurer()
     // The floor in the sp of the moment: 9.dp is 9.sp at the default font scale and 4.5.sp at the
     // accessibility maximum — the same pixels on the screen either way, which is the whole point.
     val floor = with(LocalDensity.current) { minFontSize.toSp() }
+    val group = LocalFitOneLineTextSizes.current
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
-        val fitted =
+        val own =
             if (constraints.hasBoundedWidth) {
-                fitToWidth(measurer, text, style, constraints.maxWidth, floor)
+                fitToWidth(measurer, listOf(text) + peers, style, constraints.maxWidth, floor)
             } else {
                 style
             }
+        // In a group the size this place allows is only a vote: the row is lettered in the
+        // smallest of the four, and every member says what its own place allowed.
+        if (group != null) {
+            DisposableEffect(group, text, own.fontSize) {
+                if (own.fontSize.type == TextUnitType.Sp) group.report(text, own.fontSize)
+                onDispose { group.forget(text) }
+            }
+        }
+        val fitted = group?.smallest?.let { own.copy(fontSize = it) } ?: own
         Text(
             text = text,
             style = fitted,
@@ -666,6 +691,49 @@ fun FitOneLineText(
     }
 }
 
+/**
+ * A row of [FitOneLineText]s that is lettered in ONE size: the smallest any of them arrived at.
+ *
+ * Handing every text the other words of its row — [FitOneLineText]'s peers — letters the row in one
+ * size only while the places are exactly as wide as each other, and a row of four is not quite: the
+ * pixels left over when a Row divides the screen into four go to one of the items, and ONE pixel is
+ * enough to let that item's word live one step of the ladder longer than the other three. That is
+ * measured, not feared: at font scale 1.5 the bottom bar gave its first item 211 px and the other
+ * three 210, and "Übersicht" was lettered one step above "Assistent", "Profil" and "Unterlagen".
+ *
+ * So the members measure their own place as before and then agree: each says what its place allowed
+ * and every one of them renders at the smallest of those. A member that is measured again — another
+ * font scale, another interface language — corrects its own answer, and one that leaves the screen
+ * takes it with it, so the row can grow back as well as shrink.
+ */
+@Composable
+fun FitOneLineTextGroup(content: @Composable () -> Unit) {
+    val group = remember { FitOneLineTextSizes() }
+    CompositionLocalProvider(LocalFitOneLineTextSizes provides group, content = content)
+}
+
+/// What the members of a [FitOneLineTextGroup] answered, one entry per text.
+private class FitOneLineTextSizes {
+    private val sizes = mutableStateMapOf<String, TextUnit>()
+
+    /// The size the row is lettered in. Null until the first member has measured — then every
+    /// member renders at it, which is one recomposition after the row first appears.
+    val smallest: TextUnit?
+        get() = sizes.values.minByOrNull { it.value }
+
+    fun report(text: String, size: TextUnit) {
+        sizes[text] = size
+    }
+
+    fun forget(text: String) {
+        sizes.remove(text)
+    }
+}
+
+/// Null outside a [FitOneLineTextGroup]: a text that stands alone is lettered in the size its own
+/// place allows, which is what every caller but the bottom bar wants.
+private val LocalFitOneLineTextSizes = compositionLocalOf<FitOneLineTextSizes?> { null }
+
 /** Each step is small enough that the shrink is not visible as a jump between two destinations. */
 private const val ShrinkFactor = 0.94f
 
@@ -677,9 +745,12 @@ private const val ShrinkFactor = 0.94f
  */
 private const val MaxShrinkSteps = 40
 
+/// The largest size at which EVERY one of [texts] fits [maxWidth] on one line. A single text is
+/// the ordinary case; several are a row that has to be lettered in one size, and there the walk
+/// stops at the step the longest of them can still live on.
 private fun fitToWidth(
     measurer: TextMeasurer,
-    text: String,
+    texts: List<String>,
     style: TextStyle,
     maxWidth: Int,
     minFontSize: TextUnit,
@@ -687,14 +758,16 @@ private fun fitToWidth(
     if (style.fontSize.type != TextUnitType.Sp || minFontSize.type != TextUnitType.Sp) return style
     var candidate = style
     repeat(MaxShrinkSteps) {
-        val measured = measurer.measure(
-            text = text,
-            style = candidate,
-            maxLines = 1,
-            softWrap = false,
-            constraints = Constraints(maxWidth = maxWidth),
-        )
-        if (!measured.hasVisualOverflow) return candidate
+        val overflows = texts.any { text ->
+            measurer.measure(
+                text = text,
+                style = candidate,
+                maxLines = 1,
+                softWrap = false,
+                constraints = Constraints(maxWidth = maxWidth),
+            ).hasVisualOverflow
+        }
+        if (!overflows) return candidate
         val next = candidate.fontSize * ShrinkFactor
         if (next.value < minFontSize.value) return candidate.copy(fontSize = minFontSize)
         candidate = candidate.copy(fontSize = next)

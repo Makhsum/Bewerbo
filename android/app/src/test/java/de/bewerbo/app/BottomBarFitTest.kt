@@ -16,6 +16,13 @@ import kotlin.math.pow
  * raised the font in order to read. The other three words are short enough to have survived, so
  * nothing showed until a language or a label grew.
  *
+ * Shrinking then kept every word whole, but each word only as far as its OWN item needed, and four
+ * words in a row of four items came out in four sizes: at the accessibility maximum "Profil" stood
+ * at full size beside a noticeably smaller "Übersicht", "Assistent" and "Unterlagen", and the bar
+ * read as four separate controls rather than one row. The size is now the one that fits the longest
+ * of the four, and the four agree on it — measuring the same words is not enough while one item is
+ * a pixel wider than the others, which on this bar one of them is.
+ *
  * The layout itself takes a measured screen and is checked on the emulator. What can be checked
  * here is the decision behind it — the same kind of shape scan [ScanViewerFitTest],
  * [ScanActionsFitTest], [FormActionsFitTest] and [DocumentRowFitTest] run over the surfaces before
@@ -89,6 +96,58 @@ class BottomBarFitTest {
             "The Dp floor has to be converted at the font scale of the moment, or nothing " +
                 "measures against it:\n$fitOneLineText",
             fitOneLineText.contains("minFontSize.toSp()"),
+        )
+    }
+
+    @Test
+    fun `the bar hands every label all four words, so the row is lettered in one size`() {
+        assertTrue(
+            "The bar must resolve the four labels once and hand that list to every one of them as " +
+                "its peers. A label that is shrunk only as far as its OWN word needs comes out at " +
+                "its own size, and at a raised font size \"Profil\" then stands at full size " +
+                "beside a much smaller \"Übersicht\":\n$bar",
+            bar.contains("val labels = Destination.entries.map { stringResource(it.label) }") &&
+                bar.contains("peers = labels"),
+        )
+    }
+
+    @Test
+    fun `the four agree on the size, because one item is a pixel wider than the others`() {
+        assertTrue(
+            "The bar must put its items into a FitOneLineTextGroup. Measuring the same four words " +
+                "letters them in one size only while the four places are exactly as wide as each " +
+                "other, and they are not: the bar gave its first item 211 px and the other three " +
+                "210, and at font scale 1.5 that one pixel let \"Übersicht\" live one step of the " +
+                "ladder longer than the rest:\n$bar",
+            bar.contains("FitOneLineTextGroup {"),
+        )
+        assertTrue(
+            "A member of the group must render at the size the group agreed on, not at the one " +
+                "its own place allowed:\n$fitOneLineText",
+            fitOneLineText.contains("group?.smallest?.let { own.copy(fontSize = it) } ?: own"),
+        )
+        assertTrue(
+            "A member that is measured again must correct its own answer and take it with it when " +
+                "it leaves, or the row cannot grow back when the font scale falls or the " +
+                "interface language changes:\n$fitOneLineText",
+            fitOneLineText.contains("DisposableEffect(group, text, own.fontSize)") &&
+                fitOneLineText.contains("group.report(text, own.fontSize)") &&
+                fitOneLineText.contains("onDispose { group.forget(text) }"),
+        )
+    }
+
+    @Test
+    fun `the shrinking stops at the step every word of the group still fits`() {
+        assertTrue(
+            "FitOneLineText must measure its peers along with its own text, or naming them " +
+                "changes nothing:\n$fitOneLineText",
+            fitOneLineText.contains("listOf(text) + peers"),
+        )
+        assertTrue(
+            "The ladder must keep walking while ANY text of the group overflows — stopping at the " +
+                "first one that fits is the per-word size coming back:\n$components",
+            Regex("""texts: List<String>""").containsMatchIn(components) &&
+                Regex("""val overflows = texts\.any""").containsMatchIn(components),
         )
     }
 
