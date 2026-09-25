@@ -55,6 +55,17 @@ data class AppState(
     val assistantDraft: String = "",
     val match: MatchView? = null,
     val application: ApplicationView? = null,
+    /// The application the user opened and this phone could not fetch — its id, or null while no
+    /// fetch has failed. [AppViewModel.openApplication] clears the application before it calls, so
+    /// a call that never answers leaves behind the very null a phone with no application at all
+    /// has, and the Bewerbung screen answered it with its empty state: it told a user whose letter
+    /// was written to go back and do the Abgleich they had just finished.
+    ///
+    /// Kept as state rather than left to the error snackbar for the reason [previewFailure] is:
+    /// that one is gone in seconds and the screen it leaves behind says the opposite of what
+    /// happened. The id and not a flag, because asking again is the one thing the user can do
+    /// about it and the retry has to know WHICH application to ask for.
+    val unfetchedApplication: String? = null,
     val review: Review? = null,
     val ats: AtsResult? = null,
     /// The anabin entries offered for ONE qualification, keyed by that entry's id — the same shape
@@ -182,7 +193,9 @@ val AppState.hasAssistant: Boolean get() = writer == "model"
  *
  * The fetch names itself in [AppState.busy] and openApplication is the only call that carries
  * [AppViewModel.APPLICATION], so this wait ends exactly when that one does — a failed fetch
- * included, because launch() clears the name whichever way the call went.
+ * included, because launch() clears the name whichever way the call went. What the failed one
+ * leaves standing is [AppState.unfetchedApplication]: a third thing the same null can mean, and
+ * the only one of the three the user can do something about.
  */
 val AppState.isOpeningApplication: Boolean
     get() = application == null && busy == AppViewModel.APPLICATION
@@ -986,8 +999,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // A new posting invalidates the match and the letter that were written against the old one.
         // The draft goes with them: it has been read now, and it is the source text of the posting
         // on screen — keeping a second copy of it is how "Paste a different posting" would come
-        // back with the last advert already in the field.
-        _state.update { it.copy(posting = posting, postingDraft = "", match = null, application = null, review = null, ats = null, previewPages = emptyList()) }
+        // back with the last advert already in the field. So does a fetch that failed: this is a
+        // new application with no letter yet, and that is the empty state and not a failure.
+        _state.update { it.copy(posting = posting, postingDraft = "", match = null, application = null, unfetchedApplication = null, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("postingId", posting.id).remove("applicationId").apply()
     }
 
@@ -999,7 +1013,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearPosting() {
         prefs().edit().remove("postingId").remove("applicationId").apply()
         _state.update {
-            it.copy(posting = null, postingDraft = "", match = null, application = null, review = null, ats = null, previewPages = emptyList())
+            it.copy(posting = null, postingDraft = "", match = null, application = null, unfetchedApplication = null, review = null, ats = null, previewPages = emptyList())
         }
     }
 
@@ -1096,19 +1110,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun openApplication(applicationId: String) = launch(APPLICATION) {
         // Cleared before the call, not after it: until the new one has arrived, leaving the last
-        // application on screen would put one employer's Anschreiben under another's name.
-        _state.update { it.copy(application = null, match = null, review = null, ats = null, previewPages = emptyList()) }
+        // application on screen would put one employer's Anschreiben under another's name. The
+        // failure of the attempt before goes with them — this one has not failed yet.
+        _state.update {
+            it.copy(
+                application = null, match = null, review = null, ats = null,
+                previewPages = emptyList(), unfetchedApplication = null,
+            )
+        }
 
-        val application = api.application(applicationId)
-        val posting = api.posting(application.postingId)
-        val match = api.match(posting.id)
-        _state.update { it.copy(posting = posting, match = match, application = application) }
+        // The three calls the screen has nothing at all without, and the one place their failure is
+        // written down. [runChecks] is deliberately outside: its findings are drawn beside a letter
+        // that HAS arrived, and a check that could not be run is not an application that never came.
+        try {
+            val application = api.application(applicationId)
+            val posting = api.posting(application.postingId)
+            val match = api.match(posting.id)
+            _state.update { it.copy(posting = posting, match = match, application = application) }
 
-        prefs().edit()
-            .putString("postingId", posting.id)
-            .putString("applicationId", application.id)
-            .apply()
-        runChecks(application.id)
+            prefs().edit()
+                .putString("postingId", posting.id)
+                .putString("applicationId", application.id)
+                .apply()
+        } catch (failure: Throwable) {
+            // WHICH application did not arrive, so the Bewerbung screen says that this is a failure
+            // instead of showing the empty state, and can ask for this one again. The reason itself
+            // still reaches the user through [launch], the way every other refused call does — but
+            // that snackbar is gone in seconds and this screen is the last one before sending.
+            _state.update { it.copy(unfetchedApplication = applicationId) }
+            throw failure
+        }
+        runChecks(applicationId)
     }
 
     private suspend fun runChecks(applicationId: String) {

@@ -160,21 +160,48 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         }
 
         if (application == null) {
-            // Two different things leave nothing here: the application the user tapped on the
-            // Übersicht has not arrived yet, or they have none. Only the second is an empty state.
-            // Drawn for both, it said "Noch kein Anschreiben — führen Sie zuerst den Abgleich durch"
-            // over a letter that existed and a step that was finished, for as long as three calls
-            // take. The wait says that it is a wait, the way the Übersicht's own does.
+            // Three different things leave nothing here: the application the user tapped on the
+            // Übersicht has not arrived yet, the fetch that was to bring it failed, or they have
+            // none at all. Only the third is an empty state. Drawn for all three, it said "Noch kein
+            // Anschreiben — führen Sie zuerst den Abgleich durch" over a letter that existed and a
+            // step that was finished — for as long as three calls take while they run, and until
+            // this screen is left again when they do not answer.
+            val unfetched = state.unfetchedApplication
             item {
-                if (state.isOpeningApplication) {
-                    Callout(
+                when {
+                    state.isOpeningApplication -> Callout(
                         icon = BewerboIcons.Refresh,
                         title = stringResource(R.string.application_loading_title),
                         body = stringResource(R.string.application_loading_body),
                         modifier = Modifier.testTag("application_loading"),
                     )
-                } else {
-                    Callout(
+                    // The failure said where the user is standing, and the way back offered with
+                    // it: the snackbar that named the reason is gone in seconds, and this is the
+                    // last screen before sending. The same shape the preview's own failure below
+                    // uses, and the Übersicht's when the start itself could not reach the server.
+                    unfetched != null -> Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                        Callout(
+                            icon = BewerboIcons.Attention,
+                            title = stringResource(R.string.application_unreachable_title),
+                            body = stringResource(R.string.application_unreachable_body),
+                            tone = PillTone.Attention,
+                            modifier = Modifier.testTag("application_unreachable"),
+                        )
+                        OutlinedButton(
+                            onClick = { viewModel.openApplication(unfetched) },
+                            enabled = state.busy == null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("application_btn_retry"),
+                        ) {
+                            Icon(BewerboIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text(
+                                stringResource(R.string.application_retry),
+                                modifier = Modifier.padding(start = Space.s),
+                            )
+                        }
+                    }
+                    else -> Callout(
                         icon = BewerboIcons.Document,
                         title = stringResource(R.string.application_none_title),
                         body = stringResource(R.string.application_none_body),

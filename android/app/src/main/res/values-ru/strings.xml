@@ -334,6 +334,9 @@
     <string name="application_none_body">Сначала выполните сверку требований. Письмо пишется под найденные требования.</string>
     <string name="application_loading_title">Заявка открывается</string>
     <string name="application_loading_body">Загружаются письмо и сверка требований, под которую оно написано.</string>
+    <string name="application_unreachable_title">Не удалось загрузить заявку</string>
+    <string name="application_unreachable_body">Письмо и сверка требований за ним хранятся на сервере, и телефон не смог их прочитать. Ничего не потеряно: проверьте соединение и запросите их снова.</string>
+    <string name="application_retry">Загрузить заявку снова</string>
     <string name="application_din_show">Показать сетку DIN 5008</string>
     <string name="application_din_hide">Скрыть сетку DIN 5008</string>
     <string name="application_regenerate">Написать заново</string>

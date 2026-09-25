@@ -385,7 +385,12 @@ private fun AppState.hasProduced(step: FlowStep): Boolean = when {
     // Stellenanzeige it was written against and the Abgleich it was written out of arrive with it.
     // Read off the nulls it is being fetched into, the rail spent that fetch drawing a finished
     // Abgleich as still to do, beside a Bewerbung the user was looking at.
-    isOpeningApplication -> true
+    //
+    // A fetch that FAILED leaves exactly those nulls standing, so it says the same thing and says
+    // it until the screen is left: the letter and the Abgleich behind it exist, this phone simply
+    // did not get them. Neither wait is a step to be sent back to — and neither has anything to
+    // show, which is what [FlowRailStep] decides separately.
+    isOpeningApplication || unfetchedApplication != null -> true
     else -> when (step) {
         FlowStep.Posting -> posting != null
         FlowStep.Match -> match != null
@@ -483,8 +488,13 @@ private fun FlowRailStep(
     val colors = LocalSemanticColors.current
     val isCurrent = step == current
     val isDone = state.hasProduced(step)
-    // The first step needs nothing to have happened; every other one needs its own output to exist.
-    val reachable = step == FlowStep.entries.first() || isDone
+    // The first step needs nothing to have happened; every other one needs its own output to exist
+    // — and done is not the same as in hand. Behind an application that is on its way or that never
+    // arrived the steps are finished and EMPTY: openApplication() cleared the Abgleich they lead to
+    // before it asked for it. A tap offered there opens on "Noch keine Anzeige eingelesen", which is
+    // the very sentence about a finished step this rail stopped saying.
+    val reachable = step == FlowStep.entries.first() ||
+        (isDone && !state.isOpeningApplication && state.unfetchedApplication == null)
 
     // The three tones are the ones the app already uses for these three meanings: filled primary
     // for where you are, the success tint for what is done, the neutral pill for what is not there.
