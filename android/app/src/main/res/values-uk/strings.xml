@@ -336,6 +336,8 @@
     <string name="application_none_body">Спочатку виконайте звірку вимог. Лист пишеться під знайдені вимоги.</string>
     <string name="application_loading_title">Заявка відкривається</string>
     <string name="application_loading_body">Завантажуються лист і звірка вимог, під яку його написано.</string>
+    <string name="application_writing_title">Anschreiben пишеться</string>
+    <string name="application_writing_body">Лист пишеться під вимоги, які знайшла звірка. Це найдовший крок, він триває кілька секунд.</string>
     <string name="application_unreachable_title">Не вдалося завантажити заявку</string>
     <string name="application_unreachable_body">Лист і звірка вимог за ним зберігаються на сервері, і телефон не зміг їх прочитати. Нічого не втрачено: перевірте з’єднання та запитайте їх знову.</string>
     <string name="application_retry">Завантажити заявку знову</string>

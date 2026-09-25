@@ -48,6 +48,7 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EmailDraft
 import de.bewerbo.app.data.isOpeningApplication
+import de.bewerbo.app.data.isWritingLetter
 import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
@@ -160,12 +161,13 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         }
 
         if (application == null) {
-            // Three different things leave nothing here: the application the user tapped on the
-            // Übersicht has not arrived yet, the fetch that was to bring it failed, or they have
-            // none at all. Only the third is an empty state. Drawn for all three, it said "Noch kein
-            // Anschreiben — führen Sie zuerst den Abgleich durch" over a letter that existed and a
-            // step that was finished — for as long as three calls take while they run, and until
-            // this screen is left again when they do not answer.
+            // Four different things leave nothing here: the application the user tapped on the
+            // Übersicht has not arrived yet, the Anschreiben they asked for is being written, the
+            // fetch that was to bring it failed, or they have none at all. Only the fourth is an
+            // empty state. Drawn for all four, it said "Noch kein Anschreiben — führen Sie zuerst
+            // den Abgleich durch" over a letter that existed or was on its way and a step that was
+            // finished — for as long as three calls take while they run, for the many seconds a
+            // model needs to write, and until this screen is left again when they do not answer.
             val unfetched = state.unfetchedApplication
             item {
                 when {
@@ -174,6 +176,15 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                         title = stringResource(R.string.application_loading_title),
                         body = stringResource(R.string.application_loading_body),
                         modifier = Modifier.testTag("application_loading"),
+                    )
+                    // Before the failure, not after it: a write that is running now is what the
+                    // screen is doing, and an earlier fetch that failed is history. Read the other
+                    // way round, the longest wait in the app would offer a retry it has disabled.
+                    state.isWritingLetter -> Callout(
+                        icon = BewerboIcons.Rewrite,
+                        title = stringResource(R.string.application_writing_title),
+                        body = stringResource(R.string.application_writing_body),
+                        modifier = Modifier.testTag("application_writing"),
                     )
                     // The failure said where the user is standing, and the way back offered with
                     // it: the snackbar that named the reason is gone in seconds, and this is the

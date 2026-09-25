@@ -201,6 +201,23 @@ val AppState.isOpeningApplication: Boolean
     get() = application == null && busy == AppViewModel.APPLICATION
 
 /**
+ * Whether the Anschreiben the user just asked for is being written right now.
+ *
+ * The fourth thing the same null means, and the one the user waits longest for: the Abgleich's
+ * "Anschreiben schreiben" navigates to this screen in the same onClick that starts the call, so the
+ * letter is asked for and does not exist yet. Where a model writes it that is many seconds, and the
+ * screen spent them drawing its empty state — "Noch kein Anschreiben. Führen Sie zuerst den Abgleich
+ * durch." — under a rail marking that very Abgleich done. One frame, two opposite statements, and
+ * the one the user is left reading sends them back to a step they had just finished.
+ *
+ * [AppViewModel.LETTER] names the write, and the application being null is what tells the two calls
+ * that carry that name apart: `regenerateLetter` replaces a letter that is on the screen, so this
+ * wait is `generateLetter`'s alone — the one where there is nothing to draw instead.
+ */
+val AppState.isWritingLetter: Boolean
+    get() = application == null && busy == AppViewModel.LETTER
+
+/**
  * What the app hands to a mail app: the file to attach, the Betreffzeile as the subject and the
  * covering note that goes in the body.
  *
@@ -1082,7 +1099,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * "Noch keine Bewerbung begonnen" over a button offering to continue it, and the row that leads
      * back into an unfinished application only appeared after a restart.
      */
-    fun generateLetter(tone: String) = launch("letter") {
+    fun generateLetter(tone: String) = launch(LETTER) {
         val id = profileId() ?: return@launch
         val posting = _state.value.posting ?: return@launch
         val application = api.createApplication(CreateApplicationRequest(id, posting.id, tone))
@@ -1092,7 +1109,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         refreshDerived()
     }
 
-    fun regenerateLetter(tone: String) = launch("letter") {
+    fun regenerateLetter(tone: String) = launch(LETTER) {
         val application = _state.value.application ?: return@launch
         val updated = api.regenerate(application.id, tone)
         _state.update { it.copy(application = updated, review = null, ats = null, previewPages = emptyList()) }
@@ -1645,6 +1662,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// above: [isOpeningApplication] is read off exactly this string, and a literal at each end
         /// is how the screen came to call a letter that was on its way a letter that did not exist.
         const val APPLICATION = "application"
+
+        /// The name of the call that writes the Anschreiben, named for the reason [APPLICATION] is:
+        /// [isWritingLetter] is read off exactly this string. It is the longest wait in the app —
+        /// where a model writes the letter it stands for many seconds — and the screen spent all of
+        /// them saying that there was no Anschreiben and that the finished Abgleich was still to do.
+        const val LETTER = "letter"
 
         /// The profile sections a proposal can land in, spelled as the PATCH routes spell them —
         /// and as the server's own schema lists them. The wire word is the contract here, so it is
