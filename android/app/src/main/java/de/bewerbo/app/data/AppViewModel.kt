@@ -169,6 +169,22 @@ data class AppState(
 val AppState.hasAssistant: Boolean get() = writer == "model"
 
 /**
+ * Whether the application the user just opened is still on its way.
+ *
+ * [AppViewModel.openApplication] clears the application BEFORE it fetches the new one, so that one
+ * employer's Anschreiben is never shown under another's name — which leaves the same null standing
+ * for "not fetched yet" as for "there is none". This is the difference between the two, and both the
+ * Bewerbung screen and the rail above it read it here: without it the last screen before sending
+ * spent the fetch telling a user who had finished the Abgleich to go back and do it.
+ *
+ * The fetch names itself in [AppState.busy] and openApplication is the only call that carries
+ * [AppViewModel.APPLICATION], so this wait ends exactly when that one does — a failed fetch
+ * included, because launch() clears the name whichever way the call went.
+ */
+val AppState.isOpeningApplication: Boolean
+    get() = application == null && busy == AppViewModel.APPLICATION
+
+/**
  * What the app hands to a mail app: the file to attach, the Betreffzeile as the subject and the
  * covering note that goes in the body.
  *
@@ -1070,7 +1086,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * remembered exactly where [restoreWorkInProgress] looks for it, so the next restart comes
      * back to this application rather than to whatever was open before.
      */
-    fun openApplication(applicationId: String) = launch("application") {
+    fun openApplication(applicationId: String) = launch(APPLICATION) {
         // Cleared before the call, not after it: until the new one has arrived, leaving the last
         // application on screen would put one employer's Anschreiben under another's name.
         _state.update { it.copy(application = null, match = null, review = null, ats = null, previewPages = emptyList()) }
@@ -1548,6 +1564,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         /// The busy state of accepting one proposal. Its own name and not [ASSISTANT]'s, because
         /// the screen tells them apart: a save must not draw the "preparing an answer" row.
         const val PROPOSAL = "proposal"
+
+        /// The name of the fetch behind opening an application. Named for the same reason as the two
+        /// above: [isOpeningApplication] is read off exactly this string, and a literal at each end
+        /// is how the screen came to call a letter that was on its way a letter that did not exist.
+        const val APPLICATION = "application"
 
         /// The profile sections a proposal can land in, spelled as the PATCH routes spell them —
         /// and as the server's own schema lists them. The wire word is the contract here, so it is

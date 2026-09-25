@@ -53,6 +53,7 @@ import androidx.navigation.compose.rememberNavController
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.hasAssistant
+import de.bewerbo.app.data.isOpeningApplication
 import de.bewerbo.app.ui.UiLanguageProvider
 import de.bewerbo.app.ui.components.FitOneLineText
 import de.bewerbo.app.ui.components.FitOneLineTextGroup
@@ -379,10 +380,17 @@ private fun NavHostController.openStep(step: FlowStep) {
  * This is the whole of what makes the path sequential, and the rail says it out loud instead of
  * letting the user discover it by tapping something that then explains it has nothing to show.
  */
-private fun AppState.hasProduced(step: FlowStep): Boolean = when (step) {
-    FlowStep.Posting -> posting != null
-    FlowStep.Match -> match != null
-    FlowStep.Application -> application != null
+private fun AppState.hasProduced(step: FlowStep): Boolean = when {
+    // An application that is still being fetched has produced every step behind it: the
+    // Stellenanzeige it was written against and the Abgleich it was written out of arrive with it.
+    // Read off the nulls it is being fetched into, the rail spent that fetch drawing a finished
+    // Abgleich as still to do, beside a Bewerbung the user was looking at.
+    isOpeningApplication -> true
+    else -> when (step) {
+        FlowStep.Posting -> posting != null
+        FlowStep.Match -> match != null
+        FlowStep.Application -> application != null
+    }
 }
 
 /// The step the Übersicht's one action leads to: the furthest along the path the user already got.

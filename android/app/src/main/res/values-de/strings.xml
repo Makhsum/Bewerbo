@@ -335,6 +335,8 @@
     <string name="application_subtitle">Was eine deutsche Leserin und ein Bewerbermanagementsystem sehen.</string>
     <string name="application_none_title">Noch kein Anschreiben</string>
     <string name="application_none_body">Führen Sie zuerst den Abgleich durch. Das Anschreiben wird gegen die Anforderungen geschrieben, die er findet.</string>
+    <string name="application_loading_title">Die Bewerbung wird geöffnet</string>
+    <string name="application_loading_body">Das Anschreiben und der Abgleich dahinter werden geladen.</string>
     <string name="application_din_show">DIN-5008-Raster einblenden</string>
     <string name="application_din_hide">DIN-5008-Raster ausblenden</string>
     <string name="application_regenerate">Neu schreiben</string>

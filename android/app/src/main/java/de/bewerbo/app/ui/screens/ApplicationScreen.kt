@@ -47,6 +47,7 @@ import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EmailDraft
+import de.bewerbo.app.data.isOpeningApplication
 import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.BewerboCard
@@ -159,12 +160,27 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         }
 
         if (application == null) {
+            // Two different things leave nothing here: the application the user tapped on the
+            // Übersicht has not arrived yet, or they have none. Only the second is an empty state.
+            // Drawn for both, it said "Noch kein Anschreiben — führen Sie zuerst den Abgleich durch"
+            // over a letter that existed and a step that was finished, for as long as three calls
+            // take. The wait says that it is a wait, the way the Übersicht's own does.
             item {
-                Callout(
-                    icon = BewerboIcons.Document,
-                    title = stringResource(R.string.application_none_title),
-                    body = stringResource(R.string.application_none_body),
-                )
+                if (state.isOpeningApplication) {
+                    Callout(
+                        icon = BewerboIcons.Refresh,
+                        title = stringResource(R.string.application_loading_title),
+                        body = stringResource(R.string.application_loading_body),
+                        modifier = Modifier.testTag("application_loading"),
+                    )
+                } else {
+                    Callout(
+                        icon = BewerboIcons.Document,
+                        title = stringResource(R.string.application_none_title),
+                        body = stringResource(R.string.application_none_body),
+                        modifier = Modifier.testTag("application_none"),
+                    )
+                }
             }
             return@LazyColumn
         }

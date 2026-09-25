@@ -359,6 +359,8 @@
     <string name="application_subtitle">What a German reader and an applicant tracking system see.</string>
     <string name="application_none_title">No letter yet</string>
     <string name="application_none_body">Run the requirement check first. The letter is written against the requirements it finds.</string>
+    <string name="application_loading_title">The application is being opened</string>
+    <string name="application_loading_body">The letter and the requirement check behind it are being fetched.</string>
     <string name="application_din_show">Show the DIN 5008 grid</string>
     <string name="application_din_hide">Hide the DIN 5008 grid</string>
     <string name="application_regenerate">Write it again</string>

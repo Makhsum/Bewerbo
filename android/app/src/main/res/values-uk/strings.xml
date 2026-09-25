@@ -334,6 +334,8 @@
     <string name="application_subtitle">Те, що бачить німецький читач і система відбору кандидатів.</string>
     <string name="application_none_title">Листа ще немає</string>
     <string name="application_none_body">Спочатку виконайте звірку вимог. Лист пишеться під знайдені вимоги.</string>
+    <string name="application_loading_title">Заявка відкривається</string>
+    <string name="application_loading_body">Завантажуються лист і звірка вимог, під яку його написано.</string>
     <string name="application_din_show">Показати сітку DIN 5008</string>
     <string name="application_din_hide">Сховати сітку DIN 5008</string>
     <string name="application_regenerate">Написати ще раз</string>
