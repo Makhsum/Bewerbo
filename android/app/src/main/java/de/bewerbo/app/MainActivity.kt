@@ -435,19 +435,25 @@ private fun FlowRail(current: FlowStep, state: AppState, onOpen: (FlowStep) -> U
                     .fillMaxWidth()
                     .padding(top = Space.s),
             ) {
-                FlowStep.entries.forEach { step ->
-                    if (step.ordinal > 0) {
-                        // The line between two steps is what makes the row read as a path rather
-                        // than as three tabs that happen to be numbered.
-                        Box(
-                            Modifier
-                                .padding(top = StepBadgeSize / 2)
-                                .width(Space.m)
-                                .height(1.dp)
-                                .background(MaterialTheme.colorScheme.outline),
-                        )
+                // All three step names, resolved once: every one of them is measured against every
+                // step, so that the rail settles on ONE size instead of three. See the label slot
+                // in FlowRailStep.
+                val labels = FlowStep.entries.map { stringResource(it.label) }
+                FitOneLineTextGroup {
+                    FlowStep.entries.forEach { step ->
+                        if (step.ordinal > 0) {
+                            // The line between two steps is what makes the row read as a path
+                            // rather than as three tabs that happen to be numbered.
+                            Box(
+                                Modifier
+                                    .padding(top = StepBadgeSize / 2)
+                                    .width(Space.m)
+                                    .height(1.dp)
+                                    .background(MaterialTheme.colorScheme.outline),
+                            )
+                        }
+                        FlowRailStep(step, current, state, Modifier.weight(1f), labels, onOpen)
                     }
-                    FlowRailStep(step, current, state, Modifier.weight(1f), onOpen)
                 }
             }
         }
@@ -463,6 +469,7 @@ private fun FlowRailStep(
     current: FlowStep,
     state: AppState,
     modifier: Modifier,
+    peers: List<String>,
     onOpen: (FlowStep) -> Unit,
 ) {
     val colors = LocalSemanticColors.current
@@ -509,6 +516,12 @@ private fun FlowRailStep(
         }
         // Shrunk rather than wrapped, for the reason the bar's labels are: three step names share
         // the screen width and "Stellenanzeige" does not fit a third of it at every font scale.
+        //
+        // Every name is handed all three words, and the three are one group, and that is what
+        // makes the rail ONE path: shrinking each name only as far as its own third needed left
+        // "Bewerbung" at full size beside a much smaller "Stellenanzeige" at a raised font size,
+        // and three sizes in a row of three read as three separate controls. This is the fix the
+        // bottom bar carries; the rail is the component's other caller and had the same fault.
         FitOneLineText(
             text = stringResource(step.label),
             modifier = Modifier
@@ -521,6 +534,7 @@ private fun FlowRailStep(
                 reachable -> MaterialTheme.colorScheme.onSurface
                 else -> colors.muted
             },
+            peers = peers,
         )
     }
 }
