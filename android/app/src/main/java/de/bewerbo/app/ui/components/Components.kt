@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -745,9 +746,22 @@ private const val ShrinkFactor = 0.94f
  */
 private const val MaxShrinkSteps = 40
 
-/// The largest size at which EVERY one of [texts] fits [maxWidth] on one line. A single text is
-/// the ordinary case; several are a row that has to be lettered in one size, and there the walk
-/// stops at the step the longest of them can still live on.
+/**
+ * The step of the ladder is coarse enough to be walked down in a handful of measurements and too
+ * coarse to stop on: a word that overflows its place by a hair gives up the whole 6 %. So the step
+ * that was given up is walked back up in [RefineSteps] of these, which leaves at most a hundredth
+ * of the size on the table — 0.99^5 is 0.951 of a step of 0.94.
+ */
+private const val RefineFactor = 0.99f
+
+/// Five of them cover a step of the ladder but for a hundredth, and five measurements is what the
+/// refinement costs: the walk down has found the step already, and this only searches inside it.
+private const val RefineSteps = 5
+
+/// The largest size at which EVERY one of [texts] fits [maxWidth] on one line, and never more than
+/// the size that was asked for. A single text is the ordinary case; several are a row that has to
+/// be lettered in one size, and there the walk stops at the step the longest of them can still
+/// live on. WHICH sizes are walked at all is [fittedFontSize]'s decision, not this one's.
 private fun fitToWidth(
     measurer: TextMeasurer,
     texts: List<String>,
@@ -756,21 +770,78 @@ private fun fitToWidth(
     minFontSize: TextUnit,
 ): TextStyle {
     if (style.fontSize.type != TextUnitType.Sp || minFontSize.type != TextUnitType.Sp) return style
-    var candidate = style
-    repeat(MaxShrinkSteps) {
+    val size = fittedFontSize(style.fontSize.value, minFontSize.value) { candidate ->
+        val at = style.atFontSize(candidate.sp)
         val overflows = texts.any { text ->
             measurer.measure(
                 text = text,
-                style = candidate,
+                style = at,
                 maxLines = 1,
                 softWrap = false,
                 constraints = Constraints(maxWidth = maxWidth),
             ).hasVisualOverflow
         }
-        if (!overflows) return candidate
-        val next = candidate.fontSize * ShrinkFactor
-        if (next.value < minFontSize.value) return candidate.copy(fontSize = minFontSize)
-        candidate = candidate.copy(fontSize = next)
+        !overflows
     }
-    return candidate
+    return style.atFontSize(size.sp)
 }
+
+/**
+ * The size one line of shrink-to-fit text is lettered in: the size that was asked for
+ * ([requested]), or the largest size its place has room for when that is smaller, and never below
+ * [floor]. [fits] answers whether a size still keeps every word of the row whole. All three are sp
+ * AT THE FONT SCALE OF THE MOMENT, which is what makes [floor] — a Dp — the same pixels at every
+ * one of them.
+ *
+ * RAISING THE SYSTEM FONT MUST NEVER LETTER A WORD SMALLER, and the sizes that are tried at all
+ * are what decides it. Walking down from [requested] in steps OF [requested] put the rungs of the
+ * ladder at a different place on the screen at every font scale, and the same word in the same
+ * place then came out on a rung up to one step — 6 % — lower at the accessibility maximum than at
+ * the default setting: a reader who turned the font up in order to read got less to read.
+ *
+ * So the rungs stand at FIXED places instead: [floor], and every step above it counted from there.
+ * Which rung a word still fits on is then a property of the word and its place alone and does not
+ * move when the font scale does. And the size asked for is a CEILING over that rung rather than
+ * the rung the walk starts from, so a word with room to spare is still lettered in exactly the
+ * size the system asked for and grows with it, while one without room stands still.
+ */
+internal fun fittedFontSize(requested: Float, floor: Float, fits: (Float) -> Boolean): Float {
+    // Up to the rung above the size that was asked for. Arithmetic, not measuring: nothing is
+    // measured above the size the text is going to be lettered in at most.
+    var rung = floor
+    var steps = 0
+    while (rung < requested && steps < MaxShrinkSteps) {
+        rung /= ShrinkFactor
+        steps++
+    }
+    // And down again, to the highest rung every word of the row still fits on. The floor is where
+    // the walk stops; below it the text is ellipsised rather than made illegible.
+    while (steps > 0 && !fits(rung)) {
+        rung *= ShrinkFactor
+        steps--
+    }
+    // And back up inside the step that was just given up, in finer ones. A step of the ladder is
+    // 6 % and a word that needed a hundredth of it less lost the whole step: the rail settled 2.6 %
+    // below what its third of the screen held. These rungs stand at fixed places too — they are
+    // counted from the one below them, which is counted from the floor.
+    var refinements = RefineSteps
+    while (refinements > 0) {
+        val finer = rung / RefineFactor
+        if (finer > requested || !fits(finer)) break
+        rung = finer
+        refinements--
+    }
+    return minOf(requested, maxOf(rung, floor))
+}
+
+/// [this] lettered in [size], with the tracking taken down together with the glyphs. A
+/// letterSpacing is written in sp and so grows with the system font, and copying a smaller
+/// fontSize over the style leaves it where it was: the same word then needs more width per pixel
+/// of glyph the further the font scale is turned up, and the ladder answers with a lower rung at
+/// 2.0 than at 1.5 for a place that has not changed size at all.
+private fun TextStyle.atFontSize(size: TextUnit): TextStyle =
+    if (letterSpacing.type == TextUnitType.Sp && fontSize.value > 0f) {
+        copy(fontSize = size, letterSpacing = letterSpacing * (size.value / fontSize.value))
+    } else {
+        copy(fontSize = size)
+    }
