@@ -534,8 +534,11 @@ private fun FlowRailStep(
             text = stringResource(step.label),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = Space.xs)
-                .testTag("${step.tag}_label"),
+                .padding(top = Space.xs),
+            // The tag names the LINE, not the place it is measured in: asked for its text, the
+            // tagged box answered with the empty string, and a driver could only reach the word by
+            // walking down to the child below it.
+            testTag = "${step.tag}_label",
             style = MaterialTheme.typography.labelMedium,
             color = when {
                 isCurrent -> MaterialTheme.colorScheme.primary
@@ -600,8 +603,11 @@ private fun BottomBar(navController: NavHostController) {
                             text = stringResource(destination.label),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = Space.xs)
-                                .testTag("${destination.tag}_label"),
+                                .padding(horizontal = Space.xs),
+                            // The tag names the LINE, not the place it is measured in: asked for
+                            // its text, the tagged box answered with the empty string, and a driver
+                            // could only reach the word by walking down to the child below it.
+                            testTag = "${destination.tag}_label",
                             style = MaterialTheme.typography.labelMedium,
                             peers = labels,
                         )

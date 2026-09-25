@@ -654,6 +654,13 @@ fun BewerboDialog(
 fun FitOneLineText(
     text: String,
     modifier: Modifier = Modifier,
+    /// The tag belongs on the LINE, which is why it is a parameter here rather than something the
+    /// caller puts into [modifier]: the modifier lands on the box that MEASURES the place, and the
+    /// word is drawn by a Text inside it. Tagged on the box, the node a driver reached answered with
+    /// the empty string and the word could only be got at by walking the tree by hand — a test that
+    /// asserts "this tab is named Profil" failed against a screen that was perfectly right. Tagged
+    /// here, the node that carries the tag is the node that has the word.
+    testTag: String? = null,
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
     minFontSize: Dp = 9.dp,
@@ -688,6 +695,7 @@ fun FitOneLineText(
             softWrap = false,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis,
+            modifier = if (testTag != null) Modifier.testTag(testTag) else Modifier,
         )
     }
 }
