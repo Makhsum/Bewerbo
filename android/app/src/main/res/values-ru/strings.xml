@@ -427,6 +427,7 @@
     <string name="scan_remove_note">Если убрать копию, документ останется в списке — Anlagenverzeichnis по-прежнему его называет — а файл будет удалён с сервера.</string>
     <string name="scan_page_of">Страница %1$d из %2$d</string>
     <string name="scan_loading">Скан загружается…</string>
+    <string name="scan_replacing">Новый скан отправляется. Он заменит показанную здесь копию, как только придёт.</string>
     <string name="scan_unreadable">Этот файл здесь не показать. Поделитесь копией, чтобы открыть его.</string>
 
     <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>

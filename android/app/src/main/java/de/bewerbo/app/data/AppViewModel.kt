@@ -117,6 +117,12 @@ data class AppState(
     /// Empty pages while it is being fetched.
     val openScan: StoredDocument? = null,
     val scanPages: List<android.graphics.Bitmap> = emptyList(),
+    /// Whether the copy open in the viewer is being replaced. True from the moment the new file is
+    /// on its way until the record it produced has been fetched and rendered, and the viewer says so
+    /// for as long as it is: the detail line and the pages it is still holding describe the copy on
+    /// the way OUT, and a reader who takes them for the current one cannot tell that the replacement
+    /// happened at all. See [AppViewModel.deliverPickedScan].
+    val openScanReplacing: Boolean = false,
     /// The fetched scan, ready to be handed to another app. The screen passes it to a chooser and
     /// clears it — the same handover [pendingExport] gets, for the same reason.
     val pendingScanShare: File? = null,
@@ -1315,6 +1321,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * early: a refused one that stayed held was still the pick when the user next opened the add
      * card, so that card showed a file they had not chosen there and its Save offered the server
      * the very file it had just refused. A second attempt starts from a fresh choice.
+     *
+     * When the document being uploaded to is the one OPEN in the viewer — which is what "Ersetzen"
+     * is — that window is brought along: it says the new copy is on its way while it is, and then
+     * shows the record the upload returned, pages, count and size. It used to keep the copy that had
+     * just been replaced, with the row behind it already naming the new page count, so the only way
+     * to see that anything had happened was to close the window and open it again.
      */
     private suspend fun deliverPickedScan() {
         val state = _state.value
@@ -1325,13 +1337,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         val id = profileId() ?: return
+        val replacingOpenScan = state.openScan?.id == documentId
+
+        // Said before the upload starts and not after it: the pages under the title are the copy
+        // being replaced, and the seconds a photographed Zeugnis takes to go up are exactly the
+        // seconds in which they are read as the current one.
+        if (replacingOpenScan) _state.update { it.copy(openScanReplacing = true) }
 
         try {
-            api.storeScan(documentId, picked)
-        } finally {
-            _state.update { it.copy(pickedScan = null, pickedScanFor = null) }
+            val stored = try {
+                api.storeScan(documentId, picked)
+            } finally {
+                _state.update { it.copy(pickedScan = null, pickedScanFor = null) }
+            }
+            _state.update { it.copy(profile = api.profile(id)) }
+            // The record the upload RETURNED, not one read back out of the refreshed list: it is
+            // this document with the new scan on it, so the window is refilled straight from it.
+            if (replacingOpenScan) showScan(stored)
+        } catch (failure: Throwable) {
+            // Whatever failed, nothing is on its way any more and what is on screen is what is
+            // stored. Said here rather than left standing, because a window that goes on promising
+            // a copy that was refused is worse than the stale one this card is about. The failure
+            // itself reaches the user through [launch], the way every other refused call does.
+            _state.update { it.copy(openScanReplacing = false) }
+            throw failure
         }
-        _state.update { it.copy(profile = api.profile(id)) }
         rematch()
         refreshDerived()
     }
@@ -1343,16 +1373,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * The pages are cleared before the call for the reason [refreshPreview] clears its own: pages
      * left over from the document opened before are a picture of the wrong Zeugnis.
      */
-    fun openScan(document: StoredDocument) = launch("scan") {
-        val id = document.id ?: return@launch
-        val info = document.scan ?: return@launch
-        _state.update { it.copy(openScan = document, scanPages = emptyList()) }
+    fun openScan(document: StoredDocument) = launch("scan") { showScan(document) }
+
+    /// Puts one document's stored copy in the viewer. Two callers: opening a document from the list,
+    /// and [deliverPickedScan] once a replacement has gone up — the second is the whole point of
+    /// having this as its own function, because the window has to follow the copy it is showing.
+    private suspend fun showScan(document: StoredDocument) {
+        val id = document.id ?: return
+        val info = document.scan ?: return
+        _state.update {
+            it.copy(openScan = document, scanPages = emptyList(), openScanReplacing = false)
+        }
 
         val file = api.scanFile(id, getApplication<Application>().scanFile(id, info.contentType))
         _state.update { it.copy(scanPages = renderScanPages(file, info.contentType)) }
     }
 
-    fun closeScan() = _state.update { it.copy(openScan = null, scanPages = emptyList()) }
+    fun closeScan() =
+        _state.update { it.copy(openScan = null, scanPages = emptyList(), openScanReplacing = false) }
 
     /**
      * Hands the fetched copy to another app.

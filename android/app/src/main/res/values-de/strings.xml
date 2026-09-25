@@ -430,6 +430,7 @@
     <string name="scan_remove_note">Wird die Kopie entfernt, bleibt das Dokument auf der Liste — das Anlagenverzeichnis benennt es weiterhin — und die Datei wird vom Server gelöscht.</string>
     <string name="scan_page_of">Seite %1$d von %2$d</string>
     <string name="scan_loading">Scan wird geholt…</string>
+    <string name="scan_replacing">Der neue Scan wird gesendet. Er ersetzt die hier gezeigte Kopie, sobald er angekommen ist.</string>
     <string name="scan_unreadable">Diese Datei lässt sich hier nicht anzeigen. Teilen Sie eine Kopie, um sie zu öffnen.</string>
 
     <string name="kind_arbeitszeugnis">Arbeitszeugnis</string>

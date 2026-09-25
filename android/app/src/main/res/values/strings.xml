@@ -468,6 +468,7 @@
     <string name="scan_remove_note">Removing the copy keeps the document on the list — the Anlagenverzeichnis still names it — and deletes the file from the server.</string>
     <string name="scan_page_of">Page %1$d of %2$d</string>
     <string name="scan_loading">Fetching the scan…</string>
+    <string name="scan_replacing">The new scan is being sent. It replaces the copy shown here as soon as it arrives.</string>
     <string name="scan_unreadable">This file cannot be shown here. Share a copy to open it.</string>
 
     <!-- The kinds of document. The value keeps the backend's spelling. -->

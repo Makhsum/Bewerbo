@@ -730,6 +730,13 @@ private fun NoticeFact(label: Int, body: String, tag: String) {
  * It renders the file that actually came back from the server rather than showing a name and a
  * size, for the reason the Mappe's preview renders the real PDF: what is being asked is whether
  * the copy is the Zeugnis it claims to be, and only the pages answer that.
+ *
+ * Everything under the title describes ONE copy, and while "Ersetzen" is under way that copy is on
+ * its way up. The detail line and the pages are the one being replaced, so for those seconds they
+ * are not shown at all and the window says what is happening instead — see
+ * [AppState.openScanReplacing]. It used to keep them, and keep them after the upload had finished,
+ * so a reader who had just replaced a scan saw the old page count under a window that looked
+ * untouched and had no reason to believe anything had been sent.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -742,6 +749,7 @@ private fun ScanViewerDialog(
     val colors = LocalSemanticColors.current
     val info = document.scan
     val pages = state.scanPages
+    val replacing = state.openScanReplacing
 
     BewerboDialog(
         onDismissRequest = viewModel::closeScan,
@@ -749,7 +757,7 @@ private fun ScanViewerDialog(
         title = { Text(document.title) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                if (info != null) {
+                if (info != null && !replacing) {
                     Text(
                         listOf(
                             scanTypeLabel(info.contentType),
@@ -766,6 +774,17 @@ private fun ScanViewerDialog(
                 }
 
                 when {
+                    // The new copy on its way up. Before the two branches below, because the pages
+                    // are still the old ones at this point and whichever of them matched would show
+                    // the replaced copy as the current one.
+                    replacing -> Text(
+                        stringResource(R.string.scan_replacing),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                        modifier = Modifier
+                            .padding(top = Space.m)
+                            .testTag("scan_viewer_replacing"),
+                    )
                     // Still on its way. Said in words rather than left blank, because an empty box
                     // under a title reads as a file that is not there.
                     state.busy == "scan" && pages.isEmpty() -> Text(
@@ -819,14 +838,21 @@ private fun ScanViewerDialog(
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
                     verticalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
+                    // Neither button acts on a copy that is on its way out: sharing would hand over
+                    // the file being replaced, and a second Ersetzen is exactly what a reader reached
+                    // for while this window said nothing.
                     OutlinedButton(
                         onClick = viewModel::shareScan,
-                        enabled = pages.isNotEmpty(),
+                        enabled = pages.isNotEmpty() && !replacing,
                         modifier = Modifier.testTag("scan_btn_share"),
                     ) {
                         Text(stringResource(R.string.scan_action_share))
                     }
-                    OutlinedButton(onClick = onReplace, modifier = Modifier.testTag("scan_btn_replace")) {
+                    OutlinedButton(
+                        onClick = onReplace,
+                        enabled = !replacing,
+                        modifier = Modifier.testTag("scan_btn_replace"),
+                    ) {
                         Text(stringResource(R.string.scan_action_replace))
                     }
                 }
