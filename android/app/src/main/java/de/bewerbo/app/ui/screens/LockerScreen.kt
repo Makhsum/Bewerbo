@@ -731,6 +731,7 @@ private fun NoticeFact(label: Int, body: String, tag: String) {
  * size, for the reason the Mappe's preview renders the real PDF: what is being asked is whether
  * the copy is the Zeugnis it claims to be, and only the pages answer that.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ScanViewerDialog(
     document: StoredDocument,
@@ -803,9 +804,20 @@ private fun ScanViewerDialog(
                     }
                 }
 
-                Row(
-                    Modifier.padding(top = Space.m),
+                // The two buttons WRAP, for the reason the add card's scan row does: a fixed row
+                // measures the first button at the width it asks for and leaves the second
+                // whatever is over, and at the accessibility maximum of the system font size that
+                // remainder is a column too narrow for a word — "Ersetzen" arrived as
+                // "Er / se / tz / en" beside a "Kopie teilen" that had kept its full width, and
+                // replacing a scan is not an action to guess at. Given a line of its own each
+                // label is a whole word in every interface language.
+                FlowRow(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.m)
+                        .testTag("scan_viewer_actions"),
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
                     OutlinedButton(
                         onClick = viewModel::shareScan,
