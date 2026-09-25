@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -66,10 +67,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import de.bewerbo.app.ui.theme.CardElevation
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -623,6 +624,13 @@ fun BewerboDialog(
  * wrapped to "Applicati / on" and the whole bar lost its baseline. Shrinking a step at a time
  * keeps the word whole, which an ellipsis would not: "Applicati…" is not a navigation label.
  *
+ * [minFontSize] is where the shrinking stops, and it is a Dp rather than an sp ON PURPOSE: it is
+ * the smallest text this screen may put in front of a reader, and that size does not grow because
+ * the reader turned the system font up. Written as an sp it did — at the accessibility maximum the
+ * floor stood at twice the pixels it was meant to be, the ladder reached it while the word was
+ * still wider than its place, and "Unterlagen" arrived as "Unterla…" on the bottom bar of exactly
+ * the reader who had raised the font in order to read.
+ *
  * Below [minFontSize] the text stops shrinking and is ellipsised rather than made illegible, and
  * a style whose size is not given in sp is rendered unshrunk on one line — there is no sensible
  * ladder to walk for an em size.
@@ -633,13 +641,16 @@ fun FitOneLineText(
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
-    minFontSize: TextUnit = 9.sp,
+    minFontSize: Dp = 9.dp,
 ) {
     val measurer = rememberTextMeasurer()
+    // The floor in the sp of the moment: 9.dp is 9.sp at the default font scale and 4.5.sp at the
+    // accessibility maximum — the same pixels on the screen either way, which is the whole point.
+    val floor = with(LocalDensity.current) { minFontSize.toSp() }
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val fitted =
             if (constraints.hasBoundedWidth) {
-                fitToWidth(measurer, text, style, constraints.maxWidth, minFontSize)
+                fitToWidth(measurer, text, style, constraints.maxWidth, floor)
             } else {
                 style
             }
@@ -658,8 +669,13 @@ fun FitOneLineText(
 /** Each step is small enough that the shrink is not visible as a jump between two destinations. */
 private const val ShrinkFactor = 0.94f
 
-/** The ladder cannot run forever: 0.94^14 is under half size, well past [minFontSize] anywhere. */
-private const val MaxShrinkSteps = 14
+/**
+ * The ladder stops at the floor, so its length is only the guard against a runaway — but it has to
+ * be long enough to REACH that floor from the largest style the system font scale hands it.
+ * Fourteen steps ran out at 0.42 of the starting size, which at the accessibility maximum is still
+ * bigger than the same text at the default one; 0.94^40 is a thousandth of it.
+ */
+private const val MaxShrinkSteps = 40
 
 private fun fitToWidth(
     measurer: TextMeasurer,

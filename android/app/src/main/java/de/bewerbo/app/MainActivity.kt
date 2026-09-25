@@ -553,9 +553,17 @@ private fun BottomBar(navController: NavHostController) {
                     // "Bewerbung", "Вакансия" — met the edge of its item and wrapped onto a
                     // second line. The label shrinks to fit instead; its own tag lets a driver
                     // read the line back and see that it is still one line.
+                    //
+                    // The margin is what makes a whole word LOOK whole: shrunk to the last pixel
+                    // of its item, "Unterlagen" ran into the screen edge, and a tab that ends at
+                    // the edge reads as one that was cut off there. Four dp on each side cost one
+                    // step of the ladder and give the word an end the reader can see.
                     FitOneLineText(
                         text = stringResource(destination.label),
-                        modifier = Modifier.fillMaxWidth().testTag("${destination.tag}_label"),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Space.xs)
+                            .testTag("${destination.tag}_label"),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 },
