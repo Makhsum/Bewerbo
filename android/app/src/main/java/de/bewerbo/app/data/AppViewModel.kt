@@ -5,11 +5,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import de.bewerbo.app.R
 import de.bewerbo.app.ui.uiLanguageOrDefault
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 
@@ -1386,7 +1388,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         val file = api.scanFile(id, getApplication<Application>().scanFile(id, info.contentType))
-        _state.update { it.copy(scanPages = renderScanPages(file, info.contentType)) }
+
+        // Rasterising is the one step in here that is neither a call nor a state change:
+        // [renderScanPages] draws every page of the file into a bitmap, and on the main thread
+        // that is the whole app standing still — a five-page Zeugnis froze it for seconds and,
+        // on an app that had just been started, Android offered the reader to close it on the
+        // way to their own Zeugnis. Only the drawing moves off; the update below stays where a
+        // state change belongs, and for as long as the drawing takes the viewer says the scan is
+        // being fetched, which it never got the chance to draw before.
+        val pages = withContext(Dispatchers.Default) { renderScanPages(file, info.contentType) }
+
+        // The window can be closed while its pages are still being drawn, and then these pages
+        // belong to nothing: put into the state anyway they are the ones the NEXT window opens
+        // over. [deliverPickedScan] passes the very document the update above put in the viewer,
+        // so a replacement still reaches it.
+        if (_state.value.openScan?.id == id) _state.update { it.copy(scanPages = pages) }
     }
 
     fun closeScan() =
