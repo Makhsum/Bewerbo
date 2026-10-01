@@ -47,10 +47,11 @@ import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EmailDraft
-import de.bewerbo.app.data.isOpeningApplication
+import de.bewerbo.app.data.isAwaitingApplication
 import de.bewerbo.app.data.isWritingLetter
 import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.germanTerm
+import de.bewerbo.app.ui.components.ApplicationWait
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.Callout
 import de.bewerbo.app.ui.components.DinOverlay
@@ -168,50 +169,23 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
             // den Abgleich durch" over a letter that existed or was on its way and a step that was
             // finished — for as long as three calls take while they run, for the many seconds a
             // model needs to write, and until this screen is left again when they do not answer.
-            val unfetched = state.unfetchedApplication
+            //
+            // The first and the third are the two waits every step of the flow has to be able to
+            // say, so they are [ApplicationWait]'s and not this screen's own any more.
             item {
                 when {
-                    state.isOpeningApplication -> Callout(
-                        icon = BewerboIcons.Refresh,
-                        title = stringResource(R.string.application_loading_title),
-                        body = stringResource(R.string.application_loading_body),
-                        modifier = Modifier.testTag("application_loading"),
-                    )
-                    // Before the failure, not after it: a write that is running now is what the
-                    // screen is doing, and an earlier fetch that failed is history. Read the other
-                    // way round, the longest wait in the app would offer a retry it has disabled.
+                    // The write before the waits, not after them: a write that is running now is
+                    // what the screen is doing, and an earlier fetch that failed is history. Read
+                    // the other way round, the longest wait in the app would offer a retry it has
+                    // disabled.
                     state.isWritingLetter -> Callout(
                         icon = BewerboIcons.Rewrite,
                         title = stringResource(R.string.application_writing_title),
                         body = stringResource(R.string.application_writing_body),
                         modifier = Modifier.testTag("application_writing"),
                     )
-                    // The failure said where the user is standing, and the way back offered with
-                    // it: the snackbar that named the reason is gone in seconds, and this is the
-                    // last screen before sending. The same shape the preview's own failure below
-                    // uses, and the Übersicht's when the start itself could not reach the server.
-                    unfetched != null -> Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                        Callout(
-                            icon = BewerboIcons.Attention,
-                            title = stringResource(R.string.application_unreachable_title),
-                            body = stringResource(R.string.application_unreachable_body),
-                            tone = PillTone.Attention,
-                            modifier = Modifier.testTag("application_unreachable"),
-                        )
-                        OutlinedButton(
-                            onClick = { viewModel.openApplication(unfetched) },
-                            enabled = state.busy == null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("application_btn_retry"),
-                        ) {
-                            Icon(BewerboIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(
-                                stringResource(R.string.application_retry),
-                                modifier = Modifier.padding(start = Space.s),
-                            )
-                        }
-                    }
+                    state.isAwaitingApplication ->
+                        ApplicationWait(state, "application", viewModel::openApplication)
                     else -> Callout(
                         icon = BewerboIcons.Document,
                         title = stringResource(R.string.application_none_title),

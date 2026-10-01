@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.bewerbo.app.R
+import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.AtsFinding
 import de.bewerbo.app.data.ErrorMessage
@@ -47,6 +49,7 @@ import de.bewerbo.app.data.NextStep
 import de.bewerbo.app.data.Requirement
 import de.bewerbo.app.data.ReviewCheck
 import de.bewerbo.app.data.TimelinePeriod
+import de.bewerbo.app.data.isOpeningApplication
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
 import de.bewerbo.app.ui.theme.Space
@@ -442,6 +445,64 @@ fun DinOverlay(modifier: Modifier = Modifier) {
             size = Size(mmX(56f), mmY(8f)),
             style = Stroke(width = 1.dp.toPx(), pathEffect = dash),
         )
+    }
+}
+
+/**
+ * Which wait for the application the user is in, said on the step they are standing on.
+ *
+ * `openApplication()` clears the application, the Abgleich and the checks BEFORE its three calls, so
+ * that one employer's Anschreiben is never shown under another's name. The rail marks every step of
+ * the flow done through that fetch, because the steps behind an application really are finished —
+ * and a step marked done can be opened, so each of the three has to be able to say what the cleared
+ * state means. Read as the empty state it was: the Abgleich sent the user to the Stellenanzeige
+ * screen to insert the advert that was being fetched while it said so.
+ *
+ * Shared for the reason [applicationStatusLabel] is: three screens say the same two things about
+ * one fetch. [tagPrefix] is the screen's own — the three steps draw this in turn and a run has to
+ * be able to say which of them it is looking at — and [onRetry] takes the application the failure
+ * named rather than whatever the flow last held.
+ */
+@Composable
+fun ApplicationWait(state: AppState, tagPrefix: String, onRetry: (String) -> Unit) {
+    // The fetch that is running NOW before the one that failed: a retry offered during a fetch is a
+    // button the user cannot press, and the attempt before is history. No failure recorded leaves
+    // the fetch as well — this is drawn only where there is one of the two waits to say.
+    val unfetched = state.unfetchedApplication
+    if (state.isOpeningApplication || unfetched == null) {
+        Callout(
+            icon = BewerboIcons.Refresh,
+            title = stringResource(R.string.application_loading_title),
+            body = stringResource(R.string.application_loading_body),
+            modifier = Modifier.testTag("${tagPrefix}_loading"),
+        )
+        return
+    }
+
+    // The failure said where the user is standing, and the way back offered with it: the snackbar
+    // that named the reason is gone in seconds. The same shape the preview's own failure uses, and
+    // the Übersicht's when the start itself could not reach the server.
+    Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        Callout(
+            icon = BewerboIcons.Attention,
+            title = stringResource(R.string.application_unreachable_title),
+            body = stringResource(R.string.application_unreachable_body),
+            tone = PillTone.Attention,
+            modifier = Modifier.testTag("${tagPrefix}_unreachable"),
+        )
+        OutlinedButton(
+            onClick = { onRetry(unfetched) },
+            enabled = state.busy == null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("${tagPrefix}_btn_retry"),
+        ) {
+            Icon(BewerboIcons.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.application_retry),
+                modifier = Modifier.padding(start = Space.s),
+            )
+        }
     }
 }
 

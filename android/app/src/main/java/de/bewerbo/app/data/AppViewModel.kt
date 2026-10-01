@@ -201,6 +201,19 @@ val AppState.isOpeningApplication: Boolean
     get() = application == null && busy == AppViewModel.APPLICATION
 
 /**
+ * Whether the application the user opened is not here: still on its way, or never arrived.
+ *
+ * The two waits say different sentences, but every step of the flow asks the same question first —
+ * is there anything of THIS application to draw, or is what I have the previous one's? The rail
+ * marks all three steps done through both waits, so all three are opened during them, and each one
+ * read the cleared state as "the user has none at all": the Abgleich asked for an advert that was
+ * being fetched while it asked. Which of the two waits it is, and the one thing to do about the
+ * second, is `ApplicationWait` on the screen.
+ */
+val AppState.isAwaitingApplication: Boolean
+    get() = isOpeningApplication || unfetchedApplication != null
+
+/**
  * Whether the Anschreiben the user just asked for is being written right now.
  *
  * The fourth thing the same null means, and the one the user waits longest for: the Abgleich's

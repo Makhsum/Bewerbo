@@ -67,13 +67,13 @@ class ApplicationLoadingTest {
         val branch = body(source("ui/screens/ApplicationScreen.kt"), "if (application == null) {", "        ")
 
         assertEquals(
-            "The screen reads the wait once, into the one branch that chooses between the two " +
-                "Callouts — a second reading is a second answer to the same question:\n" + branch,
+            "The screen reads the wait once, into the one branch that hands it to ApplicationWait " +
+                "— a second reading is a second answer to the same question:\n" + branch,
             1,
-            Regex("""state\.isOpeningApplication""").findAll(branch).count(),
+            Regex("""state\.isAwaitingApplication""").findAll(branch).count(),
         )
 
-        val waiting = branch.indexOf("application_loading_title")
+        val waiting = branch.indexOf("""ApplicationWait(state, "application"""")
         val none = branch.indexOf("application_none_title")
         assertTrue("The screen no longer says that the application is being fetched", waiting >= 0)
         assertTrue("The screen no longer has an empty state at all", none >= 0)
@@ -83,10 +83,10 @@ class ApplicationLoadingTest {
             waiting < none,
         )
         assertTrue(
-            "Both Callouts need their own testTag, because telling them apart is the whole point " +
-                "of this branch and a driver can only do it by id:\n" + branch,
-            branch.contains("""testTag("application_loading")""") &&
-                branch.contains("""testTag("application_none")"""),
+            "The empty state needs its own testTag, because telling it from the wait above it is " +
+                "the whole point of this branch and a driver can only do it by id. The wait's own " +
+                "tag is built from the prefix handed over here — see [FlowStepWaitTest]:\n" + branch,
+            branch.contains("""testTag("application_none")"""),
         )
     }
 

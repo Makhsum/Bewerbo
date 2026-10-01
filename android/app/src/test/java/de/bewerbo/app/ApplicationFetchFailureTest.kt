@@ -94,7 +94,7 @@ class ApplicationFetchFailureTest {
     fun `the screen says the failure instead of the empty state, and offers the way back`() {
         val branch = body(source("ui/screens/ApplicationScreen.kt"), "if (application == null) {", "        ")
 
-        val failed = branch.indexOf("application_unreachable_title")
+        val failed = branch.indexOf("""ApplicationWait(state, "application"""")
         val none = branch.indexOf("application_none_title")
         assertTrue("The screen does not say that the application could not be fetched", failed >= 0)
         assertTrue("The screen no longer has an empty state at all", none >= 0)
@@ -103,22 +103,29 @@ class ApplicationFetchFailureTest {
                 "the null is read as \"there is no Anschreiben\" again and this card is undone",
             failed < none,
         )
+
+        // The two Callouts of the wait and the retry under them live in ApplicationWait, because
+        // every step of the flow draws them now — see [FlowStepWaitTest]. What stays this screen's
+        // own is that it hands the wait its prefix and the call that asks again.
+        val wait = body(source("ui/components/DomainComponents.kt"), "fun ApplicationWait(", "")
         assertTrue(
-            "The failure needs a tag of its own, or a run cannot tell it from the two Callouts " +
-                "beside it:\n" + branch,
-            branch.contains("""testTag("application_unreachable")"""),
+            "The failure needs a tag of its own, or a run cannot tell it from the Callouts beside " +
+                "it — and one per screen, or it cannot tell WHERE it is standing:\n" + wait,
+            wait.contains("{tagPrefix}_unreachable"),
         )
         assertTrue(
-            "Trying again from this screen is half of what the card asks for, and the retry asks " +
-                "for the application the failure named — not for whatever the flow last held:\n" +
-                branch,
-            branch.contains("""testTag("application_btn_retry")""") &&
-                branch.contains("viewModel.openApplication(unfetched)"),
+            "Trying again is half of what the card asks for, and the retry asks for the " +
+                "application the failure named — not for whatever the flow last held:\n" + wait,
+            wait.contains("{tagPrefix}_btn_retry") && wait.contains("onRetry(unfetched)"),
+        )
+        assertTrue(
+            "and the Bewerbung screen is still the one that asks:\n" + branch,
+            branch.contains("viewModel::openApplication"),
         )
     }
 
     @Test
-    fun `the rail neither sends the user back to a finished Abgleich nor offers an empty one`() {
+    fun `the rail neither draws a finished Abgleich as still to do nor opens an empty one`() {
         val main = source("MainActivity.kt")
         val hasProduced = body(main, "private fun AppState.hasProduced(", "")
 
@@ -139,11 +146,12 @@ class ApplicationFetchFailureTest {
 
         val step = body(main, "val reachable = step ==", "")
         assertTrue(
-            "A step marked done behind an application that is on its way or that never arrived " +
-                "has NOTHING to show — openApplication() cleared the Abgleich it leads to. Offered " +
-                "as a tap, it opens on \"Noch keine Anzeige eingelesen\", which is the sentence " +
-                "about a finished step this rail exists to stop saying:\n" + step,
-            step.contains("!state.isOpeningApplication") && step.contains("state.unfetchedApplication == null"),
+            "A step the rail marks done has to be openable, behind an application that never " +
+                "arrived as well. The tap was taken away from those steps because they had nothing " +
+                "to show, which left a check the user could not follow — the rail going back on " +
+                "its own word in the same frame. What the step opens on is the wait itself now, " +
+                "which is [FlowStepWaitTest]'s half of this:\n" + step,
+            step.contains("step == FlowStep.entries.first() || isDone"),
         )
     }
 

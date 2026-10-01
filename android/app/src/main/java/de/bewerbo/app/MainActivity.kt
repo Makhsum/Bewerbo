@@ -488,13 +488,15 @@ private fun FlowRailStep(
     val colors = LocalSemanticColors.current
     val isCurrent = step == current
     val isDone = state.hasProduced(step)
-    // The first step needs nothing to have happened; every other one needs its own output to exist
-    // — and done is not the same as in hand. Behind an application that is on its way or that never
-    // arrived the steps are finished and EMPTY: openApplication() cleared the Abgleich they lead to
-    // before it asked for it. A tap offered there opens on "Noch keine Anzeige eingelesen", which is
-    // the very sentence about a finished step this rail stopped saying.
-    val reachable = step == FlowStep.entries.first() ||
-        (isDone && !state.isOpeningApplication && state.unfetchedApplication == null)
+    // The first step needs nothing to have happened; every other one needs its own output to exist.
+    //
+    // Done and reachable are one thing again. Behind an application that is on its way or that never
+    // arrived the steps are finished and their output is CLEARED, and the tap was taken away from
+    // them for that reason — which left a check the user could not follow, the rail going back on
+    // its own word in the same frame. What those steps open on is the wait itself now: each of the
+    // three draws ApplicationWait where it has nothing of this application to show, so the tap lands
+    // on "the application is being opened" and not on "insert an advert first".
+    val reachable = step == FlowStep.entries.first() || isDone
 
     // The three tones are the ones the app already uses for these three meanings: filled primary
     // for where you are, the success tint for what is done, the neutral pill for what is not there.

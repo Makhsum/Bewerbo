@@ -29,8 +29,10 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.Requirement
 import de.bewerbo.app.data.StoredDocument
+import de.bewerbo.app.data.isAwaitingApplication
 import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.germanTerm
+import de.bewerbo.app.ui.components.ApplicationWait
 import de.bewerbo.app.ui.components.BewerboCard
 import de.bewerbo.app.ui.components.BewerboDialog
 import de.bewerbo.app.ui.components.Callout
@@ -95,12 +97,24 @@ fun MatchScreen(
         }
 
         if (match == null) {
+            // Three things leave nothing here, and only the third is an empty state: the
+            // application the user tapped on the Übersicht is still being fetched, that fetch
+            // failed, or no advert has been read at all. openApplication() clears the Abgleich
+            // before it asks for it, and the rail marks this step done and lets it be opened
+            // through both waits — so read as the empty state, this screen spent them telling a
+            // user whose advert was on its way to go and insert one. The same division the
+            // Bewerbung screen makes about the same fetch, said with the same two Callouts.
             item {
-                Callout(
-                    icon = BewerboIcons.Posting,
-                    title = stringResource(R.string.match_none_title),
-                    body = stringResource(R.string.match_none_body),
-                )
+                when {
+                    state.isAwaitingApplication ->
+                        ApplicationWait(state, "match", viewModel::openApplication)
+                    else -> Callout(
+                        icon = BewerboIcons.Posting,
+                        title = stringResource(R.string.match_none_title),
+                        body = stringResource(R.string.match_none_body),
+                        modifier = Modifier.testTag("match_none"),
+                    )
+                }
             }
             return@LazyColumn
         }

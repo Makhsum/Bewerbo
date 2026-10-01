@@ -80,10 +80,13 @@ class LetterWritingTest {
         )
 
         val writing = branch.indexOf("application_writing_title")
-        val failed = branch.indexOf("application_unreachable_title")
+        // The fetch and the failure are ApplicationWait's two sentences now, because every step of
+        // the flow says them — see [FlowStepWaitTest]. This screen's own order against them is what
+        // is read here, and the handover is where they stand in it.
+        val waiting = branch.indexOf("""ApplicationWait(state, "application"""")
         val none = branch.indexOf("application_none_title")
         assertTrue("The screen does not say that the Anschreiben is being written", writing >= 0)
-        assertTrue("The screen no longer says that the application could not be fetched", failed >= 0)
+        assertTrue("The screen no longer says which wait for the application it is in", waiting >= 0)
         assertTrue("The screen no longer has an empty state at all", none >= 0)
         assertTrue(
             "The write has to be answered BEFORE the empty state: the empty state is what stands " +
@@ -91,10 +94,11 @@ class LetterWritingTest {
             writing < none,
         )
         assertTrue(
-            "and before the failure too: a write that is running now is what the screen is doing, " +
-                "an earlier fetch that failed is history — and its retry is disabled while a call " +
-                "is out, so read that way round the longest wait in the app offers a dead button",
-            writing < failed,
+            "and before the two waits too: a write that is running now is what the screen is " +
+                "doing, an earlier fetch that failed is history — and its retry is disabled while " +
+                "a call is out, so read that way round the longest wait in the app offers a dead " +
+                "button",
+            writing < waiting,
         )
         assertTrue(
             "The write needs a tag of its own, or a run cannot tell it from the three Callouts " +
