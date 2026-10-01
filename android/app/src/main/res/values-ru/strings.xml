@@ -339,6 +339,9 @@
     <string name="application_unreachable_title">Не удалось загрузить заявку</string>
     <string name="application_unreachable_body">Письмо и сверка требований за ним хранятся на сервере, и телефон не смог их прочитать. Ничего не потеряно: проверьте соединение и запросите их снова.</string>
     <string name="application_retry">Загрузить заявку снова</string>
+    <string name="application_unwritten_title">Не удалось написать Anschreiben</string>
+    <string name="application_unwritten_body">Сверка требований выполнена, из неё ничего не потеряно. Само письмо пишется на сервере, и телефон не смог к нему обратиться: проверьте соединение и запросите письмо снова.</string>
+    <string name="application_unwritten_retry">Запросить Anschreiben снова</string>
     <string name="application_din_show">Показать сетку DIN 5008</string>
     <string name="application_din_hide">Скрыть сетку DIN 5008</string>
     <string name="application_regenerate">Написать заново</string>

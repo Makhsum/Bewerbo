@@ -162,16 +162,20 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
         }
 
         if (application == null) {
-            // Four different things leave nothing here: the application the user tapped on the
+            // Five different things leave nothing here: the application the user tapped on the
             // Übersicht has not arrived yet, the Anschreiben they asked for is being written, the
-            // fetch that was to bring it failed, or they have none at all. Only the fourth is an
-            // empty state. Drawn for all four, it said "Noch kein Anschreiben — führen Sie zuerst
-            // den Abgleich durch" over a letter that existed or was on its way and a step that was
-            // finished — for as long as three calls take while they run, for the many seconds a
-            // model needs to write, and until this screen is left again when they do not answer.
+            // write that was to produce it failed, the fetch that was to bring it failed, or they
+            // have none at all. Only the fifth is an empty state. Drawn for all five, it said "Noch
+            // kein Anschreiben — führen Sie zuerst den Abgleich durch" over a letter that existed or
+            // was on its way and a step that was finished — for as long as three calls take while
+            // they run, for the many seconds a model needs to write, and until this screen is left
+            // again when they do not answer.
             //
-            // The first and the third are the two waits every step of the flow has to be able to
-            // say, so they are [ApplicationWait]'s and not this screen's own any more.
+            // The first and the fourth are the two waits every step of the flow has to be able to
+            // say, so they are [ApplicationWait]'s and not this screen's own any more. The write and
+            // the write that failed stay here: this is the only step the Anschreiben is asked for
+            // from, and the only one that can offer it a second time.
+            val unwrittenTone = state.unwrittenLetterTone
             item {
                 when {
                     // The write before the waits, not after them: a write that is running now is
@@ -184,6 +188,34 @@ fun ApplicationScreen(state: AppState, viewModel: AppViewModel, navigate: (Strin
                         body = stringResource(R.string.application_writing_body),
                         modifier = Modifier.testTag("application_writing"),
                     )
+                    // A write that FAILED, in the same place and for the same reason: it is the
+                    // latest thing that happened to this screen, because openApplication() forgets
+                    // it the moment another application is asked for. What it offers is the write
+                    // itself and not the step before it — generateLetter clears neither the posting
+                    // nor the match, so the Abgleich the letter is written out of is still in hand
+                    // and the rail above goes on marking it done, correctly this time.
+                    unwrittenTone != null -> Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                        Callout(
+                            icon = BewerboIcons.Attention,
+                            title = stringResource(R.string.application_unwritten_title),
+                            body = stringResource(R.string.application_unwritten_body),
+                            tone = PillTone.Attention,
+                            modifier = Modifier.testTag("application_unwritten"),
+                        )
+                        OutlinedButton(
+                            onClick = { viewModel.generateLetter(unwrittenTone) },
+                            enabled = state.busy == null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("application_btn_write_retry"),
+                        ) {
+                            Icon(BewerboIcons.Rewrite, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text(
+                                stringResource(R.string.application_unwritten_retry),
+                                modifier = Modifier.padding(start = Space.s),
+                            )
+                        }
+                    }
                     state.isAwaitingApplication ->
                         ApplicationWait(state, "application", viewModel::openApplication)
                     else -> Callout(

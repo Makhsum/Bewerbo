@@ -66,6 +66,18 @@ data class AppState(
     /// happened. The id and not a flag, because asking again is the one thing the user can do
     /// about it and the retry has to know WHICH application to ask for.
     val unfetchedApplication: String? = null,
+    /// The tone the Anschreiben was asked for in when the write that should have produced it failed,
+    /// or null while no write has failed. [AppViewModel.generateLetter] is the call that CREATES the
+    /// application, so a call that never answers leaves behind the very null a phone that has
+    /// written nothing has, and the Bewerbung screen answered it with its empty state: it told a
+    /// user who had just finished the Abgleich to go back and do it.
+    ///
+    /// Kept as state rather than left to the error snackbar for the reason [unfetchedApplication]
+    /// is: that one is gone in seconds and the screen it leaves behind says the opposite of what
+    /// happened. The TONE and not a flag, because asking again is the one thing the user can do
+    /// about it, and `generateLetter` has to be given the tone that was chosen on the Abgleich — the
+    /// screen offering the second attempt carries no tone selector of its own.
+    val unwrittenLetterTone: String? = null,
     val review: Review? = null,
     val ats: AtsResult? = null,
     /// The anabin entries offered for ONE qualification, keyed by that entry's id — the same shape
@@ -1029,9 +1041,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // A new posting invalidates the match and the letter that were written against the old one.
         // The draft goes with them: it has been read now, and it is the source text of the posting
         // on screen — keeping a second copy of it is how "Paste a different posting" would come
-        // back with the last advert already in the field. So does a fetch that failed: this is a
-        // new application with no letter yet, and that is the empty state and not a failure.
-        _state.update { it.copy(posting = posting, postingDraft = "", match = null, application = null, unfetchedApplication = null, review = null, ats = null, previewPages = emptyList()) }
+        // back with the last advert already in the field. So do a fetch and a write that failed:
+        // this is a new application with no letter yet, and that is the empty state, not a failure.
+        _state.update { it.copy(posting = posting, postingDraft = "", match = null, application = null, unfetchedApplication = null, unwrittenLetterTone = null, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("postingId", posting.id).remove("applicationId").apply()
     }
 
@@ -1043,7 +1055,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearPosting() {
         prefs().edit().remove("postingId").remove("applicationId").apply()
         _state.update {
-            it.copy(posting = null, postingDraft = "", match = null, application = null, unfetchedApplication = null, review = null, ats = null, previewPages = emptyList())
+            it.copy(posting = null, postingDraft = "", match = null, application = null, unfetchedApplication = null, unwrittenLetterTone = null, review = null, ats = null, previewPages = emptyList())
         }
     }
 
@@ -1115,8 +1127,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun generateLetter(tone: String) = launch(LETTER) {
         val id = profileId() ?: return@launch
         val posting = _state.value.posting ?: return@launch
-        val application = api.createApplication(CreateApplicationRequest(id, posting.id, tone))
-        _state.update { it.copy(application = application, review = null, ats = null, previewPages = emptyList()) }
+
+        // The one call this screen has nothing at all to draw without, and the one place its
+        // failure is written down. [runChecks] and [refreshDerived] are deliberately outside: both
+        // are read beside a letter that HAS been written, and a check that could not be run is not
+        // a letter that was never written.
+        val application = try {
+            api.createApplication(CreateApplicationRequest(id, posting.id, tone))
+        } catch (failure: Throwable) {
+            // WHICH tone was asked for, so the Bewerbung screen says that this is a failure instead
+            // of showing the empty state, and can ask for the letter again without sending the user
+            // back through the Abgleich they have just finished. The reason itself still reaches
+            // them through [launch], the way every other refused call does — but that snackbar is
+            // gone in seconds and this screen is the last one before sending.
+            _state.update { it.copy(unwrittenLetterTone = tone) }
+            throw failure
+        }
+
+        // The failed attempt before it goes with the letter that arrived: what stands here now is an
+        // Anschreiben, not a write that did not answer.
+        _state.update { it.copy(application = application, unwrittenLetterTone = null, review = null, ats = null, previewPages = emptyList()) }
         prefs().edit().putString("applicationId", application.id).apply()
         runChecks(application.id)
         refreshDerived()
@@ -1140,12 +1170,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun openApplication(applicationId: String) = launch(APPLICATION) {
         // Cleared before the call, not after it: until the new one has arrived, leaving the last
-        // application on screen would put one employer's Anschreiben under another's name. The
-        // failure of the attempt before goes with them — this one has not failed yet.
+        // application on screen would put one employer's Anschreiben under another's name. The two
+        // failures this screen can be left standing on go with them: neither the fetch nor the write
+        // has failed for THIS application yet.
         _state.update {
             it.copy(
                 application = null, match = null, review = null, ats = null,
-                previewPages = emptyList(), unfetchedApplication = null,
+                previewPages = emptyList(), unfetchedApplication = null, unwrittenLetterTone = null,
             )
         }
 

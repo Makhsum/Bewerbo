@@ -366,6 +366,9 @@
     <string name="application_unreachable_title">The application could not be fetched</string>
     <string name="application_unreachable_body">Your letter and the requirement check behind it are kept on the server, and this phone could not read them. Nothing is lost: check the connection and ask for them again.</string>
     <string name="application_retry">Fetch the application again</string>
+    <string name="application_unwritten_title">The Anschreiben could not be written</string>
+    <string name="application_unwritten_body">The requirement check is done and nothing of it is lost. The letter itself is written on the server, and this phone did not reach it: check the connection and ask for the letter again.</string>
+    <string name="application_unwritten_retry">Ask for the Anschreiben again</string>
     <string name="application_din_show">Show the DIN 5008 grid</string>
     <string name="application_din_hide">Hide the DIN 5008 grid</string>
     <string name="application_regenerate">Write it again</string>

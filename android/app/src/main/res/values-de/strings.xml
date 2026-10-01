@@ -342,6 +342,9 @@
     <string name="application_unreachable_title">Die Bewerbung konnte nicht geladen werden</string>
     <string name="application_unreachable_body">Ihr Anschreiben und der Abgleich dahinter liegen auf dem Server, und dieses Telefon konnte sie nicht lesen. Es geht nichts verloren: Prüfen Sie die Verbindung und fordern Sie sie erneut an.</string>
     <string name="application_retry">Bewerbung erneut laden</string>
+    <string name="application_unwritten_title">Das Anschreiben konnte nicht geschrieben werden</string>
+    <string name="application_unwritten_body">Der Abgleich ist erledigt, davon geht nichts verloren. Das Anschreiben selbst wird auf dem Server geschrieben, und dieses Telefon hat ihn nicht erreicht: Prüfen Sie die Verbindung und fordern Sie das Anschreiben erneut an.</string>
+    <string name="application_unwritten_retry">Anschreiben erneut anfordern</string>
     <string name="application_din_show">DIN-5008-Raster einblenden</string>
     <string name="application_din_hide">DIN-5008-Raster ausblenden</string>
     <string name="application_regenerate">Neu schreiben</string>
