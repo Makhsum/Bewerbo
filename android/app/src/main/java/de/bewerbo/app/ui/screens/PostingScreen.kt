@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -480,7 +481,15 @@ private fun SourceHint(text: Int, testTag: String) {
  *
  * Two notes can follow the value — that the quote was not found verbatim, and where the Referenz
  * ends up. Both are muted: they explain, they do not ask.
+ *
+ * The value and its marker WRAP, for the reason the Unterlagen list row does. The marker stood at
+ * the row's END with no weight, and a Row measures an unweighted child at the width it asks for and
+ * leaves the weighted one the remainder: at the accessibility maximum of the system font size that
+ * remainder was narrower than a syllable, and "In der Anzeige nicht genannt" ran down the screen as
+ * fourteen stacked fragments while the row below it, which carries no marker, set the same sentence
+ * normally. The two now share the value's whole width and take a second line where they need one.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun PostingFieldRow(
     key: String,
@@ -538,11 +547,29 @@ private fun PostingFieldRow(
                 .weight(1f)
                 .padding(start = Space.s),
         ) {
-            Text(
-                field?.value ?: stringResource(R.string.posting_field_missing),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (field == null) colors.muted else MaterialTheme.colorScheme.onSurface,
-            )
+            // What was read, and the one thing to do about it where there is one. The marker came
+            // out of the row that used to squeeze this column, and the two belong together anyway:
+            // the pill says what is wrong with the value standing next to it.
+            FlowRow(
+                Modifier
+                    .fillMaxWidth()
+                    .testTag("posting_field_line_$key"),
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+                verticalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                Text(
+                    field?.value ?: stringResource(R.string.posting_field_missing),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (field == null) colors.muted else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.testTag("posting_field_value_$key"),
+                )
+                fieldMarker(key, field)?.let { (label, tone) ->
+                    StatusPill(
+                        stringResource(label), tone,
+                        Modifier.testTag("posting_field_marker_$key"),
+                    )
+                }
+            }
             if (field != null && field.spanStart < 0 && field.quote.isNotBlank()) {
                 // Said out loud rather than shown as a highlight over the wrong words: the quote
                 // did not appear verbatim in the posting.
@@ -563,14 +590,6 @@ private fun PostingFieldRow(
                 // first meets it — the Übersicht row only repeats it later.
                 TermNote(germanTerm("referenznummer"))
             }
-        }
-        fieldMarker(key, field)?.let { (label, tone) ->
-            StatusPill(
-                stringResource(label), tone,
-                Modifier
-                    .padding(start = Space.s)
-                    .testTag("posting_field_marker_$key"),
-            )
         }
     }
 }
