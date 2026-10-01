@@ -476,6 +476,22 @@ private fun FlowRail(current: FlowStep, state: AppState, onOpen: (FlowStep) -> U
 /// The badge is the size of a pill, not of an [IconRow] icon: it sits in a rail, not in a list row.
 private val StepBadgeSize = 24.dp
 
+/**
+ * How many lines a step name may be wrapped onto, and the reason the rail asks for more than the one
+ * the bottom bar does: a third of the screen is a ceiling that one line cannot be raised past.
+ *
+ * At the accessibility maximum the rail grew its names to about 1.4x in German and Ukrainian but to
+ * 1.03x in English and 1.00x in Russian, where "Requirement check" and "Сверка требований" already
+ * filled their third at the default setting — the reader who doubled the system font watched the
+ * heading and the badges double while the names stood still. A second line is the room those names
+ * need to grow at all; they are broken between their words and never inside one, so a name that is
+ * a single word — "Stellenanzeige" — is lettered in exactly what one line holds, as before.
+ *
+ * TWO and not more: three lines of a shrink-to-fit name buy nothing any of the four interface
+ * languages can use (the longest of them is two words) and cost the rail a third of its height.
+ */
+private const val StepNameLines = 2
+
 @Composable
 private fun FlowRailStep(
     step: FlowStep,
@@ -534,8 +550,10 @@ private fun FlowRailStep(
                 )
             }
         }
-        // Shrunk rather than wrapped, for the reason the bar's labels are: three step names share
-        // the screen width and "Stellenanzeige" does not fit a third of it at every font scale.
+        // Shrunk to fit, for the reason the bar's labels are: three step names share the screen
+        // width and "Stellenanzeige" does not fit a third of it at every font scale. Unlike the
+        // bar's they may be wrapped onto a second line while they shrink — see [StepNameLines] —
+        // because a third of the screen is too little for one line to grow in at all.
         //
         // Every name is handed all three words, and the three are one group, and that is what
         // makes the rail ONE path: shrinking each name only as far as its own third needed left
@@ -557,6 +575,7 @@ private fun FlowRailStep(
                 reachable -> MaterialTheme.colorScheme.onSurface
                 else -> colors.muted
             },
+            maxLines = StepNameLines,
             peers = peers,
         )
     }

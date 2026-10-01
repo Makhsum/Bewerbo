@@ -640,6 +640,20 @@ fun BewerboDialog(
  * a style whose size is not given in sp is rendered unshrunk on one line — there is no sensible
  * ladder to walk for an em size.
  *
+ * [maxLines] is ONE line by default, which is what the bottom bar needs and what this component is
+ * named after. A place that is only a fraction of the screen wide has a ceiling that one line
+ * cannot be raised past, though: at the accessibility maximum the application rail could letter
+ * "Requirement check" no bigger than 1.03x of what it was at the default setting, because the name
+ * already filled its third of the screen there — the reader who doubled the system font saw the
+ * heading and the step badges double and the names stand still. Room for a SECOND line is the room
+ * that size needs, so a caller whose place is narrow asks for two and the name grows by wrapping.
+ *
+ * A name may only ever be broken BETWEEN its words, never inside one. Two lines is room enough for
+ * Android to break a long word at a character boundary — "Stellenanze" over "ige", a word the
+ * reader has to put back together — so every word fitting the place on its own is a condition of
+ * the size as much as the whole name fitting [maxLines] is. A name of one unbreakable word is
+ * therefore lettered in exactly the size one line allows, however many lines it is offered.
+ *
  * [peers] is the row this text is one of, and naming it is what keeps a row LETTERED IN ONE SIZE.
  * Shrinking each word only as far as its own place needs is right for a label that stands alone and
  * wrong for four beside each other: at a raised font size "Profil" stayed at full size next to a
@@ -664,6 +678,7 @@ fun FitOneLineText(
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
     minFontSize: Dp = 9.dp,
+    maxLines: Int = 1,
     peers: List<String> = emptyList(),
 ) {
     val measurer = rememberTextMeasurer()
@@ -674,7 +689,9 @@ fun FitOneLineText(
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val own =
             if (constraints.hasBoundedWidth) {
-                fitToWidth(measurer, listOf(text) + peers, style, constraints.maxWidth, floor)
+                fitToWidth(
+                    measurer, listOf(text) + peers, style, constraints.maxWidth, floor, maxLines,
+                )
             } else {
                 style
             }
@@ -691,8 +708,11 @@ fun FitOneLineText(
             text = text,
             style = fitted,
             color = color,
-            maxLines = 1,
-            softWrap = false,
+            maxLines = maxLines,
+            // Only a text that is allowed more than one line may be wrapped at all: on a single
+            // line soft wrapping would hand the layout a break to make and there is nowhere to put
+            // what comes after it.
+            softWrap = maxLines > 1,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis,
             modifier = if (testTag != null) Modifier.testTag(testTag) else Modifier,
@@ -766,33 +786,58 @@ private const val RefineFactor = 0.99f
 /// refinement costs: the walk down has found the step already, and this only searches inside it.
 private const val RefineSteps = 5
 
-/// The largest size at which EVERY one of [texts] fits [maxWidth] on one line, and never more than
-/// the size that was asked for. A single text is the ordinary case; several are a row that has to
-/// be lettered in one size, and there the walk stops at the step the longest of them can still
-/// live on. WHICH sizes are walked at all is [fittedFontSize]'s decision, not this one's.
+/// The largest size at which EVERY one of [texts] fits a box [maxWidth] wide and [maxLines] lines
+/// tall, and never more than the size that was asked for. A single text is the ordinary case;
+/// several are a row that has to be lettered in one size, and there the walk stops at the step the
+/// longest of them can still live on. WHICH sizes are walked at all is [fittedFontSize]'s decision,
+/// not this one's.
 private fun fitToWidth(
     measurer: TextMeasurer,
     texts: List<String>,
     style: TextStyle,
     maxWidth: Int,
     minFontSize: TextUnit,
+    maxLines: Int,
 ): TextStyle {
     if (style.fontSize.type != TextUnitType.Sp || minFontSize.type != TextUnitType.Sp) return style
     val size = fittedFontSize(style.fontSize.value, minFontSize.value) { candidate ->
         val at = style.atFontSize(candidate.sp)
         val overflows = texts.any { text ->
-            measurer.measure(
-                text = text,
-                style = at,
-                maxLines = 1,
-                softWrap = false,
-                constraints = Constraints(maxWidth = maxWidth),
-            ).hasVisualOverflow
+            // A text that is offered more than one line has a second way of not fitting that no
+            // measurement of the whole text reports: Android breaks a word that is wider than the
+            // line at a character boundary rather than overflowing, so "Stellenanzeige" comes back
+            // as two lines with no overflow at a size at which it is not readable as one word. So
+            // every word has to fit the width on its own as well.
+            spills(measurer, text, at, maxWidth, maxLines) ||
+                (maxLines > 1 && words(text).any { spills(measurer, it, at, maxWidth, 1) })
         }
         !overflows
     }
     return style.atFontSize(size.sp)
 }
+
+/// Whether [text] lettered in [style] spills out of a box [maxWidth] wide and [maxLines] lines tall.
+private fun spills(
+    measurer: TextMeasurer,
+    text: String,
+    style: TextStyle,
+    maxWidth: Int,
+    maxLines: Int,
+): Boolean =
+    measurer.measure(
+        text = text,
+        style = style,
+        maxLines = maxLines,
+        softWrap = maxLines > 1,
+        constraints = Constraints(maxWidth = maxWidth),
+    ).hasVisualOverflow
+
+/// The parts of [text] a wrapped name may be broken between: a run of whitespace separates two of
+/// them and nothing else does. A hyphen is a place Android would break at and this does not count
+/// as one, which is the conservative way round — a compound then has to fit a line whole, and the
+/// name is lettered no bigger than it would have been on one line rather than bigger and split.
+private fun words(text: String): List<String> = text.split(' ', ' ', '\n', '\t')
+    .filter { it.isNotEmpty() }
 
 /**
  * The size one line of shrink-to-fit text is lettered in: the size that was asked for
