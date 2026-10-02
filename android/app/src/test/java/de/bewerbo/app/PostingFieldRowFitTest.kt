@@ -85,4 +85,56 @@ class PostingFieldRowFitTest {
             declaration.contains("verticalArrangement = Arrangement.spacedBy("),
         )
     }
+
+    @Test
+    fun `the label gives its fixed column up instead of breaking inside a word`() {
+        assertTrue(
+            "The label column is a fixed width and the label inside it grows with the system " +
+                "font size, so past roughly font_scale 1.30 UNTERNEHMEN set as UNTERNE over " +
+                "HMEN. The row has to be able to set the label ABOVE the value instead:\n$row",
+            row.contains("if (labelAbove)") && row.contains("if (!labelAbove)"),
+        )
+        assertTrue(
+            "The fixed width may only be applied on the side-by-side branch. Applied " +
+                "unconditionally it is the mid-word break coming back:\n$row",
+            row.indexOf("FieldLabelWidth") > row.indexOf("if (!labelAbove)") &&
+                row.indexOf("FieldLabelWidth") < row.indexOf("if (labelAbove)"),
+        )
+        assertTrue(
+            "Stacked, the label must NOT carry the fixed width — the whole point of moving it " +
+                "is that it has the column to itself:\n$row",
+            row.indexOf("FieldLabelWidth", row.indexOf("if (labelAbove)")) < 0,
+        )
+    }
+
+    @Test
+    fun `the list decides once, from the widest label, against the column it has to fit`() {
+        val decision = run {
+            val start = screen.indexOf("private fun labelsFitTheirColumn(")
+            assertTrue("The list no longer decides where its labels go:\n$screen", start >= 0)
+            screen.substring(start, screen.indexOf("\n}", start))
+        }
+        assertTrue(
+            "The labels are a column: a list that stacks some rows and not others is not a " +
+                "column. Every label of FIELD_ORDER has to be measured, not just one:\n$decision",
+            decision.contains("FIELD_ORDER.none"),
+        )
+        assertTrue(
+            "The question is whether the label fits ONE line of the column it is given — " +
+                "measured against FieldLabelWidth, not against a font scale read off the " +
+                "device:\n$decision",
+            decision.contains("FieldLabelWidth") && decision.contains("maxLines = 1"),
+        )
+        assertTrue(
+            "SectionLabel letters its text in capitals and capitals are wider: measuring the " +
+                "word as it is written clears the column at a scale at which the label on the " +
+                "screen does not:\n$decision",
+            decision.contains(".uppercase()"),
+        )
+        assertTrue(
+            "Only one row of the list may be asked, and the answer handed to all of them:\n$screen",
+            screen.contains("val labelAbove = !labelsFitTheirColumn()") &&
+                screen.contains("labelAbove = labelAbove,"),
+        )
+    }
 }

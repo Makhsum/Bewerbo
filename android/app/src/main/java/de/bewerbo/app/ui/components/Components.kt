@@ -817,7 +817,7 @@ private fun fitToWidth(
 }
 
 /// Whether [text] lettered in [style] spills out of a box [maxWidth] wide and [maxLines] lines tall.
-private fun spills(
+internal fun spills(
     measurer: TextMeasurer,
     text: String,
     style: TextStyle,

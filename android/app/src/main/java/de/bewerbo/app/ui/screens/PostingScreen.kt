@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import de.bewerbo.app.R
 import de.bewerbo.app.data.AppState
@@ -61,6 +62,7 @@ import de.bewerbo.app.ui.components.LabelledField
 import de.bewerbo.app.ui.components.PillTone
 import de.bewerbo.app.ui.components.SectionLabel
 import de.bewerbo.app.ui.components.SegmentedControl
+import de.bewerbo.app.ui.components.spills
 import de.bewerbo.app.ui.components.StatusPill
 import de.bewerbo.app.ui.icons.BewerboIcons
 import de.bewerbo.app.ui.theme.LocalSemanticColors
@@ -294,6 +296,9 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                         SectionLabel(stringResource(R.string.posting_read_from))
                         StatusPill("${posting.fields.size}", PillTone.Neutral)
                     }
+                    // Asked once for the list, not once per row: the labels are a column, and a
+                    // column that stacks on some rows only is not a column.
+                    val labelAbove = !labelsFitTheirColumn()
                     FIELD_ORDER.forEach { key ->
                         val number = marks[key]
                         PostingFieldRow(
@@ -301,6 +306,7 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
                             field = posting.field(key),
                             number = number,
                             selected = number != null && number == selected,
+                            labelAbove = labelAbove,
                             onSelect = number?.let { { select(it, SourceItem, passageOffset(it)) } },
                         )
                     }
@@ -490,6 +496,9 @@ private fun SourceHint(text: Int, testTag: String) {
  * remainder was narrower than a syllable, and "In der Anzeige nicht genannt" ran down the screen as
  * fourteen stacked fragments while the row below it, which carries no marker, set the same sentence
  * normally. The two now share the value's whole width and take a second line where they need one.
+ *
+ * [labelAbove] gives the label column up and sets the label OVER the value instead of beside it.
+ * The whole list answers this question the same way; [labelsFitTheirColumn] is where it is asked.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -498,6 +507,7 @@ private fun PostingFieldRow(
     field: EvidenceField?,
     number: Int?,
     selected: Boolean,
+    labelAbove: Boolean,
     onSelect: (() -> Unit)?,
 ) {
     val colors = LocalSemanticColors.current
@@ -538,17 +548,27 @@ private fun PostingFieldRow(
             fieldIcon(key), contentDescription = null,
             tint = colors.muted, modifier = Modifier.size(18.dp),
         )
-        SectionLabel(
-            stringResource(fieldLabel(key)),
-            Modifier
-                .padding(start = Space.s)
-                .width(FieldLabelWidth),
-        )
+        if (!labelAbove) {
+            SectionLabel(
+                stringResource(fieldLabel(key)),
+                Modifier
+                    .padding(start = Space.s)
+                    .width(FieldLabelWidth),
+            )
+        }
         Column(
             Modifier
                 .weight(1f)
                 .padding(start = Space.s),
         ) {
+            // Over the value rather than beside it, and without the fixed width that is the whole
+            // reason it had to move: here the label has the column to itself and keeps its word.
+            if (labelAbove) {
+                SectionLabel(
+                    stringResource(fieldLabel(key)),
+                    Modifier.padding(bottom = Space.xs),
+                )
+            }
             // What was read, and the one thing to do about it where there is one. The marker came
             // out of the row that used to squeeze this column, and the two belong together anyway:
             // the pill says what is wrong with the value standing next to it.
@@ -680,10 +700,38 @@ private fun markerNumbers(posting: PostingView): Map<String, Int> {
 }
 
 /// The label column, so the values line up under each other rather than starting wherever the
-/// label happened to end. At font_scale 1.30 "UNTERNEHMEN" no longer fits it and wraps; that is
-/// the deliberate side to give way. A column wide enough for the label at every scale takes the
-/// width away from the value, and the value is the thing the user is here to check.
+/// label happened to end. A column wide enough for the label at every font size takes the width
+/// away from the value, and the value is the thing the user is here to check — so the column keeps
+/// this width and the row gives it up altogether once the label outgrows it. See
+/// [labelsFitTheirColumn].
 private val FieldLabelWidth = 112.dp
+
+/**
+ * Whether every label of the list still fits [FieldLabelWidth] on one line.
+ *
+ * The column is a fixed width and the label inside it grows with the system font size, so past
+ * roughly font_scale 1.30 a one-word label no longer fits: "UNTERNEHMEN" set as UNTERNE over HMEN
+ * and "KENNZIFFER" as KENNZIFF over ER — words the reader has to put back together, and the reader
+ * who raised the font size in order to read is exactly the reader it failed. The column also takes
+ * its width from the value, which at the accessibility maximum left the value 465 px: too narrow
+ * for "Referenznummer", which broke mid-word there for the same reason. Giving the column up hands
+ * the value the whole card and settles both.
+ *
+ * The answer is ONE answer for the whole list, because the labels are a column: a list where some
+ * rows stack their label and others do not reads as a mistake. So the widest label decides for all
+ * of them — the same way [SegmentedControl] sizes every column from its widest label.
+ */
+@Composable
+private fun labelsFitTheirColumn(): Boolean {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelSmall
+    val width = with(LocalDensity.current) { FieldLabelWidth.roundToPx() }
+    // Measured in capitals because [SectionLabel] letters it in capitals: the word as it is written
+    // clears the column at a scale at which the label actually on the screen does not.
+    return FIELD_ORDER.none { key ->
+        spills(measurer, stringResource(fieldLabel(key)).uppercase(), style, width, maxLines = 1)
+    }
+}
 
 /// The fields the Anschreiben cannot be addressed without. A posting that names no Eintritt and no
 /// Referenz is the ordinary case, not something to flag.
