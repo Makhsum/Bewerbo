@@ -832,11 +832,14 @@ internal fun spills(
         constraints = Constraints(maxWidth = maxWidth),
     ).hasVisualOverflow
 
-/// The parts of [text] a wrapped name may be broken between: a run of whitespace separates two of
-/// them and nothing else does. A hyphen is a place Android would break at and this does not count
-/// as one, which is the conservative way round — a compound then has to fit a line whole, and the
-/// name is lettered no bigger than it would have been on one line rather than bigger and split.
-private fun words(text: String): List<String> = text.split(' ', ' ', '\n', '\t')
+/// The parts of [text] a wrapped name may be broken between: a run of BREAKING whitespace separates
+/// two of them and nothing else does. A no-break space is none of it, however much of a space it
+/// looks like — it is the one space Android will not break a line at, so the words it joins are one
+/// unbreakable unit and have to fit a line together. A hyphen is a place Android would break at and
+/// this does not count as one either, which is the conservative way round — what cannot be broken
+/// then has to fit a line whole, and the name is lettered no bigger than it would have been on one
+/// line rather than bigger and split.
+private fun words(text: String): List<String> = text.split(' ', '\n', '\t')
     .filter { it.isNotEmpty() }
 
 /**

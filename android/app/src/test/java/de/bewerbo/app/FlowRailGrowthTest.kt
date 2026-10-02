@@ -222,6 +222,15 @@ class FlowRailGrowthTest {
         found!!.groupValues[1].toInt()
     }
 
+    /// The characters the component counts as a place to break a name at. Read out of the
+    /// source like [stepNameLines], because `words` is the component's own and stays private to
+    /// it: what can be asserted from here is the list it splits on.
+    private val wordSplit: String = run {
+        val start = components.indexOf("private fun words(text: String)")
+        assertTrue("The component no longer says where a name may be broken", start >= 0)
+        components.substring(start, components.indexOf('\n', start))
+    }
+
     /// The rail: from its own declaration to the bottom bar's, which is what follows it.
     private val rail: String = run {
         val start = activity.indexOf("private fun FlowRail(")
@@ -272,6 +281,15 @@ class FlowRailGrowthTest {
                 "at a size at which \"Stellenanzeige\" comes out as \"Stellenanze\" over " +
                 "\"ige\":\n$components",
             components.contains("(maxLines > 1 && words(text).any { spills(measurer, it, at, maxWidth, 1) })"),
+        )
+        assertTrue(
+            "A no-break space must not count as a place to break at. It is the one space Android " +
+                "will not break a line at, so the words it joins are one unbreakable unit: " +
+                "counting it splits that unit into parts that each fit, accepts a size at which " +
+                "the unit does not, and hands Android the character boundary again — " +
+                "\"Сверка тре\" over \"бований\", measured on the emulator at font scale 2.0 " +
+                "with one in the Russian name:\n$wordSplit",
+            !wordSplit.contains('\u00a0') && !wordSplit.contains("\\u00a0", ignoreCase = true),
         )
     }
 }
