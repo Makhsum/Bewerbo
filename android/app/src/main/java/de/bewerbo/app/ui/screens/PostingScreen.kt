@@ -85,6 +85,7 @@ private val SOURCES = listOf("paste", "link", "photo")
  * a real person with a real reference number, and the user is the only one who can tell whether
  * the app read them right.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Unit) {
     val colors = LocalSemanticColors.current
@@ -330,7 +331,18 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
 
             item {
                 BewerboCard {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    // The label and what it decides, WRAPPING. SpaceBetween only hands out what is
+                    // left over, so once the two together asked for the whole card there was
+                    // nothing left between them and the header read "ARBEITGEBERTYPbestimmt Foto
+                    // und Register" — one word made of two. A FlowRow gives the note its own line
+                    // instead, the way the Unterlagen rows and the field row above already do.
+                    FlowRow(
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("posting_employer_type_header"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(Space.xs),
+                    ) {
                         SectionLabel(stringResource(R.string.posting_employer_type))
                         Text(
                             stringResource(R.string.posting_employer_type_note),
