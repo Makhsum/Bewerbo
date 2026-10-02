@@ -103,11 +103,14 @@ data class AppState(
     /// the same shape [busy] has. Kept as state rather than left to the error snackbar: that one is
     /// gone in seconds and the preview would go on standing there empty with no way back.
     val previewFailure: String? = null,
-    /// The chosen parts the preview currently in hand was asked for — what [refreshPreview] checks
-    /// its finished pages against before publishing them, the way the scan viewer checks the id of
-    /// the document it is showing. The drawing happens off the main thread, so the chosen parts can
-    /// have changed by the time it ends.
-    val previewParts: String? = null,
+    /// The number of the render whose outcome this preview is waiting for, or 0 while none has been
+    /// asked for — what [refreshPreview] checks its finished pages and its failures against before
+    /// publishing them, the way the scan viewer checks the id of the document it is showing. The
+    /// render and not the chosen parts it was asked for: a superseded render is never cancelled, so
+    /// toggling one export chip off and on again leaves two renders of the SAME parts in flight, and
+    /// a selection cannot tell those two apart — the one that finished last won, which is the slow
+    /// one started first, and its failure landed over pages the newer render had already published.
+    val previewRender: Int = 0,
     /// Set when the user asked to send the Mappe. The screen hands it to a mail app and clears it.
     val pendingEmail: EmailDraft? = null,
     /// Set when the user asked for the copy of what is held about them. The settings screen hands
@@ -269,9 +272,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val api = BewerboApi { sessionPrefs().getString("authToken", null) }
     private val _state = MutableStateFlow(AppState())
 
-    /// How many previews have been asked for. Counts the cache file of each render apart from the
-    /// next one's — see [previewFile] and [refreshPreview]. Not in [AppState]: no screen reads it,
-    /// and a number that changes on every chip tap would recompose the Bewerbung screen for nothing.
+    /// How many previews have been asked for. The source of the number each render is known by: it
+    /// names that render's cache file and, as [AppState.previewRender], says which render the screen
+    /// is waiting for — see [previewFile] and [refreshPreview]. The numbers are handed out here and
+    /// nowhere else, so no two renders can be given the same one and none is ever used again.
     private var previewRenders = 0
     val state: StateFlow<AppState> = _state.asStateFlow()
 
@@ -1227,25 +1231,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun refreshPreview(parts: String) = launch("preview") {
         val application = _state.value.application ?: return@launch
 
+        // This render's number, taken before anything here can suspend and held for the rest of the
+        // coroutine. It is what makes this render answerable for its own outcome and nobody else's:
+        // the state below carries it until the next render takes over, and both publishing steps
+        // compare against it. The chosen parts cannot do that job — two renders of one selection
+        // read identically — and the Bewerbung screen produces exactly those two whenever a chip is
+        // toggled off and on again, because refreshPreview runs in viewModelScope and the render the
+        // chips have moved on from is never cancelled.
+        val render = ++previewRenders
+
         // Cleared BEFORE the call, not replaced after it. Pages left over from the previous
         // selection are a picture of a file the chips no longer describe, and if this call fails
         // they stay there: the screen then shows a three-page Mappe under a Lebenslauf the user
         // has just taken out, and the export button sends the other one.
         _state.update {
-            it.copy(previewPages = emptyList(), previewFailure = null, previewParts = parts)
+            it.copy(previewPages = emptyList(), previewFailure = null, previewRender = render)
         }
 
-        // A cache file of this render's OWN. All of them went into "vorschau.pdf", and since the
-        // drawing moved off the main thread two renders can be in flight at once: the download of
-        // the second truncated the file the first was still reading, so the preview the user was
-        // waiting for was drawn from a file that had been cut off under it. The file is deleted
-        // when this render is over, whichever way it ends.
-        val file = getApplication<Application>().previewFile(++previewRenders)
+        // A cache file of this render's OWN, under the same number. All of them went into
+        // "vorschau.pdf", and since the drawing moved off the main thread two renders can be in
+        // flight at once: the download of the second truncated the file the first was still reading,
+        // so the preview the user was waiting for was drawn from a file that had been cut off under
+        // it. The file is deleted when this render is over, whichever way it ends.
+        val file = getApplication<Application>().previewFile(render)
         try {
             runCatching {
                 api.applicationPdf(application.id, parts, file)
             }.onFailure {
-                previewFailed(parts, PREVIEW_NOT_FETCHED)
+                previewFailed(render, PREVIEW_NOT_FETCHED)
             }.getOrThrow()
 
             // Rasterising is the one step in here that is neither a call nor a state change, and
@@ -1270,25 +1283,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // snackbar would say Bewerbo could not be reached, and it was — the file is here. The
             // screen says this one itself, and goes on saying it.
             if (pages.isEmpty()) {
-                previewFailed(parts, PREVIEW_NOT_DRAWN)
+                previewFailed(render, PREVIEW_NOT_DRAWN)
                 return@launch
             }
 
-            // The chips can be changed while the pages are still being drawn, and the render that
-            // was started for the selection before belongs to nothing: put into the state anyway it
-            // is exactly the picture of a file the chips no longer describe that the clearing above
-            // exists to prevent.
-            if (_state.value.previewParts == parts) _state.update { it.copy(previewPages = pages) }
+            // A render that a later one has taken over belongs to nothing: put into the state anyway
+            // it is exactly the picture of a file the chips no longer describe that the clearing
+            // above exists to prevent — or, when the two renders were asked for the same parts, the
+            // right pages under the newer render's failure card, where that branch keeps them
+            // hidden. Either way the screen ends on the outcome of the render started last.
+            if (_state.value.previewRender == render) _state.update { it.copy(previewPages = pages) }
         } finally {
             file.delete()
         }
     }
 
-    /// Says why the preview has no pages — unless the chips have moved on while this render ran, in
-    /// which case a newer one is already on its way and this failure describes a selection the user
-    /// has left. The same check the finished pages go through in [refreshPreview].
-    private fun previewFailed(parts: String, reason: String) {
-        if (_state.value.previewParts == parts) {
+    /// Says why the preview has no pages — unless a newer render has taken over while this one ran,
+    /// in which case it is already on its way and this failure describes a render nobody is waiting
+    /// for: said anyway it is the way-back card over a preview that is coming, or over one the newer
+    /// render has already drawn. The same check the finished pages go through in [refreshPreview].
+    private fun previewFailed(render: Int, reason: String) {
+        if (_state.value.previewRender == render) {
             _state.update { it.copy(previewFailure = reason) }
         }
     }

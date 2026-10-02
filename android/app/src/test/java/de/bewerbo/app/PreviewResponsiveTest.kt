@@ -76,10 +76,11 @@ class PreviewResponsiveTest {
             published > drawn,
         )
         assertTrue(
-            "The chips can be changed while the pages are still being drawn. The render started " +
-                "for the selection before then belongs to nothing, and published anyway it is a " +
-                "picture of a file the chips no longer describe:\n" + refresh,
-            refresh.contains("_state.value.previewParts == parts"),
+            "The chips can be changed while the pages are still being drawn. A render a later one " +
+                "has taken over then belongs to nothing, and published anyway it is a picture of a " +
+                "file the chips no longer describe. Which render, not which selection — see " +
+                "[PreviewSupersededTest]:\n" + refresh,
+            refresh.contains("_state.value.previewRender == render"),
         )
     }
 

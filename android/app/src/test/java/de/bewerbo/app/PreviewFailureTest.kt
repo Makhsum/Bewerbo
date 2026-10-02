@@ -59,8 +59,9 @@ class PreviewFailureTest {
         )
         assertTrue(
             "The render asks for the file with a number nothing else has had — a counter that " +
-                "goes up, not the state of the screen:\n" + refreshPreview(),
-            refreshPreview().contains("previewFile(++previewRenders)"),
+                "goes up, handed out on this side and not read back off the screen:\n" + refreshPreview(),
+            refreshPreview().contains("val render = ++previewRenders") &&
+                refreshPreview().contains("previewFile(render)"),
         )
         assertTrue(
             "A cache file per render fills the cache unless each one is removed when its render " +
@@ -105,13 +106,14 @@ class PreviewFailureTest {
 
     @Test
     fun `a failure of the render before is not said over a render that is still running`() {
-        val said = body(viewModel(), "private fun previewFailed(parts: String, reason: String)", "    ")
+        val said = body(viewModel(), "private fun previewFailed(render: Int, reason: String)", "    ")
 
         assertTrue(
             "The chips can be changed while a render is in flight. Its failure published anyway " +
                 "puts the way-back card over a preview that is on its way — the same check the " +
-                "finished pages go through:\n" + said,
-            said.contains("_state.value.previewParts == parts"),
+                "finished pages go through. The render and not the selection, for the reason " +
+                "[PreviewSupersededTest] is about:\n" + said,
+            said.contains("_state.value.previewRender == render"),
         )
     }
 
