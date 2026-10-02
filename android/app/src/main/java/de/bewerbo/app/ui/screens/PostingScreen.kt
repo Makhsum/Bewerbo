@@ -49,7 +49,7 @@ import de.bewerbo.app.data.AppState
 import de.bewerbo.app.data.AppViewModel
 import de.bewerbo.app.data.EvidenceField
 import de.bewerbo.app.data.PostingView
-import de.bewerbo.app.data.isOpeningApplication
+import de.bewerbo.app.data.isAwaitingApplication
 import de.bewerbo.app.ui.TermNote
 import de.bewerbo.app.ui.germanTerm
 import de.bewerbo.app.ui.components.ApplicationWait
@@ -155,18 +155,20 @@ fun PostingScreen(state: AppState, viewModel: AppViewModel, onMatched: () -> Uni
             }
         }
 
-        // The first step of the flow is reachable at all times, so it is opened while the
-        // application the user tapped on the Übersicht is still being fetched — and the fetch does
-        // NOT clear the posting, so what stood here then was the advert of the application BEFORE
-        // it, read as this one's, or, with none held at all, the form asking the user to insert the
-        // advert that was arriving as it asked. Both are the step talking about an application that
-        // is not the one being opened; the fetch is what the screen is doing and it says so, the
-        // way the two steps behind it do.
+        // The first step of the flow is reachable at all times, so it is opened through BOTH waits
+        // for the application the user tapped on the Übersicht — and neither wait clears the
+        // posting, so what stood here was the advert of the application BEFORE it, read as this
+        // one's, or, with none held at all, the form asking the user to insert the advert the
+        // server is holding. Both are the step talking about an application that is not the one
+        // being opened, so it says which wait it is in, the way the two steps behind it do.
         //
-        // The wait that FAILED is deliberately not answered here, unlike on those two: this is the
-        // screen a user whose application never arrived begins the next one on, and the way in must
-        // not be taken away from them. The retry lives where the letter does.
-        if (state.isOpeningApplication) {
+        // The failed wait was once left out of this, to keep the paste form as the way into the
+        // next application. It is not that way in: the rail marks every step done through the
+        // failure, so resumeStep() is the Bewerbung, `beginning` is false and the Übersicht
+        // therefore offers "Begin another application" — which is what clears unfetchedApplication
+        // and brings this form back. Left out, the step the rail invites a tap on opened on that
+        // form with no word of the failure, asking for the very advert the failure is about.
+        if (state.isAwaitingApplication) {
             item { ApplicationWait(state, "posting", viewModel::openApplication) }
             return@LazyColumn
         }

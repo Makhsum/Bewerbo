@@ -115,22 +115,47 @@ class FlowStepWaitTest {
     }
 
     @Test
-    fun `the Stellenanzeige step keeps its way in once the fetch has ended`() {
+    fun `the Stellenanzeige step answers BOTH waits, like the two behind it`() {
         val screen = source("ui/screens/PostingScreen.kt")
 
+        assertTrue(
+            "This step answered the RUNNING fetch and nothing else, to keep the paste form as the " +
+                "way into the next application. It is not that way in — see the test below — and " +
+                "left out, the step the rail invites a tap on opened on the form with no word of " +
+                "the failure, asking for the very advert the failure is about:\n" + screen,
+            screen.contains("state.isAwaitingApplication"),
+        )
         assertEquals(
-            "This step answers the fetch that is RUNNING and nothing else. It is the screen a user " +
-                "whose application never arrived begins the next one on, and the form is the only " +
-                "way in there — hidden behind a failure that nothing on this screen clears, the " +
-                "step is a dead end. The retry lives where the letter does.",
+            "and it reads the wait ONCE. Two conditions here is the special case back: the three " +
+                "steps ask the same question of the same state and ApplicationWait decides which " +
+                "of the two waits to draw.",
             0,
-            Regex("""state\.isAwaitingApplication""").findAll(screen).count(),
+            Regex("""state\.isOpeningApplication""").findAll(screen).count(),
+        )
+    }
+
+    @Test
+    fun `the way into the next application is the Uebersicht, not the paste form`() {
+        // What the exclusion above used to rest on. The rail marks every step done through the
+        // failure, so resumeStep() is the LAST step and `beginning` is false — which is exactly
+        // when the Übersicht offers "Begin another application", and that is the call that clears
+        // unfetchedApplication and brings the paste form back. Were any of these three to change,
+        // hiding the form behind the failure really would make the step a dead end.
+        val activity = source("MainActivity.kt")
+        val viewModel = source("data/AppViewModel.kt")
+
+        assertTrue(
+            "The Übersicht decides the way in from the step the user got to:\n" + activity,
+            activity.contains("val beginning = step == FlowStep.Posting && state.posting == null"),
         )
         assertTrue(
-            "and it does have to answer the running fetch: what stood here then was the advert of " +
-                "the application BEFORE this one — openApplication() does not clear the posting — " +
-                "or the form asking for the advert that was arriving as it asked:\n" + screen,
-            screen.contains("state.isOpeningApplication"),
+            "and offers \"Begin another application\" whenever that is not where they are standing",
+            activity.contains("onBeginAnother = if (beginning) {"),
+        )
+        assertTrue(
+            "which clears the failure along with the posting — without that the form would come " +
+                "back under the notice it is meant to replace:\n" + body(viewModel, "fun clearPosting()", "    "),
+            body(viewModel, "fun clearPosting()", "    ").contains("unfetchedApplication = null"),
         )
     }
 
