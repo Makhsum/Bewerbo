@@ -21,8 +21,11 @@
     "mainActivity": "de.bewerbo.app/.MainActivity",
     "buildCommand": "gradle :app:assembleDebug",
     "testCommand": "gradle :app:testDebugUnitTest",
-    "installCommand": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
-    "apiBaseUrl": "http://10.0.2.2:5099"
+    "installCommand": "adb install -r android/app/build/outputs/apk/debug/app-x86_64-debug.apk",
+    "apiBaseUrl": "http://10.0.2.2:5099",
+    "notes": [
+      "The build is split per ABI and writes NO app-debug.apk — only app-x86_64-debug.apk and app-arm64-v8a-debug.apk. The emulator is x86_64, which is the one installCommand names; use the arm64 one for a real device. See the splits block in app/build.gradle.kts for why there is no universal APK."
+    ]
   },
 
   "conventions": {
