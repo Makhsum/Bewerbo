@@ -262,7 +262,7 @@ fun BewerboApp(viewModel: AppViewModel = viewModel()) {
                             } else {
                                 {
                                     viewModel.clearPosting()
-                                    navController.openFromOverview(FlowStep.Posting.route)
+                                    navController.beginFlow()
                                 }
                             },
                         ) { route -> navController.openFromOverview(route) }
@@ -355,6 +355,31 @@ private fun NavHostController.openFromOverview(route: String) {
         popUpTo(graph.startDestinationId) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+/**
+ * Begins the flow again for the next employer, at its first step.
+ *
+ * Nothing is RESTORED here, and that is the difference to [openFromOverview] — the same difference
+ * [openSettings] draws, and for the same kind of reason. Restoring is what the bar wants: it carries
+ * the user back to the place they left, mid-path. Beginning another application is the opposite
+ * request. Asked for through [openFromOverview], the saved flow stack came back whole and the user
+ * landed on its TOP entry, the Bewerbung — so "Weitere Bewerbung beginnen" answered with the LAST
+ * step of a path they had just asked to start, under an empty state telling them to go and do the
+ * Abgleich first.
+ *
+ * The saved stack is cleared rather than merely ignored: [AppViewModel.clearPosting] has just
+ * dropped the posting, the match and the letter that path was walked for, and a path whose every
+ * screen is now empty is not one to be restored onto later. Left behind, it was still waiting under
+ * the first step's own id for the next navigation that restores — and "Bewerbung fortsetzen" would
+ * have walked the user into the same empty Bewerbung from the other side.
+ */
+private fun NavHostController.beginFlow() {
+    clearBackStack(FlowStep.Posting.route)
+    navigate(FlowStep.Posting.route) {
+        popUpTo(graph.startDestinationId) { saveState = true }
+        launchSingleTop = true
     }
 }
 
