@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "aria-android": {
+      "type": "stdio",
+      "command": "C:\\Projects\\ARIA\\src\\Aria.McpServer\\bin\\Release\\net8.0-windows\\Aria.McpServer.exe",
+      "args": [],
+      "env": {
+        "AUTOMATION_BACKEND": "android",
+        "ARIA_ANDROID_PACKAGE": "de.bewerbo.app",
+        "ARIA_APPIUM_URL": "http://127.0.0.1:4723"
+      }
+    }
+  }
+}

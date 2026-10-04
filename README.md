@@ -57,6 +57,28 @@ Zufriedenheit" means a bad review — is the real moat, and belongs in version t
 The Compose UI is driven by ARIA over Appium. Set `testTagsAsResourceId` at the root, above every
 branch, from the first screen — retrofitting it later means re-tagging the whole UI.
 
+Testing runs on an emulator. One command brings up everything it needs and is safe to repeat —
+each step checks first and only acts when it has to:
+
+```bash
+android/emulator.sh up      # AVD bewerbo_api35, boot, animations off, Appium, build, install, launch
+android/emulator.sh down    # stops the emulator; Appium keeps running for the next "up"
+```
+
+The steps are commands of their own too: `avd`, `boot`, `appium_up`, `install`, `launch`.
+
+What it needs once per machine:
+
+```bash
+sdkmanager "system-images;android-35;google_apis;x86_64"
+npm install -g appium && appium driver install uiautomator2
+```
+
+`.mcp.json` registers ARIA for this project as `aria-android` — the same executable as the desktop
+ARIA, started with `AUTOMATION_BACKEND=android` and `ARIA_ANDROID_PACKAGE=de.bewerbo.app`. It
+needs an ARIA build that contains the Android backend; an older one ignores the variable and asks
+for a window title.
+
 ## Licence note
 
 QuestPDF is free under its Community licence below roughly $1M annual revenue; above that it needs
@@ -87,16 +109,19 @@ android/app                  Kotlin + Compose client, five destinations
 dotnet run --project backend/src/Bewerbo.Api --urls http://0.0.0.0:5099
 
 # client — 10.0.2.2 is the host as the emulator sees it
-gradle -p android :app:assembleDebug
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+android/gradlew -p android :app:assembleDebug
+adb install -r android/app/build/outputs/apk/debug/app-x86_64-debug.apk
 ```
+
+The debug build is split by ABI like the release, so there is no `app-debug.apk`: the emulator
+takes `app-x86_64-debug.apk`, a phone `app-arm64-v8a-debug.apk`.
 
 `backend/smoke.sh` walks the whole card end to end against a running API.
 
 ### A build for a real phone
 
 ```bash
-gradle -p android :app:assembleRelease -PbewerboApiUrl=https://your-backend
+android/gradlew -p android :app:assembleRelease -PbewerboApiUrl=https://your-backend
 # app/build/outputs/apk/release/app-arm64-v8a-release.apk   — any modern phone
 # app/build/outputs/apk/release/app-x86_64-release.apk      — the emulator
 ```

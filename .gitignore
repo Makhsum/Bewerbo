@@ -12,6 +12,7 @@ appsettings.Local.json
 
 # ---- Android (Kotlin client) ----
 .gradle/
+.kotlin/
 build/
 local.properties
 *.apk
