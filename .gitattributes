@@ -10,3 +10,7 @@
 # text=auto rather than text: the repository is all text today, and a binary added later (a
 # screenshot, a keystore, the Gradle wrapper jar) must not be rewritten by this line.
 * text=auto eol=lf
+
+# The one exception: cmd.exe misreads GOTO labels in a batch file with LF endings, which is why
+# Gradle generates gradlew.bat with CRLF and keeps it that way.
+*.bat text eol=crlf
